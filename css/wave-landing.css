@@ -1,10 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Bitcount:CRSV,ELSH,ELXP,slnt,wght@0..1,0..100,0..100,-8..0,200..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bitcount:CRSV,ELSH,ELXP,slnt,wght@0..1,0..100,0..100,-8..0,200..700&family=Unbounded:wght@400;500;600;700&display=swap");
 
 :root {
   --bg-0: #1d0838;
   --bg-1: #2a0f4c;
   --bg-2: #2d1152;
-  --lime: #b9f244;
+  --headline: #cf9ee6;
+  --headline-sub: #9e8fb8;
+  --nav: #f0d7ee;
+  --nav-active: #c2f542;
+  --top-size: clamp(32px, 6.4vw, 118px);
+  --complex-space: 0.32em;
 }
 
 * {
@@ -21,27 +26,93 @@ body {
 body {
   overflow: hidden;
   background:
-    radial-gradient(120vw 120vh at 8% 10%, rgba(95, 43, 146, 0.38), transparent 50%),
-    radial-gradient(90vw 90vh at 82% 85%, rgba(47, 132, 125, 0.15), transparent 60%),
-    linear-gradient(165deg, var(--bg-0) 0%, var(--bg-1) 46%, var(--bg-2) 100%);
-  color: var(--lime);
+    radial-gradient(130vw 110vh at -12% 112%, rgba(168, 104, 220, 0.14), transparent 48%),
+    linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 48%, var(--bg-2) 100%);
+  color: var(--headline);
+  font-family: "Unbounded", "Avenir Next", "Futura", sans-serif;
 }
 
-.text-stage {
+.top-nav {
+  position: fixed;
+  top: 48px;
+  left: 84px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+}
+
+.brand {
+  color: var(--nav);
+  text-decoration: none;
+  font-size: clamp(24px, 2.1vw, 34px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 66px;
+}
+
+.menu-link {
+  color: var(--nav);
+  text-decoration: none;
+  font-size: clamp(18px, 1.5vw, 26px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.menu-link.is-active {
+  color: var(--nav-active);
+}
+
+.hero {
   width: 100%;
   height: 100%;
   display: grid;
-  place-items: center;
+  place-content: center;
+  justify-items: center;
+  gap: 0;
+  text-align: center;
+  transform: translate(-1.6vw, 20px);
+}
+
+.line {
+  margin: 0;
+  font-family: "Unbounded", "Avenir Next", "Futura", sans-serif;
+  font-style: normal;
+  color: var(--headline);
+  font-weight: 500;
+}
+
+.line-top {
+  font-size: var(--top-size);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.line-for {
+  font-size: 0.52em;
+  color: var(--headline);
+  vertical-align: top;
   position: relative;
+  top: 0.08em;
+  margin-left: 0.08em;
 }
 
 .vf-text {
   margin: 0;
-  color: var(--lime);
+  color: var(--headline);
   font-family: "Bitcount", "Bitcount Variable", "Avenir Next", "Futura", sans-serif;
-  font-size: clamp(2.1rem, 6.6vw, 6.3rem);
-  line-height: 0.95;
-  letter-spacing: -0.025em;
+  font-size: calc(var(--top-size) * 90 / 62);
+  font-style: normal;
+  font-weight: 200;
+  line-height: 1.02;
+  letter-spacing: 0.015em;
   white-space: nowrap;
   user-select: none;
   font-synthesis-weight: none;
@@ -53,8 +124,51 @@ body {
   will-change: font-variation-settings;
 }
 
-@media (max-width: 980px), (pointer: coarse) {
-  .vf-text {
-    font-size: clamp(2rem, 10vw, 3.2rem);
+.vf-space {
+  display: inline-block;
+  width: var(--complex-space);
+}
+
+.line-bottom {
+  font-size: clamp(27px, 3.05vw, 56px);
+  line-height: 1.03;
+  letter-spacing: -0.015em;
+  margin-top: 4px;
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --top-size: clamp(34px, 8.4vw, 72px);
+  }
+
+  .top-nav {
+    top: 34px;
+    left: 34px;
+    gap: 30px;
+  }
+
+  .brand {
+    font-size: 24px;
+  }
+
+  .menu {
+    gap: 30px;
+  }
+
+  .menu-link {
+    font-size: 18px;
+  }
+
+  .hero {
+    padding: 0 24px;
+    transform: translateY(0);
+  }
+
+  .line-bottom {
+    font-size: clamp(24px, 4.5vw, 42px);
+  }
+
+  .vf-space {
+    width: 0.28em;
   }
 }

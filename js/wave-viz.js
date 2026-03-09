@@ -20,6 +20,17 @@ const REFERENCE_IMAGE_BY_SET = {
   key: WAVE_SET_CONFIG.key.referenceImage,
   harmonic: WAVE_SET_CONFIG.harmonic.referenceImage
 };
+const PRIMARY_BLEND_IN_BETWEEN = 100;
+const BLEND_MODE_DIRECT_INDEX = "direct-index";
+const BLEND_MODE_FROZEN_PHASE = "frozen-phase";
+const BLEND_MODE_ARC_LENGTH = "arc-length";
+const BLEND_MODE_SEAM_INVARIANT = "seam-invariant";
+const PRIMARY_BLEND_MODES = [
+  BLEND_MODE_DIRECT_INDEX,
+  BLEND_MODE_FROZEN_PHASE,
+  BLEND_MODE_ARC_LENGTH,
+  BLEND_MODE_SEAM_INVARIANT
+];
 const TOKEN_RE = /[AaCcMmLlHhVvQqSsTtZz]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?/g;
 
 const CONFIG = {
@@ -104,7 +115,8 @@ const CONFIG = {
   motion: {
     travelSpeedPxPerSecond: 76,
     travelDirectionA: 1,
-    travelDirectionB: -1
+    travelDirectionB: -1,
+    scrubStepSeconds: 1 / 120
   },
   zoomBlur: {
     enabled: true,
@@ -577,6 +589,7 @@ class WaveOriginalRenderer {
     this.hud = hud;
     this.motionToggleButton = motionToggleButton;
     this.baselineAModeButton = baselineAModeButton;
+    this.blendModeButton = document.getElementById("blend-mode-toggle");
     this.harmonicSystemToggle = harmonicSystemToggle;
     this.keySystemToggle = keySystemToggle;
     this.baselineSmoothInput = baselineSmoothInput;
@@ -632,7 +645,23 @@ class WaveOriginalRenderer {
     this.motionSpeedPxPerSecond = CONFIG.motion.travelSpeedPxPerSecond;
     this.travelDirectionA = Math.sign(Number(CONFIG.motion.travelDirectionA) || 1) || 1;
     this.travelDirectionB = Math.sign(Number(CONFIG.motion.travelDirectionB) || -1) || -1;
+    this.primaryBlendInBetween = Math.max(0, PRIMARY_BLEND_IN_BETWEEN | 0);
+    this.hidePrimaryBlendEndpoints = true;
+    this.primaryBlendMode = BLEND_MODE_DIRECT_INDEX;
+    this.primaryBlendColorScratch = new Float32Array(4);
+    this.primaryBlendFrozenState = {
+      initialized: false,
+      segCount: 0,
+      reverseFrom: false,
+      phase: 0,
+      target: 0
+    };
     this.motionPaused = false;
+    this.motionScrubMode = false;
+    this.motionScrubStepSeconds = Math.max(
+      1 / 240,
+      Number(CONFIG.motion.scrubStepSeconds) || 1 / 120
+    );
     this.mouseInfluencePx = CONFIG.interaction.mouseInfluencePx;
     this.pixiZoomEnabled = !!CONFIG.zoomBlur.enabled;
     this.zoomBlurCenterXNorm = clamp(Number(CONFIG.zoomBlur.centerXNorm) || 0.68, 0, 1);
@@ -677,6 +706,13 @@ class WaveOriginalRenderer {
     this.viewSecondaryB = new Float32Array(this.n * 2);
     this.waveTravelA = new Float32Array(this.n * 2);
     this.waveTravelB = new Float32Array(this.n * 2);
+    this.waveStableA = new Float32Array(this.n * 2);
+    this.waveStableB = new Float32Array(this.n * 2);
+    this.blendMapA = this.createBlendMapTransitionState();
+    this.blendMapB = this.createBlendMapTransitionState();
+    this.blendMapMinDurationSec = 1 / 120;
+    this.blendMapMaxDurationSec = 8;
+    this.blendMapSeamJumpToleranceSegments = 2;
     this.waveSecondaryTravelA = new Float32Array(this.n * 2);
     this.waveSecondaryTravelB = new Float32Array(this.n * 2);
     this.baseA = new Float32Array(this.n * 2);
@@ -703,6 +739,10 @@ class WaveOriginalRenderer {
     this.baseArcLenB = 0;
     this.baseSecondaryArcLenA = 0;
     this.baseSecondaryArcLenB = 0;
+    this.primaryBlendArcFrom = new Float32Array(this.n);
+    this.primaryBlendArcTo = new Float32Array(this.n);
+    this.blendDebugArcFrom = new Float32Array(this.n);
+    this.blendDebugArcTo = new Float32Array(this.n);
     this.baseDispA = new Float32Array(this.n);
     this.baseDispB = new Float32Array(this.n);
     this.baseSecondaryDispA = new Float32Array(this.n);
@@ -753,10 +793,51 @@ class WaveOriginalRenderer {
     this.waveSkipAEnd = -1;
     this.waveSkipBStart = -1;
     this.waveSkipBEnd = -1;
+    this.waveOrderAStart = -1;
+    this.waveOrderAEnd = -1;
+    this.waveOrderACount = 0;
+    this.waveOrderBStart = -1;
+    this.waveOrderBEnd = -1;
+    this.waveOrderBCount = 0;
     this.waveSecondarySkipAStart = -1;
     this.waveSecondarySkipAEnd = -1;
     this.waveSecondarySkipBStart = -1;
     this.waveSecondarySkipBEnd = -1;
+    this.blendDebugSeamAStart = -1;
+    this.blendDebugSeamBStart = -1;
+    this.blendDebugSeamASource = "none";
+    this.blendDebugSeamBSource = "none";
+    this.blendDebug = {
+      frame: 0,
+      mode: this.primaryBlendMode,
+      reverseFrom: false,
+      phase: 0,
+      useTransition: false,
+      rawWorkPxA: 0,
+      rawWorkPxB: 0,
+      seamEventsA: 0,
+      seamEventsB: 0,
+      seamSignificantA: 0,
+      seamSignificantB: 0,
+      transitionStartsA: 0,
+      transitionStartsB: 0,
+      transitionRestartsA: 0,
+      transitionRestartsB: 0,
+      eventLogA: [],
+      eventLogB: [],
+      probePrimed: false,
+      prevProbeRaw: new Float32Array(this.n * 2),
+      prevProbeSmooth: new Float32Array(this.n * 2),
+      probeRawScratch: new Float32Array(this.n * 2),
+      probeSmoothScratch: new Float32Array(this.n * 2),
+      jumpRawAllPx: 0,
+      jumpSmoothAllPx: 0,
+      jumpRawAwayPx: 0,
+      jumpSmoothAwayPx: 0,
+      seamLocalityRaw: 1,
+      seamLocalitySmooth: 1,
+      seamCutSuspect: false
+    };
     this.crestsA = [];
     this.troughsA = [];
     this.crestsB = [];
@@ -1177,6 +1258,13 @@ class WaveOriginalRenderer {
       this.updateBaselineAModeButton();
     }
 
+    if (this.blendModeButton) {
+      this.blendModeButton.addEventListener("click", () => {
+        this.cyclePrimaryBlendMode(1);
+      });
+      this.updateBlendModeButton();
+    }
+
     if (this.baselineAEllipseRxInput) {
       this.baselineAEllipseRxInput.value = String(Math.round(this.baselineAEllipseRadiusXPx));
       if (this.baselineAEllipseRxValue) {
@@ -1342,7 +1430,11 @@ class WaveOriginalRenderer {
   }
 
   setMotionPaused(paused) {
-    this.motionPaused = !!paused;
+    const nextPaused = !!paused;
+    if (!nextPaused && this.motionScrubMode) {
+      this.motionScrubMode = false;
+    }
+    this.motionPaused = nextPaused;
     this.updateMotionToggleButton();
     this.updateHud();
   }
@@ -1354,12 +1446,730 @@ class WaveOriginalRenderer {
     this.motionToggleButton.textContent = this.motionPaused ? "Resume Motion" : "Pause Motion";
   }
 
+  setMotionScrubMode(enabled, autoPause = true) {
+    const next = !!enabled;
+    if (this.motionScrubMode === next) {
+      this.updateHud();
+      return;
+    }
+    this.motionScrubMode = next;
+    if (next && autoPause) {
+      this.motionPaused = true;
+      this.updateMotionToggleButton();
+    }
+    this.updateHud();
+  }
+
+  advanceMotionByDeltaSeconds(deltaSeconds, ignorePause = false) {
+    const dt = Number(deltaSeconds);
+    if (!Number.isFinite(dt)) {
+      return;
+    }
+    const speed = ignorePause ? this.motionSpeedPxPerSecond : this.motionPaused ? 0 : this.motionSpeedPxPerSecond;
+    this.travelArcA = this.wrapArc(
+      this.travelArcA + dt * speed * this.travelDirectionA,
+      this.baseArcLenA
+    );
+    this.travelArcB = this.wrapArc(
+      this.travelArcB + dt * speed * this.travelDirectionB,
+      this.baseArcLenB
+    );
+    const motionDt = Math.abs(speed) > 1e-6 ? Math.abs(dt) : 0;
+    if (motionDt > 0 && this.blendDebug) {
+      this.blendDebug.frame += 1;
+    }
+    this.updateTravelWaves(motionDt);
+    this.updateTravelMarkers();
+    this.buildVertices();
+    this.render();
+  }
+
+  stepMotionScrub(direction, stepScale = 1) {
+    const dir = Math.sign(direction);
+    if (!dir) {
+      return;
+    }
+    if (!this.motionScrubMode) {
+      this.setMotionScrubMode(true, true);
+    }
+    const scale = Math.max(1, Math.floor(Number(stepScale) || 1));
+    const dt = this.motionScrubStepSeconds * scale * dir;
+    this.advanceMotionByDeltaSeconds(dt, true);
+    this.updateHud();
+  }
+
   updateBaselineAModeButton() {
     if (!this.baselineAModeButton) {
       return;
     }
     this.baselineAModeButton.textContent =
       this.baselineAMode === "arc" ? "Baseline B: Arc" : "Baseline B: Current";
+  }
+
+  getPrimaryBlendModeLabel(mode = this.primaryBlendMode) {
+    switch (mode) {
+      case BLEND_MODE_FROZEN_PHASE:
+        return "Frozen Phase";
+      case BLEND_MODE_ARC_LENGTH:
+        return "Arc Length";
+      case BLEND_MODE_SEAM_INVARIANT:
+        return "Seam Invariant";
+      case BLEND_MODE_DIRECT_INDEX:
+      default:
+        return "Direct Index";
+    }
+  }
+
+  resetPrimaryBlendPhase() {
+    this.primaryBlendFrozenState.initialized = false;
+    this.primaryBlendFrozenState.segCount = 0;
+    this.primaryBlendFrozenState.reverseFrom = false;
+    this.primaryBlendFrozenState.phase = 0;
+    this.primaryBlendFrozenState.target = 0;
+  }
+
+  createBlendMapTransitionState() {
+    return {
+      primed: false,
+      active: false,
+      prevSkipStart: -1,
+      prevSkipEnd: -1,
+      prevSeamPeriod: Math.max(1, this.n - 1),
+      prevSeamSource: "none",
+      elapsedSec: 0,
+      durationSec: 1,
+      lastDeltaStart: 0,
+      lastDeltaEnd: 0,
+      prevCurve: new Float32Array(this.n * 2),
+      fromCurve: new Float32Array(this.n * 2),
+      targetCurve: new Float32Array(this.n * 2),
+      workCurve: new Float32Array(this.n * 2)
+    };
+  }
+
+  pushBlendDebugEvent(label, message) {
+    if (!this.blendDebug) {
+      return;
+    }
+    const list = label === "A" ? this.blendDebug.eventLogA : this.blendDebug.eventLogB;
+    list.push(message);
+    if (list.length > 6) {
+      list.shift();
+    }
+  }
+
+  maxCurveDeltaPx(curveA, curveB, sampleStep = 1) {
+    if (!curveA?.length || !curveB?.length) {
+      return 0;
+    }
+    const cw = this.canvas.width;
+    const ch = this.canvas.height;
+    let maxDist = 0;
+    const step = Math.max(1, sampleStep | 0);
+    for (let i = 0; i < this.n; i += step) {
+      const k = i * 2;
+      const dx = (curveA[k] - curveB[k]) * cw;
+      const dy = (curveA[k + 1] - curveB[k + 1]) * ch;
+      const d = Math.hypot(dx, dy);
+      if (d > maxDist) {
+        maxDist = d;
+      }
+    }
+    return maxDist;
+  }
+
+  resetBlendMapTransitions() {
+    const resetOne = (state) => {
+      if (!state) {
+        return;
+      }
+      state.primed = false;
+      state.active = false;
+      state.prevSkipStart = -1;
+      state.prevSkipEnd = -1;
+      state.prevSeamPeriod = Math.max(1, this.n - 1);
+      state.prevSeamSource = "none";
+      state.elapsedSec = 0;
+      state.durationSec = 1;
+    };
+    resetOne(this.blendMapA);
+    resetOne(this.blendMapB);
+  }
+
+  resolveBlendTransitionSeam(skipStart, skipEnd, orderStart, orderEnd, orderCount) {
+    if (this.hasSkipRange(skipStart, skipEnd)) {
+      return {
+        start: skipStart,
+        end: skipEnd,
+        period: Math.max(1, this.n - 1),
+        source: "skip"
+      };
+    }
+    if (
+      Number.isFinite(orderStart) &&
+      Number.isFinite(orderEnd) &&
+      Number.isFinite(orderCount) &&
+      orderCount > 1
+    ) {
+      return {
+        start: orderStart,
+        end: orderEnd,
+        period: Math.max(2, orderCount | 0),
+        source: "order"
+      };
+    }
+    return {
+      start: -1,
+      end: -1,
+      period: Math.max(1, this.n - 1),
+      source: "none"
+    };
+  }
+
+  resetBlendDebugStats() {
+    if (!this.blendDebug) {
+      return;
+    }
+    this.blendDebug.frame = 0;
+    this.blendDebug.mode = this.primaryBlendMode;
+    this.blendDebug.reverseFrom = false;
+    this.blendDebug.phase = 0;
+    this.blendDebug.useTransition = false;
+    this.blendDebug.rawWorkPxA = 0;
+    this.blendDebug.rawWorkPxB = 0;
+    this.blendDebug.seamEventsA = 0;
+    this.blendDebug.seamEventsB = 0;
+    this.blendDebug.seamSignificantA = 0;
+    this.blendDebug.seamSignificantB = 0;
+    this.blendDebug.transitionStartsA = 0;
+    this.blendDebug.transitionStartsB = 0;
+    this.blendDebug.transitionRestartsA = 0;
+    this.blendDebug.transitionRestartsB = 0;
+    this.blendDebug.eventLogA.length = 0;
+    this.blendDebug.eventLogB.length = 0;
+    this.blendDebug.probePrimed = false;
+    this.blendDebug.jumpRawAllPx = 0;
+    this.blendDebug.jumpSmoothAllPx = 0;
+    this.blendDebug.jumpRawAwayPx = 0;
+    this.blendDebug.jumpSmoothAwayPx = 0;
+    this.blendDebug.seamLocalityRaw = 1;
+    this.blendDebug.seamLocalitySmooth = 1;
+    this.blendDebug.seamCutSuspect = false;
+    this.blendDebugSeamAStart = -1;
+    this.blendDebugSeamBStart = -1;
+    this.blendDebugSeamASource = "none";
+    this.blendDebugSeamBSource = "none";
+  }
+
+  isBlendMapTransitionMode(mode = this.primaryBlendMode) {
+    return (
+      mode === BLEND_MODE_DIRECT_INDEX ||
+      mode === BLEND_MODE_FROZEN_PHASE ||
+      mode === BLEND_MODE_ARC_LENGTH
+    );
+  }
+
+  easeBlendMapTransition(t) {
+    const tc = clamp(t, 0, 1);
+    return tc * tc * (3 - 2 * tc);
+  }
+
+  circularSegmentDelta(next, prev, segCount) {
+    if (!Number.isFinite(next) || !Number.isFinite(prev) || segCount <= 0) {
+      return 0;
+    }
+    let d = next - prev;
+    const half = segCount * 0.5;
+    if (d > half) {
+      d -= segCount;
+    } else if (d < -half) {
+      d += segCount;
+    }
+    return d;
+  }
+
+  isSignificantSeamJump(prevStart, prevEnd, nextStart, nextEnd, period) {
+    if (prevStart < 0 || prevEnd < 0 || nextStart < 0 || nextEnd < 0) {
+      return true;
+    }
+    const segCount = Math.max(1, period | 0);
+    const dStart = Math.abs(this.circularSegmentDelta(nextStart, prevStart, segCount));
+    const dEnd = Math.abs(this.circularSegmentDelta(nextEnd, prevEnd, segCount));
+    return (
+      dStart > this.blendMapSeamJumpToleranceSegments ||
+      dEnd > this.blendMapSeamJumpToleranceSegments
+    );
+  }
+
+  estimateNextSeamEventSeconds(anchorStates, totalArc, arcOffset, direction) {
+    if (!Array.isArray(anchorStates) || !anchorStates.length || totalArc <= 1e-6) {
+      return Number.POSITIVE_INFINITY;
+    }
+    const speedAbs = Math.abs(this.motionSpeedPxPerSecond);
+    if (speedAbs <= 1e-6) {
+      return Number.POSITIVE_INFINITY;
+    }
+    const dir = Math.sign(direction) || 1;
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < anchorStates.length; i += 1) {
+      const state = anchorStates[i];
+      const u = this.wrapArc(state.u0 + arcOffset, totalArc);
+      let dist = dir >= 0 ? totalArc - u : u;
+      if (dist < 1e-6) {
+        dist = totalArc;
+      }
+      const seconds = dist / speedAbs;
+      if (seconds > 1e-6 && seconds < best) {
+        best = seconds;
+      }
+    }
+    return best;
+  }
+
+  updateSingleBlendMapTransition(
+    label,
+    state,
+    curve,
+    seamStart,
+    seamEnd,
+    seamPeriod,
+    seamSource,
+    anchorStates,
+    totalArc,
+    arcOffset,
+    direction,
+    dtSeconds
+  ) {
+    if (!state || !curve?.length) {
+      return curve;
+    }
+
+    if (!state.primed) {
+      state.prevCurve.set(curve);
+      state.workCurve.set(curve);
+      state.prevSkipStart = seamStart;
+      state.prevSkipEnd = seamEnd;
+      state.prevSeamPeriod = Math.max(1, seamPeriod | 0);
+      state.prevSeamSource = seamSource || "none";
+      state.primed = true;
+      state.active = false;
+      return state.workCurve;
+    }
+
+    const segCount = Math.max(1, seamPeriod | 0);
+    const seamChanged =
+      state.prevSkipStart !== seamStart ||
+      state.prevSkipEnd !== seamEnd ||
+      state.prevSeamPeriod !== segCount ||
+      state.prevSeamSource !== seamSource;
+    const dStart = this.circularSegmentDelta(seamStart, state.prevSkipStart, segCount);
+    const dEnd = this.circularSegmentDelta(seamEnd, state.prevSkipEnd, segCount);
+    let seamJump = false;
+    if (seamChanged) {
+      if (seamSource === "order" && state.prevSeamSource === "order") {
+        seamJump =
+          seamStart >= 0 &&
+          seamEnd >= 0 &&
+          state.prevSkipStart >= 0 &&
+          state.prevSkipEnd >= 0;
+      } else {
+        seamJump = this.isSignificantSeamJump(
+          state.prevSkipStart,
+          state.prevSkipEnd,
+          seamStart,
+          seamEnd,
+          segCount
+        );
+      }
+    }
+    if (seamChanged && this.blendDebug) {
+      if (label === "A") {
+        this.blendDebug.seamEventsA += 1;
+      } else {
+        this.blendDebug.seamEventsB += 1;
+      }
+      this.pushBlendDebugEvent(
+        label,
+        `f${this.blendDebug.frame} ${state.prevSeamSource}:${state.prevSkipStart}/${state.prevSkipEnd} -> ${seamSource}:${seamStart}/${seamEnd} p${segCount} d(${dStart.toFixed(2)},${dEnd.toFixed(2)}) ${seamJump ? "jump" : "minor"}`
+      );
+      if (seamJump) {
+        if (label === "A") {
+          this.blendDebug.seamSignificantA += 1;
+        } else {
+          this.blendDebug.seamSignificantB += 1;
+        }
+      }
+    }
+    state.lastDeltaStart = dStart;
+    state.lastDeltaEnd = dEnd;
+    if (seamJump) {
+      if (state.active) {
+        state.fromCurve.set(state.workCurve);
+        if (this.blendDebug) {
+          if (label === "A") {
+            this.blendDebug.transitionRestartsA += 1;
+          } else {
+            this.blendDebug.transitionRestartsB += 1;
+          }
+        }
+      } else {
+        state.fromCurve.set(state.prevCurve);
+      }
+      state.targetCurve.set(curve);
+      state.elapsedSec = 0;
+      const nextSeconds = this.estimateNextSeamEventSeconds(
+        anchorStates,
+        totalArc,
+        arcOffset,
+        direction
+      );
+      const fallback = Number.isFinite(state.durationSec) ? state.durationSec : 0.35;
+      state.durationSec = clamp(
+        Number.isFinite(nextSeconds) ? nextSeconds : fallback,
+        this.blendMapMinDurationSec,
+        this.blendMapMaxDurationSec
+      );
+      state.active = true;
+      if (this.blendDebug) {
+        if (label === "A") {
+          this.blendDebug.transitionStartsA += 1;
+        } else {
+          this.blendDebug.transitionStartsB += 1;
+        }
+      }
+    }
+
+    if (state.active) {
+      // Follow the continuously moving target mapping so the transition lands
+      // on the live geometry, not on a stale snapshot.
+      state.targetCurve.set(curve);
+      state.elapsedSec += Math.max(0, Number(dtSeconds) || 0);
+      const t = clamp(state.elapsedSec / Math.max(1e-6, state.durationSec), 0, 1);
+      const w = this.easeBlendMapTransition(t);
+      const inv = 1 - w;
+      for (let i = 0; i < this.n * 2; i += 1) {
+        state.workCurve[i] = state.fromCurve[i] * inv + state.targetCurve[i] * w;
+      }
+      if (t >= 1 - 1e-6) {
+        state.active = false;
+        state.workCurve.set(state.targetCurve);
+      }
+    } else {
+      state.workCurve.set(curve);
+    }
+
+    state.prevCurve.set(curve);
+    state.prevSkipStart = seamStart;
+    state.prevSkipEnd = seamEnd;
+    state.prevSeamPeriod = segCount;
+    state.prevSeamSource = seamSource || "none";
+    return state.workCurve;
+  }
+
+  updateBlendMapTransitions(dtSeconds = 0) {
+    if (!this.isBlendMapTransitionMode()) {
+      this.resetBlendMapTransitions();
+      this.blendDebugSeamAStart = -1;
+      this.blendDebugSeamBStart = -1;
+      this.blendDebugSeamASource = "none";
+      this.blendDebugSeamBSource = "none";
+      return;
+    }
+    const dt = Math.max(0, Number(dtSeconds) || 0);
+    const seamA = this.resolveBlendTransitionSeam(
+      this.waveSkipAStart,
+      this.waveSkipAEnd,
+      this.waveOrderAStart,
+      this.waveOrderAEnd,
+      this.waveOrderACount
+    );
+    const seamB = this.resolveBlendTransitionSeam(
+      this.waveSkipBStart,
+      this.waveSkipBEnd,
+      this.waveOrderBStart,
+      this.waveOrderBEnd,
+      this.waveOrderBCount
+    );
+    this.blendDebugSeamAStart = seamA.source === "skip" ? seamA.start : -1;
+    this.blendDebugSeamBStart = seamB.source === "skip" ? seamB.start : -1;
+    this.blendDebugSeamASource = seamA.source;
+    this.blendDebugSeamBSource = seamB.source;
+    this.updateSingleBlendMapTransition(
+      "A",
+      this.blendMapA,
+      this.waveTravelA,
+      seamA.start,
+      seamA.end,
+      seamA.period,
+      seamA.source,
+      this.anchorStateA,
+      this.baseArcLenA,
+      this.travelArcA,
+      this.travelDirectionA,
+      dt
+    );
+    this.updateSingleBlendMapTransition(
+      "B",
+      this.blendMapB,
+      this.waveTravelB,
+      seamB.start,
+      seamB.end,
+      seamB.period,
+      seamB.source,
+      this.anchorStateB,
+      this.baseArcLenB,
+      this.travelArcB,
+      this.travelDirectionB,
+      dt
+    );
+  }
+
+  circularIndexDistance(a, b, period) {
+    if (!Number.isFinite(a) || !Number.isFinite(b) || period <= 0) {
+      return Number.POSITIVE_INFINITY;
+    }
+    let d = Math.abs(a - b);
+    if (d > period * 0.5) {
+      d = period - d;
+    }
+    return d;
+  }
+
+  computeMappedSeamIndexForFrom(skipStart, reverseFrom, phase, segCount) {
+    if (!Number.isFinite(skipStart) || skipStart < 0) {
+      return -1;
+    }
+    const base = reverseFrom ? segCount - 1 - skipStart : skipStart;
+    const idx = base - phase;
+    return this.wrapSegmentIndex(Math.round(idx), segCount);
+  }
+
+  buildProbeBlendCurve(mode, fromCurve, toCurve, reverseFrom, phase, t, outCurve) {
+    const tc = clamp(t, 0, 1);
+    const segCount = Math.max(1, this.n - 1);
+
+    if (mode === BLEND_MODE_ARC_LENGTH) {
+      const fromLen = this.computeArcTable(fromCurve, this.blendDebugArcFrom);
+      const toLen = this.computeArcTable(toCurve, this.blendDebugArcTo);
+      const phaseNorm = phase / segCount;
+      for (let i = 0; i <= segCount; i += 1) {
+        const u = i / segCount;
+        let uf = reverseFrom ? 1 - u : u;
+        uf = this.wrapUnit(uf + phaseNorm);
+        const fromP = this.sampleFloat2AtArc(fromCurve, this.blendDebugArcFrom, uf * fromLen);
+        const toP = this.sampleFloat2AtArc(toCurve, this.blendDebugArcTo, u * toLen);
+        const k = i * 2;
+        outCurve[k] = lerp(fromP.x, toP.x, tc);
+        outCurve[k + 1] = lerp(fromP.y, toP.y, tc);
+      }
+      return outCurve;
+    }
+
+    for (let i = 0; i < segCount; i += 1) {
+      const mappedBase = reverseFrom ? segCount - 1 - i : i;
+      const jFloat = mappedBase + phase;
+      const jFloor = Math.floor(jFloat);
+      const frac = jFloat - jFloor;
+      const jA = this.wrapSegmentIndex(jFloor, segCount);
+      const jB = this.wrapSegmentIndex(jFloor + 1, segCount);
+
+      const k0 = i * 2;
+      const k1 = (i + 1) * 2;
+      const a0 = jA * 2;
+      const a1 = (jA + 1) * 2;
+      const b0 = jB * 2;
+      const b1 = (jB + 1) * 2;
+
+      const fromX0 = lerp(fromCurve[a0], fromCurve[b0], frac);
+      const fromY0 = lerp(fromCurve[a0 + 1], fromCurve[b0 + 1], frac);
+      const fromX1 = lerp(fromCurve[a1], fromCurve[b1], frac);
+      const fromY1 = lerp(fromCurve[a1 + 1], fromCurve[b1 + 1], frac);
+
+      outCurve[k0] = lerp(fromX0, toCurve[k0], tc);
+      outCurve[k0 + 1] = lerp(fromY0, toCurve[k0 + 1], tc);
+      outCurve[k1] = lerp(fromX1, toCurve[k1], tc);
+      outCurve[k1 + 1] = lerp(fromY1, toCurve[k1 + 1], tc);
+    }
+    return outCurve;
+  }
+
+  updateBlendDebugProbeMetrics({
+    blendMode,
+    reverseFrom,
+    phase,
+    rawFromCurve,
+    rawToCurve,
+    blendFromCurve,
+    blendToCurve
+  }) {
+    if (!this.blendDebug) {
+      return;
+    }
+    const dbg = this.blendDebug;
+    dbg.mode = blendMode;
+    dbg.reverseFrom = !!reverseFrom;
+    dbg.phase = Number(phase) || 0;
+    dbg.useTransition = !!(
+      this.isBlendMapTransitionMode(blendMode) &&
+      (this.blendMapA?.active || this.blendMapB?.active)
+    );
+    dbg.rawWorkPxA = this.maxCurveDeltaPx(rawToCurve, blendToCurve, 8);
+    dbg.rawWorkPxB = this.maxCurveDeltaPx(rawFromCurve, blendFromCurve, 8);
+
+    const segCount = Math.max(1, this.n - 1);
+    const probeRaw = dbg.probeRawScratch;
+    const probeSmooth = dbg.probeSmoothScratch;
+    this.buildProbeBlendCurve(
+      blendMode,
+      rawFromCurve,
+      rawToCurve,
+      reverseFrom,
+      phase,
+      0.5,
+      probeRaw
+    );
+    this.buildProbeBlendCurve(
+      blendMode,
+      blendFromCurve,
+      blendToCurve,
+      reverseFrom,
+      phase,
+      0.5,
+      probeSmooth
+    );
+
+    const seamA = this.blendDebugSeamAStart >= 0 ? this.blendDebugSeamAStart : this.waveSkipAStart;
+    const seamB = this.computeMappedSeamIndexForFrom(
+      this.blendDebugSeamBStart >= 0 ? this.blendDebugSeamBStart : this.waveSkipBStart,
+      reverseFrom,
+      phase,
+      segCount
+    );
+    const seamWindow = 18;
+
+    if (!dbg.probePrimed) {
+      dbg.prevProbeRaw.set(probeRaw);
+      dbg.prevProbeSmooth.set(probeSmooth);
+      dbg.probePrimed = true;
+      dbg.jumpRawAllPx = 0;
+      dbg.jumpSmoothAllPx = 0;
+      dbg.jumpRawAwayPx = 0;
+      dbg.jumpSmoothAwayPx = 0;
+      dbg.seamLocalityRaw = 1;
+      dbg.seamLocalitySmooth = 1;
+      dbg.seamCutSuspect = false;
+      return;
+    }
+
+    const cw = this.canvas.width;
+    const ch = this.canvas.height;
+    let maxRawAll = 0;
+    let maxSmoothAll = 0;
+    let maxRawAway = 0;
+    let maxSmoothAway = 0;
+
+    for (let i = 0; i < this.n; i += 1) {
+      const k = i * 2;
+      const drx = (probeRaw[k] - dbg.prevProbeRaw[k]) * cw;
+      const dry = (probeRaw[k + 1] - dbg.prevProbeRaw[k + 1]) * ch;
+      const dsx = (probeSmooth[k] - dbg.prevProbeSmooth[k]) * cw;
+      const dsy = (probeSmooth[k + 1] - dbg.prevProbeSmooth[k + 1]) * ch;
+      const dRaw = Math.hypot(drx, dry);
+      const dSmooth = Math.hypot(dsx, dsy);
+      if (dRaw > maxRawAll) {
+        maxRawAll = dRaw;
+      }
+      if (dSmooth > maxSmoothAll) {
+        maxSmoothAll = dSmooth;
+      }
+
+      const distA = seamA >= 0 ? this.circularIndexDistance(i, seamA, this.n) : Number.POSITIVE_INFINITY;
+      const distB = seamB >= 0 ? this.circularIndexDistance(i, seamB, this.n) : Number.POSITIVE_INFINITY;
+      const nearSeam = Math.min(distA, distB) <= seamWindow;
+      if (!nearSeam) {
+        if (dRaw > maxRawAway) {
+          maxRawAway = dRaw;
+        }
+        if (dSmooth > maxSmoothAway) {
+          maxSmoothAway = dSmooth;
+        }
+      }
+    }
+
+    dbg.jumpRawAllPx = maxRawAll;
+    dbg.jumpSmoothAllPx = maxSmoothAll;
+    dbg.jumpRawAwayPx = maxRawAway;
+    dbg.jumpSmoothAwayPx = maxSmoothAway;
+    dbg.seamLocalityRaw = maxRawAway > 1e-6 ? maxRawAll / maxRawAway : Number.POSITIVE_INFINITY;
+    dbg.seamLocalitySmooth = maxSmoothAway > 1e-6 ? maxSmoothAll / maxSmoothAway : Number.POSITIVE_INFINITY;
+    dbg.seamCutSuspect =
+      dbg.seamLocalitySmooth > 1.8 && dbg.jumpSmoothAwayPx < dbg.jumpSmoothAllPx * 0.7;
+
+    dbg.prevProbeRaw.set(probeRaw);
+    dbg.prevProbeSmooth.set(probeSmooth);
+  }
+
+  getBlendDebugSectionLines() {
+    if (!this.blendDebug) {
+      return [];
+    }
+    const dbg = this.blendDebug;
+    const aState = this.blendMapA;
+    const bState = this.blendMapB;
+    const fmtPx = (v) => (Number.isFinite(v) ? `${Number(v).toFixed(3)}px` : "n/a");
+    const fmtNum = (v) => (Number.isFinite(v) ? Number(v).toFixed(3) : "n/a");
+    const aProg = aState?.active
+      ? Math.max(0, Math.min(1, aState.elapsedSec / Math.max(1e-6, aState.durationSec)))
+      : 1;
+    const bProg = bState?.active
+      ? Math.max(0, Math.min(1, bState.elapsedSec / Math.max(1e-6, bState.durationSec)))
+      : 1;
+    const lastA = dbg.eventLogA.length ? dbg.eventLogA[dbg.eventLogA.length - 1] : "none";
+    const lastB = dbg.eventLogB.length ? dbg.eventLogB[dbg.eventLogB.length - 1] : "none";
+    return [
+      "----- Blend Debug -----",
+      `1) seam events A ${dbg.seamEventsA} (sig ${dbg.seamSignificantA}) src ${this.blendDebugSeamASource} last ${lastA} | B ${dbg.seamEventsB} (sig ${dbg.seamSignificantB}) src ${this.blendDebugSeamBSource} last ${lastB}`,
+      `2) transition A ${aState?.active ? "active" : "idle"} p ${fmtNum(aProg)} t ${fmtNum(aState?.elapsedSec)}/${fmtNum(aState?.durationSec)}s starts ${dbg.transitionStartsA} restarts ${dbg.transitionRestartsA} | B ${bState?.active ? "active" : "idle"} p ${fmtNum(bProg)} t ${fmtNum(bState?.elapsedSec)}/${fmtNum(bState?.durationSec)}s starts ${dbg.transitionStartsB} restarts ${dbg.transitionRestartsB}`,
+      `3) curve usage mode ${dbg.mode} reverse ${dbg.reverseFrom ? "yes" : "no"} phase ${fmtNum(dbg.phase)} transition ${dbg.useTransition ? "yes" : "no"} raw-vs-used A ${fmtPx(dbg.rawWorkPxA)} B ${fmtPx(dbg.rawWorkPxB)}`,
+      `4) probe jump t=0.5 raw all ${fmtPx(dbg.jumpRawAllPx)} away ${fmtPx(dbg.jumpRawAwayPx)} | smooth all ${fmtPx(dbg.jumpSmoothAllPx)} away ${fmtPx(dbg.jumpSmoothAwayPx)}`,
+      `5) seam-cut check locality raw ${fmtNum(dbg.seamLocalityRaw)} smooth ${fmtNum(dbg.seamLocalitySmooth)} suspect ${dbg.seamCutSuspect ? "yes" : "no"}`
+    ];
+  }
+
+  updateBlendModeButton() {
+    if (!this.blendModeButton) {
+      return;
+    }
+    this.blendModeButton.textContent = `Blend: ${this.getPrimaryBlendModeLabel()}`;
+  }
+
+  setPrimaryBlendMode(mode) {
+    if (!PRIMARY_BLEND_MODES.includes(mode)) {
+      return;
+    }
+    if (this.primaryBlendMode === mode) {
+      this.updateBlendModeButton();
+      return;
+    }
+    this.primaryBlendMode = mode;
+    this.resetPrimaryBlendPhase();
+    this.resetBlendMapTransitions();
+    this.resetBlendDebugStats();
+    this.updateBlendModeButton();
+    this.buildVertices();
+    this.render();
+    this.updateHud();
+  }
+
+  cyclePrimaryBlendMode(step = 1) {
+    const modes = PRIMARY_BLEND_MODES;
+    if (!modes.length) {
+      return;
+    }
+    const current = modes.indexOf(this.primaryBlendMode);
+    const base = current >= 0 ? current : 0;
+    const next = ((base + step) % modes.length + modes.length) % modes.length;
+    this.setPrimaryBlendMode(modes[next]);
   }
 
   resetBaselineAPivotTracking() {
@@ -1662,6 +2472,8 @@ class WaveOriginalRenderer {
         return;
       case "f":
       case "F":
+        this.cyclePrimaryBlendMode(1);
+        event.preventDefault();
         return;
       case "b":
       case "B":
@@ -1673,6 +2485,8 @@ class WaveOriginalRenderer {
         return;
       case "t":
       case "T":
+        this.setMotionScrubMode(!this.motionScrubMode, true);
+        event.preventDefault();
         return;
       case "u":
       case "U":
@@ -1697,6 +2511,11 @@ class WaveOriginalRenderer {
         return;
       case ",":
       case "<":
+        if (this.motionScrubMode) {
+          this.stepMotionScrub(-1, event.shiftKey ? 8 : 1);
+          event.preventDefault();
+          return;
+        }
         if (this.baselineAMode === "arc") {
           this.selectBaselineBAnchor(-1);
           changed = true;
@@ -1705,6 +2524,11 @@ class WaveOriginalRenderer {
         return;
       case ".":
       case ">":
+        if (this.motionScrubMode) {
+          this.stepMotionScrub(1, event.shiftKey ? 8 : 1);
+          event.preventDefault();
+          return;
+        }
         if (this.baselineAMode === "arc") {
           this.selectBaselineBAnchor(1);
           changed = true;
@@ -1760,6 +2584,11 @@ class WaveOriginalRenderer {
         this.systemEnabled.harmonic = false;
         this.systemEnabled.key = true;
         this.overlayVisible = CONFIG.align.overlayDefaultVisible;
+        this.primaryBlendMode = BLEND_MODE_DIRECT_INDEX;
+        this.resetPrimaryBlendPhase();
+        this.resetBlendMapTransitions();
+        this.resetBlendDebugStats();
+        this.updateBlendModeButton();
         this.baselineAMode = "current";
         this.updateBaselineAModeButton();
         this.baselineAArcAnchors = [];
@@ -1805,6 +2634,11 @@ class WaveOriginalRenderer {
           this.keySystemToggle.checked = true;
         }
         this.applyOverlayState();
+        this.motionScrubMode = false;
+        this.motionScrubStepSeconds = Math.max(
+          1 / 240,
+          Number(CONFIG.motion.scrubStepSeconds) || 1 / 120
+        );
         this.motionPaused = false;
         this.updateMotionToggleButton();
         changed = true;
@@ -3794,6 +4628,7 @@ class WaveOriginalRenderer {
     this.waveArcU0B.set(this.baseArcB);
     this.waveSecondaryArcU0A.set(this.baseSecondaryArcA);
     this.waveSecondaryArcU0B.set(this.baseSecondaryArcB);
+    this.resetBlendMapTransitions();
     this.updateTravelWaves();
   }
 
@@ -3878,10 +4713,17 @@ class WaveOriginalRenderer {
     this.waveSkipAEnd = -1;
     this.waveSkipBStart = -1;
     this.waveSkipBEnd = -1;
+    this.waveOrderAStart = -1;
+    this.waveOrderAEnd = -1;
+    this.waveOrderACount = 0;
+    this.waveOrderBStart = -1;
+    this.waveOrderBEnd = -1;
+    this.waveOrderBCount = 0;
     this.waveSecondarySkipAStart = -1;
     this.waveSecondarySkipAEnd = -1;
     this.waveSecondarySkipBStart = -1;
     this.waveSecondarySkipBEnd = -1;
+    this.resetBlendMapTransitions();
     this.updateTravelWaves();
   }
 
@@ -4236,6 +5078,9 @@ class WaveOriginalRenderer {
       return {
         skipStart: -1,
         skipEnd: -1,
+        orderStart: -1,
+        orderEnd: -1,
+        orderCount: 0,
         maxOrthDot: 0,
         maxHandleLenErrorPx: 0,
         minAdjacentAnchorPx: Infinity,
@@ -4426,6 +5271,9 @@ class WaveOriginalRenderer {
       return {
         skipStart: -1,
         skipEnd: -1,
+        orderStart: -1,
+        orderEnd: -1,
+        orderCount: 0,
         maxOrthDot,
         maxHandleLenErrorPx,
         minAdjacentAnchorPx: Infinity,
@@ -4608,6 +5456,9 @@ class WaveOriginalRenderer {
       return {
         skipStart: -1,
         skipEnd: -1,
+        orderStart: anchorOrder.length ? anchorOrder[0] : -1,
+        orderEnd: anchorOrder.length ? anchorOrder[anchorOrder.length - 1] : -1,
+        orderCount: anchorOrder.length,
         maxOrthDot,
         maxHandleLenErrorPx,
         minAdjacentAnchorPx,
@@ -4664,6 +5515,9 @@ class WaveOriginalRenderer {
     return {
       skipStart,
       skipEnd,
+      orderStart: anchorOrder.length ? anchorOrder[0] : -1,
+      orderEnd: anchorOrder.length ? anchorOrder[anchorOrder.length - 1] : -1,
+      orderCount: anchorOrder.length,
       maxOrthDot,
       maxHandleLenErrorPx,
       minAdjacentAnchorPx,
@@ -4857,7 +5711,7 @@ class WaveOriginalRenderer {
     this.copyMarkerPositions(this.constraintSecondaryAnchorB, this.markerPosSecondaryB);
   }
 
-  updateTravelWaves() {
+  updateTravelWaves(dtSeconds = 0) {
     this.applyBaselineAInteractiveMorph();
     this.applyBaselineBArcEditState();
 
@@ -4883,6 +5737,9 @@ class WaveOriginalRenderer {
       );
       this.waveSkipAStart = seamA.skipStart;
       this.waveSkipAEnd = seamA.skipEnd;
+      this.waveOrderAStart = seamA.orderStart;
+      this.waveOrderAEnd = seamA.orderEnd;
+      this.waveOrderACount = seamA.orderCount;
       this.constraintOrthDotA = seamA.maxOrthDot;
       this.handleLenErrorPxA = seamA.maxHandleLenErrorPx;
       this.adjMinPxA = seamA.minAdjacentAnchorPx;
@@ -4900,6 +5757,9 @@ class WaveOriginalRenderer {
       );
       this.waveSkipAStart = -1;
       this.waveSkipAEnd = -1;
+      this.waveOrderAStart = -1;
+      this.waveOrderAEnd = -1;
+      this.waveOrderACount = 0;
       this.constraintOrthDotA = 0;
       this.handleLenErrorPxA = 0;
       this.adjMinPxA = Infinity;
@@ -4928,6 +5788,9 @@ class WaveOriginalRenderer {
       );
       this.waveSkipBStart = seamB.skipStart;
       this.waveSkipBEnd = seamB.skipEnd;
+      this.waveOrderBStart = seamB.orderStart;
+      this.waveOrderBEnd = seamB.orderEnd;
+      this.waveOrderBCount = seamB.orderCount;
       this.constraintOrthDotB = seamB.maxOrthDot;
       this.handleLenErrorPxB = seamB.maxHandleLenErrorPx;
       this.adjMinPxB = seamB.minAdjacentAnchorPx;
@@ -4945,11 +5808,38 @@ class WaveOriginalRenderer {
       );
       this.waveSkipBStart = -1;
       this.waveSkipBEnd = -1;
+      this.waveOrderBStart = -1;
+      this.waveOrderBEnd = -1;
+      this.waveOrderBCount = 0;
       this.constraintOrthDotB = 0;
       this.handleLenErrorPxB = 0;
       this.adjMinPxB = Infinity;
       this.adjClosePairsB = 0;
     }
+
+    // Seam-invariant blend source curves: sample by stable arc material coordinate (u0)
+    // instead of dynamic seam/index ordering used by moved cubic rendering.
+    this.writeTravelWave(
+      this.baseA,
+      this.baseNormA,
+      this.baseArcA,
+      this.baseArcLenA,
+      this.waveArcU0A,
+      this.waveDispA,
+      this.travelArcA,
+      this.waveStableA
+    );
+    this.writeTravelWave(
+      this.baseB,
+      this.baseNormB,
+      this.baseArcB,
+      this.baseArcLenB,
+      this.waveArcU0B,
+      this.waveDispB,
+      this.travelArcB,
+      this.waveStableB
+    );
+    this.updateBlendMapTransitions(dtSeconds);
 
     if (this.cubicSecondaryA.length && this.anchorSecondaryStateA.length) {
       const seamSecondaryA = this.writeMovedCubicWave(
@@ -5066,19 +5956,7 @@ class WaveOriginalRenderer {
       const dt = Math.min(0.05, (timeMs - this.lastFrameTimeMs) * 0.001);
       this.lastFrameTimeMs = timeMs;
 
-      const speed = this.motionPaused ? 0 : this.motionSpeedPxPerSecond;
-      this.travelArcA = this.wrapArc(
-        this.travelArcA + dt * speed * this.travelDirectionA,
-        this.baseArcLenA
-      );
-      this.travelArcB = this.wrapArc(
-        this.travelArcB + dt * speed * this.travelDirectionB,
-        this.baseArcLenB
-      );
-      this.updateTravelWaves();
-      this.updateTravelMarkers();
-      this.buildVertices();
-      this.render();
+      this.advanceMotionByDeltaSeconds(dt, false);
       if (this.hudVisible && (this.hudTickCounter++ & 15) === 0) {
         this.updateHud();
       }
@@ -5172,6 +6050,350 @@ class WaveOriginalRenderer {
         widthPx,
         color
       );
+    }
+    return ptr;
+  }
+
+  isSegmentInSkipRange(segmentIndex, skipStart, skipEnd) {
+    return this.hasSkipRange(skipStart, skipEnd) && segmentIndex >= skipStart && segmentIndex < skipEnd;
+  }
+
+  wrapSegmentIndex(index, segCount) {
+    if (segCount <= 0) {
+      return 0;
+    }
+    return ((index % segCount) + segCount) % segCount;
+  }
+
+  alignPeriodic(target, reference, period) {
+    if (!Number.isFinite(target) || !Number.isFinite(reference) || period <= 0) {
+      return target;
+    }
+    return target + Math.round((reference - target) / period) * period;
+  }
+
+  smoothToward(current, target, alpha = 0.18, maxStep = 0.22) {
+    if (!Number.isFinite(current)) {
+      return target;
+    }
+    const desired = lerp(current, target, clamp(alpha, 0, 1));
+    const delta = desired - current;
+    if (Math.abs(delta) <= maxStep) {
+      return desired;
+    }
+    return current + Math.sign(delta) * maxStep;
+  }
+
+  interpolatePrimaryBlendColor(t, out = this.primaryBlendColorScratch) {
+    const tc = clamp(t, 0, 1);
+    out[0] = lerp(COLORS.primaryB[0], COLORS.primaryA[0], tc);
+    out[1] = lerp(COLORS.primaryB[1], COLORS.primaryA[1], tc);
+    out[2] = lerp(COLORS.primaryB[2], COLORS.primaryA[2], tc);
+    out[3] = lerp(COLORS.primaryB[3], COLORS.primaryA[3], tc);
+    return out;
+  }
+
+  pushLerpedPolylineSkipRanges(
+    ptr,
+    fromCurve,
+    toCurve,
+    t,
+    widthPx,
+    color,
+    fromSkipStart,
+    fromSkipEnd,
+    toSkipStart,
+    toSkipEnd,
+    reverseFrom = false
+  ) {
+    const tc = clamp(t, 0, 1);
+    const count = Math.min((fromCurve.length / 2) | 0, (toCurve.length / 2) | 0, this.n);
+    const segCount = Math.max(0, count - 1);
+    if (segCount <= 0) {
+      return ptr;
+    }
+    for (let i = 0; i < segCount; i += 1) {
+      if (this.isSegmentInSkipRange(i, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+      if (this.isSegmentInSkipRange(i, toSkipStart, toSkipEnd)) {
+        continue;
+      }
+      const j = reverseFrom ? segCount - 1 - i : i;
+      if (this.isSegmentInSkipRange(j, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+      const k0 = i * 2;
+      const k1 = (i + 1) * 2;
+      const j0 = j * 2;
+      const j1 = (j + 1) * 2;
+      const x0 = lerp(fromCurve[j0], toCurve[k0], tc);
+      const y0 = lerp(fromCurve[j0 + 1], toCurve[k0 + 1], tc);
+      const x1 = lerp(fromCurve[j1], toCurve[k1], tc);
+      const y1 = lerp(fromCurve[j1 + 1], toCurve[k1 + 1], tc);
+      ptr = this.pushSegment(ptr, x0, y0, x1, y1, widthPx, color);
+    }
+    return ptr;
+  }
+
+  evaluateBlendPhaseScore(
+    fromCurve,
+    toCurve,
+    segCount,
+    phase,
+    reverseFrom,
+    fromSkipStart = -1,
+    fromSkipEnd = -1,
+    toSkipStart = -1,
+    toSkipEnd = -1
+  ) {
+    if (segCount <= 0) {
+      return Number.POSITIVE_INFINITY;
+    }
+    const step = Math.max(1, Math.floor(segCount / 64));
+    let score = 0;
+    let samples = 0;
+    const cw = this.canvas.width;
+    const ch = this.canvas.height;
+    for (let i = 0; i < segCount; i += step) {
+      if (this.isSegmentInSkipRange(i, toSkipStart, toSkipEnd)) {
+        continue;
+      }
+      const mappedBase = reverseFrom ? segCount - 1 - i : i;
+      const jFloat = mappedBase + phase;
+      const jFloor = Math.floor(jFloat);
+      const frac = jFloat - jFloor;
+      const jA = this.wrapSegmentIndex(jFloor, segCount);
+      const jB = this.wrapSegmentIndex(jFloor + 1, segCount);
+      if (this.isSegmentInSkipRange(jA, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+      if (this.isSegmentInSkipRange(jB, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+
+      const ak = i * 2;
+      const aMidX = 0.5 * (toCurve[ak] + toCurve[ak + 2]);
+      const aMidY = 0.5 * (toCurve[ak + 1] + toCurve[ak + 3]);
+
+      const a0 = jA * 2;
+      const a1 = (jA + 1) * 2;
+      const b0 = jB * 2;
+      const b1 = (jB + 1) * 2;
+      const bMidAX = 0.5 * (fromCurve[a0] + fromCurve[a1]);
+      const bMidAY = 0.5 * (fromCurve[a0 + 1] + fromCurve[a1 + 1]);
+      const bMidBX = 0.5 * (fromCurve[b0] + fromCurve[b1]);
+      const bMidBY = 0.5 * (fromCurve[b0 + 1] + fromCurve[b1 + 1]);
+
+      const bMidX = lerp(bMidAX, bMidBX, frac);
+      const bMidY = lerp(bMidAY, bMidBY, frac);
+      const dx = (aMidX - bMidX) * cw;
+      const dy = (aMidY - bMidY) * ch;
+      score += dx * dx + dy * dy;
+      samples += 1;
+    }
+    if (!samples) {
+      return Number.POSITIVE_INFINITY;
+    }
+    return score / samples;
+  }
+
+  getPrimaryFrozenBlendPhase(
+    fromCurve,
+    toCurve,
+    segCount,
+    reverseFrom,
+    fromSkipStart = -1,
+    fromSkipEnd = -1,
+    toSkipStart = -1,
+    toSkipEnd = -1
+  ) {
+    if (segCount <= 0) {
+      return 0;
+    }
+    const state = this.primaryBlendFrozenState;
+    const needsReset =
+      !state.initialized || state.segCount !== segCount || state.reverseFrom !== reverseFrom;
+    if (needsReset) {
+      const coarseStep = Math.max(1, Math.floor(segCount / 72));
+      let bestPhase = 0;
+      let bestScore = Number.POSITIVE_INFINITY;
+      for (let p = 0; p < segCount; p += coarseStep) {
+        const score = this.evaluateBlendPhaseScore(
+          fromCurve,
+          toCurve,
+          segCount,
+          p,
+          reverseFrom,
+          fromSkipStart,
+          fromSkipEnd,
+          toSkipStart,
+          toSkipEnd
+        );
+        if (score < bestScore) {
+          bestScore = score;
+          bestPhase = p;
+        }
+      }
+      state.initialized = true;
+      state.segCount = segCount;
+      state.reverseFrom = reverseFrom;
+      state.phase = bestPhase;
+      state.target = bestPhase;
+      return bestPhase;
+    }
+
+    const current = state.phase;
+    const offsets = [0, -1, 1, -2, 2, -0.5, 0.5];
+    let bestTarget = state.target;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < offsets.length; i += 1) {
+      const candidate = current + offsets[i];
+      const score = this.evaluateBlendPhaseScore(
+        fromCurve,
+        toCurve,
+        segCount,
+        candidate,
+        reverseFrom,
+        fromSkipStart,
+        fromSkipEnd,
+        toSkipStart,
+        toSkipEnd
+      );
+      if (score < bestScore) {
+        bestScore = score;
+        bestTarget = candidate;
+      }
+    }
+    bestTarget = this.alignPeriodic(bestTarget, current, segCount);
+    state.target = bestTarget;
+    state.phase = this.smoothToward(current, bestTarget, 0.18, 0.24);
+    return state.phase;
+  }
+
+  pushLerpedPolylineWithPhase(
+    ptr,
+    fromCurve,
+    toCurve,
+    t,
+    widthPx,
+    color,
+    phase,
+    reverseFrom,
+    fromSkipStart = -1,
+    fromSkipEnd = -1,
+    toSkipStart = -1,
+    toSkipEnd = -1
+  ) {
+    const tc = clamp(t, 0, 1);
+    const count = Math.min((fromCurve.length / 2) | 0, (toCurve.length / 2) | 0, this.n);
+    const segCount = Math.max(0, count - 1);
+    if (segCount <= 0) {
+      return ptr;
+    }
+    for (let i = 0; i < segCount; i += 1) {
+      if (this.isSegmentInSkipRange(i, toSkipStart, toSkipEnd)) {
+        continue;
+      }
+      const mappedBase = reverseFrom ? segCount - 1 - i : i;
+      const jFloat = mappedBase + phase;
+      const jFloor = Math.floor(jFloat);
+      const frac = jFloat - jFloor;
+      const jA = this.wrapSegmentIndex(jFloor, segCount);
+      const jB = this.wrapSegmentIndex(jFloor + 1, segCount);
+      if (this.isSegmentInSkipRange(jA, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+      if (this.isSegmentInSkipRange(jB, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+
+      const k0 = i * 2;
+      const k1 = (i + 1) * 2;
+      const a0 = jA * 2;
+      const a1 = (jA + 1) * 2;
+      const b0 = jB * 2;
+      const b1 = (jB + 1) * 2;
+
+      const fromX0 = lerp(fromCurve[a0], fromCurve[b0], frac);
+      const fromY0 = lerp(fromCurve[a0 + 1], fromCurve[b0 + 1], frac);
+      const fromX1 = lerp(fromCurve[a1], fromCurve[b1], frac);
+      const fromY1 = lerp(fromCurve[a1 + 1], fromCurve[b1 + 1], frac);
+
+      const x0 = lerp(fromX0, toCurve[k0], tc);
+      const y0 = lerp(fromY0, toCurve[k0 + 1], tc);
+      const x1 = lerp(fromX1, toCurve[k1], tc);
+      const y1 = lerp(fromY1, toCurve[k1 + 1], tc);
+      ptr = this.pushSegment(ptr, x0, y0, x1, y1, widthPx, color);
+    }
+    return ptr;
+  }
+
+  wrapUnit(value) {
+    return ((value % 1) + 1) % 1;
+  }
+
+  pushArcLengthLerpedPolyline(
+    ptr,
+    fromCurve,
+    toCurve,
+    t,
+    widthPx,
+    color,
+    phase,
+    reverseFrom,
+    fromSkipStart = -1,
+    fromSkipEnd = -1,
+    toSkipStart = -1,
+    toSkipEnd = -1
+  ) {
+    const tc = clamp(t, 0, 1);
+    const count = Math.min((fromCurve.length / 2) | 0, (toCurve.length / 2) | 0, this.n);
+    const segCount = Math.max(0, count - 1);
+    if (segCount <= 0) {
+      return ptr;
+    }
+
+    const fromLen = this.computeArcTable(fromCurve, this.primaryBlendArcFrom);
+    const toLen = this.computeArcTable(toCurve, this.primaryBlendArcTo);
+    if (fromLen <= 1e-6 || toLen <= 1e-6) {
+      return ptr;
+    }
+
+    const phaseNorm = phase / Math.max(1, segCount);
+    for (let i = 0; i < segCount; i += 1) {
+      if (this.isSegmentInSkipRange(i, toSkipStart, toSkipEnd)) {
+        continue;
+      }
+      const u0 = i / segCount;
+      const u1 = (i + 1) / segCount;
+
+      let uf0 = reverseFrom ? 1 - u0 : u0;
+      let uf1 = reverseFrom ? 1 - u1 : u1;
+      uf0 = this.wrapUnit(uf0 + phaseNorm);
+      uf1 = this.wrapUnit(uf1 + phaseNorm);
+      const mappedBase = reverseFrom ? segCount - 1 - i : i;
+      const jFloat = mappedBase + phase;
+      const jFloor = Math.floor(jFloat);
+      const jA = this.wrapSegmentIndex(jFloor, segCount);
+      const jB = this.wrapSegmentIndex(jFloor + 1, segCount);
+      if (this.isSegmentInSkipRange(jA, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+      if (this.isSegmentInSkipRange(jB, fromSkipStart, fromSkipEnd)) {
+        continue;
+      }
+
+      const fromP0 = this.sampleFloat2AtArc(fromCurve, this.primaryBlendArcFrom, uf0 * fromLen);
+      const fromP1 = this.sampleFloat2AtArc(fromCurve, this.primaryBlendArcFrom, uf1 * fromLen);
+      const toP0 = this.sampleFloat2AtArc(toCurve, this.primaryBlendArcTo, u0 * toLen);
+      const toP1 = this.sampleFloat2AtArc(toCurve, this.primaryBlendArcTo, u1 * toLen);
+
+      const x0 = lerp(fromP0.x, toP0.x, tc);
+      const y0 = lerp(fromP0.y, toP0.y, tc);
+      const x1 = lerp(fromP1.x, toP1.x, tc);
+      const y1 = lerp(fromP1.y, toP1.y, tc);
+      ptr = this.pushSegment(ptr, x0, y0, x1, y1, widthPx, color);
     }
     return ptr;
   }
@@ -5809,7 +7031,13 @@ class WaveOriginalRenderer {
     const segs = this.n - 1;
     const activeEnabled = !!this.systemEnabled[this.activeWaveSet];
     const secondaryEnabled = !!this.systemEnabled[this.secondaryWaveSet];
-    const primaryWaveVerts = activeEnabled ? segs * 6 * 2 : 0;
+    const primaryBlendWaveCount = Math.max(2, (this.primaryBlendInBetween | 0) + 2);
+    const hideBlendEndpoints = this.hidePrimaryBlendEndpoints && primaryBlendWaveCount > 2;
+    const primaryBlendDrawCount = Math.max(
+      0,
+      primaryBlendWaveCount - (hideBlendEndpoints ? 2 : 0)
+    );
+    const primaryWaveVerts = activeEnabled ? segs * 6 * primaryBlendDrawCount : 0;
     const secondaryWaveVerts = secondaryEnabled ? segs * 6 * 2 : 0;
     const secondaryBReplicaCopies =
       secondaryEnabled && this.enableSecondaryBReplicas
@@ -5946,22 +7174,139 @@ class WaveOriginalRenderer {
     }
 
     if (activeEnabled) {
-      ptr = this.pushPolylineSkipRange(
-        ptr,
-        this.waveTravelB,
-        CONFIG.stroke.widthB,
-        COLORS.primaryB,
-        this.waveSkipBStart,
-        this.waveSkipBEnd
-      );
-      ptr = this.pushPolylineSkipRange(
-        ptr,
-        this.waveTravelA,
-        CONFIG.stroke.widthA,
-        COLORS.primaryA,
-        this.waveSkipAStart,
-        this.waveSkipAEnd
-      );
+      const denom = Math.max(1, primaryBlendWaveCount - 1);
+      const reverseFromForBlend = this.travelDirectionA * this.travelDirectionB < 0;
+      const blendMode = this.primaryBlendMode;
+      const rawFromCurve =
+        blendMode === BLEND_MODE_SEAM_INVARIANT ? this.waveStableB : this.waveTravelB;
+      const rawToCurve =
+        blendMode === BLEND_MODE_SEAM_INVARIANT ? this.waveStableA : this.waveTravelA;
+      let blendFromCurve = rawFromCurve;
+      let blendToCurve = rawToCurve;
+      if (blendMode === BLEND_MODE_SEAM_INVARIANT) {
+        blendFromCurve = this.waveStableB;
+        blendToCurve = this.waveStableA;
+      } else if (this.isBlendMapTransitionMode(blendMode)) {
+        if (this.blendMapB?.primed) {
+          blendFromCurve = this.blendMapB.workCurve;
+        }
+        if (this.blendMapA?.primed) {
+          blendToCurve = this.blendMapA.workCurve;
+        }
+      }
+      const blendSegCount = Math.max(0, this.n - 1);
+      const phaseBlendMode =
+        blendMode === BLEND_MODE_FROZEN_PHASE || blendMode === BLEND_MODE_ARC_LENGTH;
+      const frozenPhase = phaseBlendMode
+        ? this.getPrimaryFrozenBlendPhase(
+              blendFromCurve,
+              blendToCurve,
+              blendSegCount,
+              reverseFromForBlend,
+              this.waveSkipBStart,
+              this.waveSkipBEnd,
+              this.waveSkipAStart,
+              this.waveSkipAEnd
+            )
+        : 0;
+      this.updateBlendDebugProbeMetrics({
+        blendMode,
+        reverseFrom: reverseFromForBlend,
+        phase: frozenPhase,
+        rawFromCurve,
+        rawToCurve,
+        blendFromCurve,
+        blendToCurve
+      });
+      for (let i = 0; i < primaryBlendWaveCount; i += 1) {
+        if (hideBlendEndpoints && (i === 0 || i === primaryBlendWaveCount - 1)) {
+          continue;
+        }
+        const t = i / denom;
+        const color = this.interpolatePrimaryBlendColor(t);
+        const width = lerp(CONFIG.stroke.widthB, CONFIG.stroke.widthA, t);
+        if (i === 0) {
+          ptr = this.pushPolylineSkipRange(
+            ptr,
+            this.waveTravelB,
+            width,
+            color,
+            this.waveSkipBStart,
+            this.waveSkipBEnd
+          );
+          continue;
+        }
+        if (i === primaryBlendWaveCount - 1) {
+          ptr = this.pushPolylineSkipRange(
+            ptr,
+            this.waveTravelA,
+            width,
+            color,
+            this.waveSkipAStart,
+            this.waveSkipAEnd
+          );
+          continue;
+        }
+        if (blendMode === BLEND_MODE_FROZEN_PHASE) {
+          ptr = this.pushLerpedPolylineWithPhase(
+            ptr,
+            blendFromCurve,
+            blendToCurve,
+            t,
+            width,
+            color,
+            frozenPhase,
+            reverseFromForBlend,
+            this.waveSkipBStart,
+            this.waveSkipBEnd,
+            this.waveSkipAStart,
+            this.waveSkipAEnd
+          );
+        } else if (blendMode === BLEND_MODE_ARC_LENGTH) {
+          ptr = this.pushArcLengthLerpedPolyline(
+            ptr,
+            blendFromCurve,
+            blendToCurve,
+            t,
+            width,
+            color,
+            frozenPhase,
+            reverseFromForBlend,
+            this.waveSkipBStart,
+            this.waveSkipBEnd,
+            this.waveSkipAStart,
+            this.waveSkipAEnd
+          );
+        } else if (blendMode === BLEND_MODE_SEAM_INVARIANT) {
+          ptr = this.pushLerpedPolylineSkipRanges(
+            ptr,
+            blendFromCurve,
+            blendToCurve,
+            t,
+            width,
+            color,
+            -1,
+            -1,
+            -1,
+            -1,
+            reverseFromForBlend
+          );
+        } else {
+          ptr = this.pushLerpedPolylineSkipRanges(
+            ptr,
+            blendFromCurve,
+            blendToCurve,
+            t,
+            width,
+            color,
+            this.waveSkipBStart,
+            this.waveSkipBEnd,
+            this.waveSkipAStart,
+            this.waveSkipAEnd,
+            reverseFromForBlend
+          );
+        }
+      }
     }
     if (this.showBaselines) {
       if (activeEnabled) {
@@ -6306,14 +7651,30 @@ class WaveOriginalRenderer {
       this.pixiZoomEnabled && !this.pixiZoomReady && this.pixiZoomError
         ? `pixi blur error: ${this.pixiZoomError}`
         : null;
+    const blendDirInfo = `blend direction-map ${
+      this.travelDirectionA * this.travelDirectionB < 0 ? "reversed-from-B" : "direct"
+    }`;
+    const blendModeInfo = `blend mode ${this.getPrimaryBlendModeLabel(this.primaryBlendMode)}`;
+    const blendEndpointInfo = `blend key endpoints ${this.hidePrimaryBlendEndpoints ? "hidden" : "shown"}`;
+    const blendMapInfo = this.isBlendMapTransitionMode()
+      ? `blend map-interp A ${this.blendMapA.active ? "active" : "idle"} ${this.blendMapA.elapsedSec.toFixed(3)}/${this.blendMapA.durationSec.toFixed(3)}s | B ${this.blendMapB.active ? "active" : "idle"} ${this.blendMapB.elapsedSec.toFixed(3)}/${this.blendMapB.durationSec.toFixed(3)}s`
+      : null;
+    const scrubInfo = `scrub ${this.motionScrubMode ? "on" : "off"} | step ${(this.motionScrubStepSeconds * 1000).toFixed(2)}ms`;
+    const blendDebugLines = this.getBlendDebugSectionLines();
 
     this.hud.textContent = [
       `Profile: ${suffix}`,
       "wave set key",
+      `blend ${Math.max(2, (this.primaryBlendInBetween | 0) + 2)} waves (${Math.max(0, this.primaryBlendInBetween | 0)} in-between)`,
+      blendModeInfo,
+      blendDirInfo,
+      blendEndpointInfo,
+      blendMapInfo,
       blurInfo,
       blurErrorInfo,
       `system key ${this.systemEnabled.key ? "on" : "off"}`,
       `motion ${this.motionPaused ? "paused" : "running"} | speed ${this.motionSpeedPxPerSecond.toFixed(1)} px/s`,
+      scrubInfo,
       `rightEdge ${fmt(this.layout.rightEdge)} | top ${fmt(gTop)} | scaleX ${fmt(gSx)} | scaleY ${fmt(gSy)}`,
       `waveA x ${fmt(aX)} y ${fmt(aY)} sx ${fmt(aScaleX)} sy ${fmt(aScaleY)} rot ${aRot.toFixed(2)}deg | waveB x ${fmt(bX)} y ${fmt(bY)} sx ${fmt(bScaleX)} sy ${fmt(bScaleY)} rot ${bRot.toFixed(2)}deg`,
       `baseline B mode ${this.baselineAMode} | smooth ${this.baselineSmooth} | handle ${this.baselineHandle.toFixed(2)}`,
@@ -6335,9 +7696,11 @@ class WaveOriginalRenderer {
       "Keys: Arrows move global placement, Z/X scaleX, C/V scaleY",
       "A/D + W/S move waveA, Q/E rotate waveA, 3/4 A scaleX, 5/6 A scaleY, J/L + I/K move waveB, ;/' rotate waveB, 7/8 B scaleX, 9/0 B scaleY",
       "Baseline B: button toggles current/arc edit, ,/. select anchor, Shift+Arrows move selected anchor, N/M rotate selected handle",
-      "[ ] overlay opacity, O overlay toggle, P pause/resume, B baselines, Y markers, U labels, G handles, 2 key, R reset, H hide HUD",
-      extraMessage ||
-        `Reference file: key ${REFERENCE_IMAGE_BY_SET.key}`
+      "T scrub mode, ,/. step back/forward (Shift x8 while scrub is on)",
+      "[ ] overlay opacity, O overlay toggle, P pause/resume, F blend mode, B baselines, Y markers, U labels, G handles, 2 key, R reset, H hide HUD",
+      extraMessage || `Reference file: key ${REFERENCE_IMAGE_BY_SET.key}`,
+      "",
+      ...blendDebugLines
     ]
       .filter(Boolean)
       .join("\n");

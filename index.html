@@ -3,13 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Curious Designer</title>
-  <meta name="description" content="Fast variable-font lens interaction.">
+  <title>Curious Designer for Complex Systems</title>
+  <meta name="description" content="Landing composition with interactive variable-font headline.">
   <link rel="stylesheet" href="css/wave-landing.css">
 </head>
 <body>
-  <main class="text-stage" aria-label="Interactive variable font text">
-    <h1 class="vf-text" id="vf-text" aria-label="curious designer">curious designer</h1>
+  <header class="top-nav" aria-label="Primary navigation">
+    <a class="brand" href="/">sk</a>
+    <nav class="menu" aria-label="Main menu">
+      <a class="menu-link is-active" href="#">about</a>
+      <a class="menu-link" href="#">work</a>
+      <a class="menu-link" href="#">resume</a>
+    </nav>
+  </header>
+
+  <main class="hero" aria-label="Landing headline">
+    <h1 class="line line-top">
+      curious designer <span class="line-for">for</span>
+    </h1>
+    <h2 class="vf-text" id="vf-text" aria-label="complex systems">complex systems</h2>
+    <p class="line line-bottom">that need to scale</p>
   </main>
 
   <script type="module" src="js/text-lens.js"></script>
