@@ -2136,6 +2136,79 @@ class WaveOriginalRenderer {
     ];
   }
 
+  buildIntermediateAnchorMapRows(aCount, bCount) {
+    const aN = Math.max(0, aCount | 0);
+    const bN = Math.max(0, bCount | 0);
+    if (aN < 2 || bN < 2) {
+      return {
+        intermediateCount: 0,
+        rows: [],
+        notes: ["insufficient anchors"]
+      };
+    }
+
+    const k = Math.max(2, Math.round((aN + bN) * 0.5));
+    const rows = [];
+    const notes = [];
+
+    const pushRow = (i, a, b, mode) => {
+      rows.push({ i, a, b, mode });
+    };
+
+    // PoC v0 rule requested in discussion: A17/B15 -> I16 with center compression.
+    if (aN === 17 && bN === 15 && k === 16) {
+      for (let i = 1; i <= 7; i += 1) {
+        pushRow(i, i, i, "direct");
+      }
+      pushRow(8, 8, 8, "center-1");
+      pushRow(9, 10, 9, "center-2");
+      for (let i = 10; i <= 16; i += 1) {
+        pushRow(i, i + 1, i - 1, "right");
+      }
+      notes.push("A9 collapsed in center compression");
+      notes.push("B9 reused at I9 and I10 by construction");
+      return {
+        intermediateCount: k,
+        rows,
+        notes
+      };
+    }
+
+    // Generic fallback: stable proportional pairing (for visibility only).
+    for (let i = 1; i <= k; i += 1) {
+      const t = k > 1 ? (i - 1) / (k - 1) : 0;
+      const a = 1 + Math.round(t * (aN - 1));
+      const b = 1 + Math.round(t * (bN - 1));
+      pushRow(i, clamp(a, 1, aN), clamp(b, 1, bN), "proportional");
+    }
+    notes.push("fallback proportional map (non-PoC case)");
+    return {
+      intermediateCount: k,
+      rows,
+      notes
+    };
+  }
+
+  getIntermediateAnchorMapHudLines(aCount, bCount) {
+    const map = this.buildIntermediateAnchorMapRows(aCount, bCount);
+    const rows = map.rows || [];
+    const lines = [
+      "----- Intermediate Anchor Map (PoC) -----",
+      `counts A ${aCount} B ${bCount} => I ${map.intermediateCount}`
+    ];
+    if (!rows.length) {
+      lines.push("no map rows");
+      return lines;
+    }
+    for (const row of rows) {
+      lines.push(`I${row.i} <- A${row.a} + B${row.b} (${row.mode})`);
+    }
+    for (const note of map.notes || []) {
+      lines.push(`note: ${note}`);
+    }
+    return lines;
+  }
+
   updateBlendModeButton() {
     if (!this.blendModeButton) {
       return;
@@ -7661,6 +7734,7 @@ class WaveOriginalRenderer {
       : null;
     const scrubInfo = `scrub ${this.motionScrubMode ? "on" : "off"} | step ${(this.motionScrubStepSeconds * 1000).toFixed(2)}ms`;
     const blendDebugLines = this.getBlendDebugSectionLines();
+    const intermediateMapLines = this.getIntermediateAnchorMapHudLines(keyAnchorA, keyAnchorB);
 
     this.hud.textContent = [
       `Profile: ${suffix}`,
@@ -7699,6 +7773,8 @@ class WaveOriginalRenderer {
       "T scrub mode, ,/. step back/forward (Shift x8 while scrub is on)",
       "[ ] overlay opacity, O overlay toggle, P pause/resume, F blend mode, B baselines, Y markers, U labels, G handles, 2 key, R reset, H hide HUD",
       extraMessage || `Reference file: key ${REFERENCE_IMAGE_BY_SET.key}`,
+      "",
+      ...intermediateMapLines,
       "",
       ...blendDebugLines
     ]

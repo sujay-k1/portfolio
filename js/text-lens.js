@@ -36,7 +36,11 @@ if (heading) {
 
   for (const ch of source) {
     if (ch === " ") {
-      heading.append(document.createTextNode(" "));
+      const space = document.createElement("span");
+      space.className = "vf-space";
+      space.setAttribute("aria-hidden", "true");
+      space.textContent = "\u00A0";
+      heading.appendChild(space);
       continue;
     }
 
