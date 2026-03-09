@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wave Visualization</title>
+  <link rel="stylesheet" href="css/wave-viz.css">
+</head>
+<body>
+  <canvas id="wave-canvas" aria-hidden="true"></canvas>
+  <canvas id="pixi-post-canvas" aria-hidden="true"></canvas>
+  <canvas id="anchor-label-canvas" aria-hidden="true"></canvas>
+  <img id="ref-overlay-key" class="ref-overlay" alt="Key reference overlay" hidden>
+  <div id="ui-stack">
+    <pre id="align-hud" hidden></pre>
+    <div id="baseline-control">
+      <div class="system-toggle-group">
+        <label class="system-toggle">
+          <input id="system-key-toggle" type="checkbox" checked>
+          <span>Key System</span>
+        </label>
+      </div>
+      <button id="motion-toggle" type="button">Pause Motion</button>
+      <button id="baseline-a-mode-toggle" type="button">Baseline A: Current</button>
+      <label for="baseline-a-ellipse-rx">Baseline A Ellipse rx</label>
+      <input id="baseline-a-ellipse-rx" type="range" min="40" max="1600" step="1" value="280">
+      <output id="baseline-a-ellipse-rx-value" for="baseline-a-ellipse-rx">280</output>
+      <label for="baseline-a-ellipse-ry">Baseline A Ellipse ry</label>
+      <input id="baseline-a-ellipse-ry" type="range" min="40" max="1600" step="1" value="160">
+      <output id="baseline-a-ellipse-ry-value" for="baseline-a-ellipse-ry">160</output>
+      <div class="control-divider">Blur Controls</div>
+      <label class="system-toggle" for="pixi-blur-enabled">
+        <input id="pixi-blur-enabled" type="checkbox" checked>
+        <span>Pixi Blur Enabled</span>
+      </label>
+      <label for="pixi-blur-center-x">Blur Center X</label>
+      <input id="pixi-blur-center-x" type="range" min="0" max="1" step="0.001" value="0.680">
+      <output id="pixi-blur-center-x-value" for="pixi-blur-center-x">0.680</output>
+      <label for="pixi-blur-center-y">Blur Center Y</label>
+      <input id="pixi-blur-center-y" type="range" min="0" max="1" step="0.001" value="0.540">
+      <output id="pixi-blur-center-y-value" for="pixi-blur-center-y">0.540</output>
+      <label for="pixi-blur-inner-radius">Blur Inner Radius (px)</label>
+      <input id="pixi-blur-inner-radius" type="range" min="0" max="3000" step="1" value="160">
+      <output id="pixi-blur-inner-radius-value" for="pixi-blur-inner-radius">160</output>
+      <label for="pixi-blur-radius">Blur Radius (px)</label>
+      <input id="pixi-blur-radius" type="range" min="1" max="4000" step="1" value="650">
+      <output id="pixi-blur-radius-value" for="pixi-blur-radius">650</output>
+      <label for="pixi-blur-strength">Blur Strength</label>
+      <input id="pixi-blur-strength" type="range" min="0" max="2" step="0.001" value="0.140">
+      <output id="pixi-blur-strength-value" for="pixi-blur-strength">0.140</output>
+      <label for="pixi-blur-kernel">Blur Kernel</label>
+      <input id="pixi-blur-kernel" type="range" min="3" max="32" step="1" value="11">
+      <output id="pixi-blur-kernel-value" for="pixi-blur-kernel">11</output>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pixi-filters@5.2.1/dist/browser/pixi-filters.min.js"></script>
+  <script type="module" src="js/wave-viz.js"></script>
+</body>
+</html>

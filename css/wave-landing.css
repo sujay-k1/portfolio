@@ -1,0 +1,60 @@
+@import url("https://fonts.googleapis.com/css2?family=Bitcount:CRSV,ELSH,ELXP,slnt,wght@0..1,0..100,0..100,-8..0,200..700&display=swap");
+
+:root {
+  --bg-0: #1d0838;
+  --bg-1: #2a0f4c;
+  --bg-2: #2d1152;
+  --lime: #b9f244;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(120vw 120vh at 8% 10%, rgba(95, 43, 146, 0.38), transparent 50%),
+    radial-gradient(90vw 90vh at 82% 85%, rgba(47, 132, 125, 0.15), transparent 60%),
+    linear-gradient(165deg, var(--bg-0) 0%, var(--bg-1) 46%, var(--bg-2) 100%);
+  color: var(--lime);
+}
+
+.text-stage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.vf-text {
+  margin: 0;
+  color: var(--lime);
+  font-family: "Bitcount", "Bitcount Variable", "Avenir Next", "Futura", sans-serif;
+  font-size: clamp(2.1rem, 6.6vw, 6.3rem);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  user-select: none;
+  font-synthesis-weight: none;
+}
+
+.vf-char {
+  display: inline-block;
+  font-variation-settings: "wght" 200, "ELSH" 10;
+  will-change: font-variation-settings;
+}
+
+@media (max-width: 980px), (pointer: coarse) {
+  .vf-text {
+    font-size: clamp(2rem, 10vw, 3.2rem);
+  }
+}

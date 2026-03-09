@@ -1,0 +1,39 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?sujaykumar\.net$ [NC]
+RewriteRule ^(.*)$ https://sujaykumar.net/$1 [L,R=301]
+</IfModule>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^(www\.)?sujaykumar\.net$ [NC]
+RewriteRule .* - [E=UPGRADE]
+    <IfModule mod_headers.c>
+        Header always set Content-Security-Policy "upgrade-insecure-requests;" env=UPGRADE
+    </IfModule>
+</IfModule>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Legacy URL redirects
+RewriteRule ^home\.html$ / [R=301,L,NC]
+RewriteRule ^Work\.html$ /work [R=301,L,NC]
+RewriteRule ^Work-Biz2X\.html$ /work/Biz2X [R=301,L,NC]
+RewriteRule ^Work-Jio\.html$ /work/Jio [R=301,L,NC]
+RewriteRule ^Work-MentorConnect\.html$ /work/MentorConnect [R=301,L,NC]
+RewriteRule ^Work-Spillproof\.html$ /work/Spillproof [R=301,L,NC]
+RewriteRule ^Work-SurakshaCentral\.html$ /work/SurakshaCentral [R=301,L,NC]
+RewriteRule ^Work-WhatsApp\.html$ /work/WhatsApp [R=301,L,NC]
+RewriteRule ^about/?$ / [R=301,L,NC]
+
+# Canonical index routes
+RewriteRule ^index\.html$ / [R=301,L,NC]
+RewriteRule ^about/index\.html$ / [R=301,L,NC]
+RewriteRule ^work/index\.html$ /work [R=301,L,NC]
+RewriteRule ^work/Biz2X/index\.html$ /work/Biz2X [R=301,L,NC]
+RewriteRule ^work/Jio/index\.html$ /work/Jio [R=301,L,NC]
+RewriteRule ^work/MentorConnect/index\.html$ /work/MentorConnect [R=301,L,NC]
+RewriteRule ^work/Spillproof/index\.html$ /work/Spillproof [R=301,L,NC]
+RewriteRule ^work/SurakshaCentral/index\.html$ /work/SurakshaCentral [R=301,L,NC]
+RewriteRule ^work/WhatsApp/index\.html$ /work/WhatsApp [R=301,L,NC]
+</IfModule>

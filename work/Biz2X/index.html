@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<base href="/">
+	
+					<!-- Open Graph Meta Tags -->
+<meta property="og:title" content="Enterprise lending stack at Biz2X: A product design case study">
+<meta property="og:description" content="Providing configurability to financial institutions for effortless customer onboarding and successful loan application completion.">
+<meta property="og:image" content="Assets/Biz2X-header.jpg">
+<meta property="og:url" content="https://sujaykumar.net/work/Biz2X">
+<meta property="og:type" content="website">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Enterprise lending stack at Biz2X: A product design case study">
+<meta name="twitter:description" content="Providing configurability to financial institutions for effortless customer onboarding and successful loan application completion.">
+<meta name="twitter:image" content="Assets/Biz2X-header.jpg">
+	
+<title>Enterprise lending stack at Biz2X: A product design case study</title>
+
+<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px)">
+<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 767px)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+	<link rel="icon" type="image/x-icon" href="Assets/Logo-full.ico">
+
+</head>
+
+<body class="case-study-page">
+	
+	<div class="header">
+		<div class="container">
+			<div class="logo">
+				<img class ="logo-piece1a-static" src="Assets/sk-dark.png" alt="Logo element for Sujay Kumar">
+				<img class ="logo-piece2-static" src="Assets/Arrow.png" alt="Logo element for Sujay Kumar">
+			</div>
+			<div class="buttons">
+				<div class="navigation-menu-button"><a href="/work">&larr; Work</a></div>
+				<div class="navigation-menu-button"><a href="/">About me</a></div>
+				<div class="navigation-menu-button"><a href="Assets/Resume-SK.pdf" target="_blank">Resume &#8599;</a></div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="project-banner">
+		<video src="Biz2X-assets/Pixel_7a_3.mp4" width="100%" height="auto" muted loop autoplay preload="auto"></video>
+	</div>
+	
+<div class="project-content">
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">Introduction</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				Providing configurability to financial institutions for effortless customer onboarding and successfull loan application completion.
+			</p>
+			<p class="section-body">
+				Biz2X helps financial institutions worldwide to launch and scale digital lending offerings. Over time, the platform had onboarded multiple banks, NBFCs, and fintechs.
+			</p>
+			<p class="section-body">
+				This project focused on designing a configurable loan application design pattern that could support diverse lending journeys without rebuilding flows for every new client.
+			</p>
+			<p class="section-body">
+				The outcome was a JSON-driven configurable UI that balanced speed for quick customer onboarding and flexibility in later, more complex stages for improved application completion.
+			</p>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					Biz2X offers an end-to-end lending stack for financial institutions. In pursuit of building a SAAS platform, configurability was the key!
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">The problem</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				Biz2X built tailor-made custom solutions for each financial instituion
+			</p>
+			<p class="section-body">
+				Lending journeys in India vary widely based on:
+			</p>
+			<ul>
+				<li>📑 Product type (personal loans, MSME loans, secured loans)</li>
+				<li>💸 Credit policy</li>
+				<li>⚠️ Risk evaluation methods</li>
+				<li>👷‍♀️ Operational processes</li>
+			</ul>
+			<p class="section-body">
+				At Biz2X, these differences had historically been handled through client-specific customizations. Each new client resulted in:
+			</p>
+			<ul>
+				<li>👩‍💻 Hardcoded application flows</li>
+				<li>🧮 One-off frontend logic</li>
+				<li>👨‍🎨 Design rework for every variation</li>
+			</ul>
+			<p class="section-body">
+				As the number of clients grew, this approach became unsustainable:
+			</p>
+			<ul>
+				<li>💰 Onboarding new clients was <u>slow and expensive</u></li>
+				<li>🧪 Small changes required code changes and regression testing.</li>
+			</ul>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					Varying client needs resulted in fragmented platform with limited re-usability. Code base which could be re-used had to be frankensteined together to build the next solution.
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">Key insight</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				Amidst the differences, all journeys followed the same high-level path
+			</p>
+
+			<img class="modal-image" src="Biz2X-assets/high-level-pattern.png"  alt="A high-level flow of three types of customer journeys.">
+
+			<p class="section-body">
+				While studying existing client journeys and credit policies, three types of common journeys were prevalant. Out of it, came a 3-step application bound by customer eligibility that encapsulated all varieties of loan application journeys.
+			</p>
+			<p class="section-body">
+				In the 3-steps, variabilities lived:
+			</p>
+			<ul>
+				<li>KYC, eligibility criteria steps and its order</li>
+				<li>Documents, collaterals, co-applicants, and any other means of evaluation</li>
+				<li>The complexity and duration of post-eligibility tasks</li>
+			</ul>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					3-step application process comprising of pre-eligibility information, eligibility check, and post-eligibility documentation and details could cover any loan application journey.
+				</p>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">User experience breakdown</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				User drop-off instances were rampant, financial institutions heavily relied on assisted journeys.
+			</p>
+			<img class="modal-image" src="Biz2X-assets/previously.png"  alt="An image illustrating an old design that followed a basic forward and back navigation.">
+			
+			<p class="section-body">
+				Loan applications across all financial institutions had the same way of navigation throughout the journey: Back and Next. Applicants had no visibility into:
+			</p>
+			<ul>
+				<li><strong>The progress</strong>: Where they were in the journey</li>
+				<li><strong>The next step</strong>: What was coming next: Next step</li>
+				<li><strong>Total number of steps</strong>: How much effort remained</li>
+			</ul>
+			<p class="section-body">
+				The hypothesis was that these steps felt time-consuming and high-effort to the users. In addition, the entire application felt never-ending when coupled with additional documentations required. This lack of structure reduced trust and led to poor application completion—especially for complex loans.
+			</p>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					Loan applications used simple Back/Next navigation, leaving users unaware of progress, upcoming steps, or total effort. Navigation felt chaotic, especially for complex multi-step actions making the process feel endless.
+				</p>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">The solution</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				Navigation should match task complexity: Momentum vs control
+			</p>
+			<p class="heading3">
+				&#10148; Pre-eligibility: Quick steps in linear progression to check eligibility
+			</p>
+			<p class="section-body">
+				Key guiding principle: Pre-eligibility has to feel <u>effortless</u> to the user. Hence, the steps should retain the previous model for the user to keep going next with ocassional need of coming back.
+			</p>
+			<p class="section-body">
+				An intuitive and encouraging progress stepper was the element that was going to make all the difference with:
+			</p>
+			<ul>
+				<li>Current step</li>
+				<li>Total number of steps</li>
+				<li>What’s coming next</li>
+				<li>Completion % on current step</li>
+			</ul>
+			<video class="modal-image" src="Biz2X-assets/iPhoneAir_copy_1.mp4" muted loop autoplay preload="auto" alt="Algorithm chart for a self-sustaining feed generation."></video>
+			<p class="section-body">
+				Variants: <emphasis>Standard</emphasis> | <emphasis>Compact</emphasis> | <emphasis>Super-tight</emphasis>
+			</p>
+			<p class="section-body">
+				The UI works in tandem with guidelines and constraints to keep the intent of the design intact:
+			</p>
+			<ul>
+				<li>Max number of steps: 8</li>
+				<li>Stepper label guideline: Familiarity, conciseness, max character count</li>
+				<li>Type of steps: KYC, Loan requirements, Customer info</li>
+			</ul>
+			<p class="heading3">
+				&#10148; Post Eligibility: Allow navigating back-and-forth for flexibility and control 
+			</p>
+			<p class="section-body">
+				Key guiding principle: Post-eligibility steps are <u>complex</u>
+			</p>
+			<ul>
+				<li>Often requires adding <u>multiple entities</u> like collaterals, co-applicants, family members with multiple fields</li>
+				<li>Includes <u>failure-prone tasks</u> like connecting bank account, co-applicant consent, etc</li>
+				<li>Third-party verification</li>
+			</ul>
+			<p class="section-body">
+				And hence, is typically a multi-session process, which may even span 2-3 days.
+			</p>
+			<video class="modal-image" src="Biz2X-assets/iPhoneAir_copy_2.mp4" muted loop autoplay preload="auto" alt="Algorithm chart for a self-sustaining feed generation."></video>
+			<p class="section-body">
+				Hub-spoke navigation with status visibility for guidance:
+			</p>
+			<ul>
+				<li><emphasis>Count of entities added</emphasis></li>
+				<li><emphasis>Verification status, erros</emphasis></li>
+				<li><emphasis>Motion transition to reinforce directionality</emphasis></li>
+				<li><emphasis>Supports partial completion and re-entry</emphasis></li>
+			</ul>
+
+			<p class="heading3">
+				&#10148; Configurability: Empowering financial institutions to build custom pre-eligibility and post eligibility steps
+			</p>
+			<img class="modal-image" src="Biz2X-assets/system.png" alt="Algorithm chart for a self-sustaining feed generation.">
+			<p class="heading3">
+				&#10148; Prototype: A sample lending journey showcasing all use-cases addressed with the design pattern:
+			</p>
+			<iframe background="#222222" marginwidth="0" allowtransparency="true" frameborder="0" width="100%" height="600" src="https://embed.figma.com/proto/BVpOB1tQsCEzKa1sDEgtZm/Biz2X--INDCFPL--Internal-dev-use-2?page-id=16174%3A137387&node-id=17362-108411&node-type=frame&viewport=34605%2C-30357%2C0.79&t=8rUcarPUS4DiQHhD-1&scaling=contain&content-scaling=fixed&starting-point-node-id=17362%3A108411&show-proto-sidebar=1&hotspot-hints=0&disable-default-keyboard-nav=1&hide-ui=1&embed-host=share" allowfullscreen></iframe>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					Design navigation to match task complexity: momentum for pre-eligibility, control for post-eligibility. Pre-eligibility uses a lightweight, linear stepper (≤8 steps) to feel effortless and keep users moving, while post-eligibility shifts to a hub-and-spoke model that supports complex, failure-prone, multi-session tasks with clear status visibility.
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">Configuration</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				JSON driven UI as the first step to long-term SAAS vision
+			</p>
+			<p class="section-body">
+				At the core of this system was a JSON configuration schema that acted as the single source of truth.
+			</p>
+			<p class="section-body">
+				From a UX standpoint, the schema encoded:
+			</p>
+			<ul>
+				<li>Phase grouping</li>
+				<li>Step order</li>
+				<li>Mandatory vs optional steps</li>
+				<li>Skippability rules</li>
+			</ul>
+			<p class="section-body">
+				By abstracting these decisions into configuration, new lender journeys could be launched without redesigning screens or interactions.
+			</p>
+			<p class="section-body">
+				Configuration replaced customization.
+			</p>
+			<div class="note-container">
+				<p class="emoji">🎯</p>
+				<p class="note">
+					A JSON-driven UI formed the foundation of the long-term SaaS vision, beginning with endless configurability on-demand.
+				</p>
+			</div>
+
+			<img class="modal-image" src="Biz2X-assets/image 601.png" alt="Algorithm chart for a self-sustaining feed generation.">
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<p class="headline">Impact</p>
+		</div>
+		<div class="content-section-block">
+			<p class="section-title">
+				When the system started working
+			</p>
+			<ul>
+				<li>60% reduction in client onboarding time</li>
+				<li>3× improvement in application completion</li>
+				<li>No design involvement required for new client onboarding</li>
+				<li>Sales and engineering teams could independently configure journeys</li>
+			</ul>
+		</div>
+	</div>
+
+</div>
+
+	
+<!--Image viewer modal-->
+
+<div id="myModal" class="modal">
+    <!-- Modal Content (The image will be dynamically inserted here) -->
+    <img class="modal-content" id="img01" alt="Expanded view of the selected image">
+    <!-- Close Button -->
+    <span class="close">&times;</span>
+</div>
+
+	<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+<!--Image viewer script	-->
+
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the image and insert it inside the modal
+var modalImg = document.getElementById("img01");
+
+// Get all the thumbnail images
+var thumbnails = document.querySelectorAll(".modal-image");
+
+// Loop through each thumbnail image
+thumbnails.forEach(function(img) {
+    img.onclick = function() {
+        modal.style.display = "flex"; // Open modal
+        modalImg.src = this.src; // Set the source of the modal image to the clicked thumbnail's source
+    }
+});
+
+// When the user clicks on <span> (x), close the modal
+var span = document.getElementsByClassName("close")[0];
+span.onclick = function() {
+    modal.style.display = "none"; // Close the modal
+}
+</script>
+
+<!--Playing image when it comes in viewport-->
+
+
+	
+	<script>
+        function animateVideoToTopLeft() {
+			const video = document.querySelector('.intro-video'); // Select the video element
+			video.classList.add('animate'); // Add the animation class
+			
+			const banner = document.querySelector('.intro-banner');
+			banner.classList.add('hide');
+			
+			const logoPiece1 = document.querySelector('.logo-piece1');
+			logoPiece1.classList.add('moveDiagonal');
+			
+			const logoPiece1a = document.querySelector('.logo-piece1a');
+			logoPiece1a.classList.add('sklogo');
+			
+			const logoPiece2 = document.querySelector('.logo-piece2');
+			logoPiece2.classList.add('moveArrow');
+			
+		}
+//		function closeBanner(){
+//			const div = document.querySelector('.intro-banner'):
+//			div.classList.add('animate')
+//		}
+    </script>
+	
+</body>
+</html>
