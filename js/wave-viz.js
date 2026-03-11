@@ -25,11 +25,13 @@ const BLEND_MODE_DIRECT_INDEX = "direct-index";
 const BLEND_MODE_FROZEN_PHASE = "frozen-phase";
 const BLEND_MODE_ARC_LENGTH = "arc-length";
 const BLEND_MODE_SEAM_INVARIANT = "seam-invariant";
+const BLEND_MODE_CENTER_LOCK_D3_SEAM = "center-lock-d3-seam";
 const PRIMARY_BLEND_MODES = [
   BLEND_MODE_DIRECT_INDEX,
   BLEND_MODE_FROZEN_PHASE,
   BLEND_MODE_ARC_LENGTH,
-  BLEND_MODE_SEAM_INVARIANT
+  BLEND_MODE_SEAM_INVARIANT,
+  BLEND_MODE_CENTER_LOCK_D3_SEAM
 ];
 const TOKEN_RE = /[AaCcMmLlHhVvQqSsTtZz]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?/g;
 
@@ -646,7 +648,10 @@ class WaveOriginalRenderer {
     this.travelDirectionA = Math.sign(Number(CONFIG.motion.travelDirectionA) || 1) || 1;
     this.travelDirectionB = Math.sign(Number(CONFIG.motion.travelDirectionB) || -1) || -1;
     this.primaryBlendInBetween = Math.max(0, PRIMARY_BLEND_IN_BETWEEN | 0);
-    this.hidePrimaryBlendEndpoints = true;
+    this.hidePrimaryBlendEndpoints = false;
+    this.primaryBlendPocIntermediate = false;
+    this.primaryBlendPocReverseA = true;
+    this.primaryBlendPocReverseB = false;
     this.primaryBlendMode = BLEND_MODE_DIRECT_INDEX;
     this.primaryBlendColorScratch = new Float32Array(4);
     this.primaryBlendFrozenState = {
@@ -656,6 +661,10 @@ class WaveOriginalRenderer {
       phase: 0,
       target: 0
     };
+    this.d3InterpolatePath = this.resolveD3InterpolatePathFunction();
+    this.centerLockD3InteriorSamples = 320;
+    this.centerLockD3TrimPoints = 1;
+    this.centerLockD3LastError = "";
     this.motionPaused = false;
     this.motionScrubMode = false;
     this.motionScrubStepSeconds = Math.max(
@@ -706,6 +715,7 @@ class WaveOriginalRenderer {
     this.viewSecondaryB = new Float32Array(this.n * 2);
     this.waveTravelA = new Float32Array(this.n * 2);
     this.waveTravelB = new Float32Array(this.n * 2);
+    this.waveIntermediatePoc = new Float32Array(this.n * 2);
     this.waveStableA = new Float32Array(this.n * 2);
     this.waveStableB = new Float32Array(this.n * 2);
     this.blendMapA = this.createBlendMapTransitionState();
@@ -713,6 +723,9 @@ class WaveOriginalRenderer {
     this.blendMapMinDurationSec = 1 / 120;
     this.blendMapMaxDurationSec = 8;
     this.blendMapSeamJumpToleranceSegments = 2;
+    this.intermediatePocTransition = this.createIntermediatePocTransitionState();
+    this.intermediatePocMinDurationSec = 1 / 120;
+    this.intermediatePocMaxDurationSec = 8;
     this.waveSecondaryTravelA = new Float32Array(this.n * 2);
     this.waveSecondaryTravelB = new Float32Array(this.n * 2);
     this.baseA = new Float32Array(this.n * 2);
@@ -765,16 +778,23 @@ class WaveOriginalRenderer {
     this.anchorSecondaryStateB = [];
     this.cubicMovedA = [];
     this.cubicMovedB = [];
+    this.cubicIntermediatePoc = [];
+    this.intermediatePocAnchorCount = 0;
     this.cubicSecondaryMovedA = [];
     this.cubicSecondaryMovedB = [];
     this.constraintBaseA = new Float32Array(0);
     this.constraintBaseB = new Float32Array(0);
     this.constraintAnchorA = new Float32Array(0);
     this.constraintAnchorB = new Float32Array(0);
+    this.constraintHandleOutA = new Float32Array(0);
+    this.constraintHandleInA = new Float32Array(0);
+    this.constraintHandleOutB = new Float32Array(0);
+    this.constraintHandleInB = new Float32Array(0);
     this.constraintSecondaryBaseA = new Float32Array(0);
     this.constraintSecondaryBaseB = new Float32Array(0);
     this.constraintSecondaryAnchorA = new Float32Array(0);
     this.constraintSecondaryAnchorB = new Float32Array(0);
+    this.constraintIntermediatePoc = new Float32Array(0);
     this.mappingSecondaryA = new Float32Array(0);
     this.mappingSecondaryB = new Float32Array(0);
     this.constraintOrthDotA = 0;
@@ -1506,6 +1526,26 @@ class WaveOriginalRenderer {
       this.baselineAMode === "arc" ? "Baseline B: Arc" : "Baseline B: Current";
   }
 
+  resolveD3InterpolatePathFunction() {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    const globalAny = window;
+    if (globalAny.d3 && typeof globalAny.d3.interpolatePath === "function") {
+      return globalAny.d3.interpolatePath.bind(globalAny.d3);
+    }
+    if (typeof globalAny.interpolatePath === "function") {
+      return globalAny.interpolatePath.bind(globalAny);
+    }
+    if (
+      globalAny.d3InterpolatePath &&
+      typeof globalAny.d3InterpolatePath.interpolatePath === "function"
+    ) {
+      return globalAny.d3InterpolatePath.interpolatePath.bind(globalAny.d3InterpolatePath);
+    }
+    return null;
+  }
+
   getPrimaryBlendModeLabel(mode = this.primaryBlendMode) {
     switch (mode) {
       case BLEND_MODE_FROZEN_PHASE:
@@ -1514,6 +1554,8 @@ class WaveOriginalRenderer {
         return "Arc Length";
       case BLEND_MODE_SEAM_INVARIANT:
         return "Seam Invariant";
+      case BLEND_MODE_CENTER_LOCK_D3_SEAM:
+        return "Center Lock D3 Seam";
       case BLEND_MODE_DIRECT_INDEX:
       default:
         return "Direct Index";
@@ -1545,6 +1587,87 @@ class WaveOriginalRenderer {
       targetCurve: new Float32Array(this.n * 2),
       workCurve: new Float32Array(this.n * 2)
     };
+  }
+
+  createIntermediatePocTransitionState() {
+    return {
+      primed: false,
+      active: false,
+      count: 0,
+      elapsedSec: 0,
+      durationSec: 1,
+      starts: 0,
+      restarts: 0,
+      lastMappingChanged: false,
+      prevMapA: new Int32Array(0),
+      prevMapB: new Int32Array(0),
+      fromAnchors: new Float32Array(0),
+      fromOut: new Float32Array(0),
+      fromIn: new Float32Array(0),
+      targetAnchors: new Float32Array(0),
+      targetOut: new Float32Array(0),
+      targetIn: new Float32Array(0),
+      workAnchors: new Float32Array(0),
+      workOut: new Float32Array(0),
+      workIn: new Float32Array(0)
+    };
+  }
+
+  resetIntermediatePocTransitionState() {
+    const state = this.intermediatePocTransition;
+    if (!state) {
+      return;
+    }
+    state.primed = false;
+    state.active = false;
+    state.count = 0;
+    state.elapsedSec = 0;
+    state.durationSec = 1;
+    state.starts = 0;
+    state.restarts = 0;
+    state.lastMappingChanged = false;
+  }
+
+  ensureIntermediatePocTransitionCapacity(count) {
+    const state = this.intermediatePocTransition;
+    const c = Math.max(0, count | 0);
+    if (state.count === c) {
+      return;
+    }
+    const vecLen = c * 2;
+    state.count = c;
+    state.prevMapA = new Int32Array(c);
+    state.prevMapB = new Int32Array(c);
+    state.prevMapA.fill(-1);
+    state.prevMapB.fill(-1);
+    state.fromAnchors = new Float32Array(vecLen);
+    state.fromOut = new Float32Array(vecLen);
+    state.fromIn = new Float32Array(vecLen);
+    state.targetAnchors = new Float32Array(vecLen);
+    state.targetOut = new Float32Array(vecLen);
+    state.targetIn = new Float32Array(vecLen);
+    state.workAnchors = new Float32Array(vecLen);
+    state.workOut = new Float32Array(vecLen);
+    state.workIn = new Float32Array(vecLen);
+    state.primed = false;
+    state.active = false;
+    state.elapsedSec = 0;
+  }
+
+  estimateIntermediatePocNextSnapSeconds() {
+    const nextA = this.estimateNextSeamEventSeconds(
+      this.anchorStateA,
+      this.baseArcLenA,
+      this.travelArcA,
+      this.travelDirectionA
+    );
+    const nextB = this.estimateNextSeamEventSeconds(
+      this.anchorStateB,
+      this.baseArcLenB,
+      this.travelArcB,
+      this.travelDirectionB
+    );
+    return Math.min(nextA, nextB);
   }
 
   pushBlendDebugEvent(label, message) {
@@ -1665,7 +1788,8 @@ class WaveOriginalRenderer {
     return (
       mode === BLEND_MODE_DIRECT_INDEX ||
       mode === BLEND_MODE_FROZEN_PHASE ||
-      mode === BLEND_MODE_ARC_LENGTH
+      mode === BLEND_MODE_ARC_LENGTH ||
+      mode === BLEND_MODE_CENTER_LOCK_D3_SEAM
     );
   }
 
@@ -2136,6 +2260,53 @@ class WaveOriginalRenderer {
     ];
   }
 
+  getIntermediatePocDebugLines() {
+    const st = this.intermediatePocTransition;
+    if (!st) {
+      return [];
+    }
+    const aCount = Math.max(0, (this.constraintAnchorA.length / 2) | 0);
+    const bCount = Math.max(0, (this.constraintAnchorB.length / 2) | 0);
+    const map = this.buildIntermediateAnchorMapRows(aCount, bCount);
+    const rows = map.rows || [];
+    const pick = (idx) => (idx >= 0 && idx < rows.length ? rows[idx] : null);
+    const first = pick(0);
+    const mid = pick((rows.length * 0.5) | 0);
+    const last = pick(rows.length - 1);
+    const fmt = (row) => {
+      if (!row) {
+        return "n/a";
+      }
+      const ai = this.mapLogicalToPhysicalAnchorIndex(row.a, aCount, !!this.primaryBlendPocReverseA);
+      const bi = this.mapLogicalToPhysicalAnchorIndex(row.b, bCount, !!this.primaryBlendPocReverseB);
+      return `I${row.i - 1}<-A${ai}+B${bi}`;
+    };
+    let i0AvgErrPx = Number.NaN;
+    if (
+      this.constraintIntermediatePoc.length >= 2 &&
+      this.constraintAnchorA.length >= 2 &&
+      this.constraintAnchorB.length >= 2 &&
+      aCount > 0 &&
+      bCount > 0
+    ) {
+      const a0 = this.mapLogicalToPhysicalAnchorIndex(1, aCount, !!this.primaryBlendPocReverseA) * 2;
+      const b0 = this.mapLogicalToPhysicalAnchorIndex(1, bCount, !!this.primaryBlendPocReverseB) * 2;
+      if (a0 >= 0 && b0 >= 0) {
+        const tx = 0.5 * (this.constraintAnchorA[a0] + this.constraintAnchorB[b0]);
+        const ty = 0.5 * (this.constraintAnchorA[a0 + 1] + this.constraintAnchorB[b0 + 1]);
+        const dx = (this.constraintIntermediatePoc[0] - tx) * this.canvas.width;
+        const dy = (this.constraintIntermediatePoc[1] - ty) * this.canvas.height;
+        i0AvgErrPx = Math.hypot(dx, dy);
+      }
+    }
+    return [
+      "----- Intermediate PoC Debug -----",
+      `count ${this.intermediatePocAnchorCount} | mapChanged ${st.lastMappingChanged ? "yes" : "no"} | tr ${st.active ? "active" : "idle"} ${st.elapsedSec.toFixed(3)}/${st.durationSec.toFixed(3)}s starts ${st.starts} restarts ${st.restarts}`,
+      `map probes ${fmt(first)} | ${fmt(mid)} | ${fmt(last)}`,
+      `I0 avg(A-start,B-start) err ${Number.isFinite(i0AvgErrPx) ? `${i0AvgErrPx.toFixed(3)}px` : "n/a"}`
+    ];
+  }
+
   buildIntermediateAnchorMapRows(aCount, bCount) {
     const aN = Math.max(0, aCount | 0);
     const bN = Math.max(0, bCount | 0);
@@ -2155,18 +2326,22 @@ class WaveOriginalRenderer {
       rows.push({ i, a, b, mode });
     };
 
-    // PoC v0 rule requested in discussion: A17/B15 -> I16 with center compression.
-    if (aN === 17 && bN === 15 && k === 16) {
-      for (let i = 1; i <= 7; i += 1) {
+    // PoC v0 center-compression rule used for current key setup (A16/B14),
+    // and similarly for A17/B15 if present.
+    if ((aN === 16 && bN === 14 && k === 15) || (aN === 17 && bN === 15 && k === 16)) {
+      const left = 7;
+      const rightStart = left + 3; // logical A11/B8 for 1-based mapping
+      for (let i = 1; i <= left; i += 1) {
         pushRow(i, i, i, "direct");
       }
-      pushRow(8, 8, 8, "center-1");
-      pushRow(9, 10, 9, "center-2");
-      for (let i = 10; i <= 16; i += 1) {
-        pushRow(i, i + 1, i - 1, "right");
+      pushRow(left + 1, left + 1, left + 1, "center-1");
+      pushRow(left + 2, left + 3, left + 2, "center-2");
+      for (let i = left + 3; i <= k; i += 1) {
+        const d = i - (left + 3);
+        pushRow(i, rightStart + d, left + 1 + d, "right");
       }
-      notes.push("A9 collapsed in center compression");
-      notes.push("B9 reused at I9 and I10 by construction");
+      notes.push(`A${left + 2} collapsed in center compression`);
+      notes.push(`B${left + 1} reused across center transition`);
       return {
         intermediateCount: k,
         rows,
@@ -2189,24 +2364,291 @@ class WaveOriginalRenderer {
     };
   }
 
+  mapLogicalToPhysicalAnchorIndex(logicalOneBased, count, reverse) {
+    const c = Math.max(0, count | 0);
+    if (c <= 0) {
+      return -1;
+    }
+    const li = Math.max(1, Math.min(c, logicalOneBased | 0));
+    return reverse ? c - li : li - 1;
+  }
+
   getIntermediateAnchorMapHudLines(aCount, bCount) {
     const map = this.buildIntermediateAnchorMapRows(aCount, bCount);
     const rows = map.rows || [];
+    const reverseA = !!this.primaryBlendPocReverseA;
+    const reverseB = !!this.primaryBlendPocReverseB;
     const lines = [
       "----- Intermediate Anchor Map (PoC) -----",
-      `counts A ${aCount} B ${bCount} => I ${map.intermediateCount}`
+      `counts A ${aCount} B ${bCount} => I ${map.intermediateCount} | A reverse ${reverseA ? "yes" : "no"} B reverse ${reverseB ? "yes" : "no"}`
     ];
     if (!rows.length) {
       lines.push("no map rows");
       return lines;
     }
     for (const row of rows) {
-      lines.push(`I${row.i} <- A${row.a} + B${row.b} (${row.mode})`);
+      const ai = this.mapLogicalToPhysicalAnchorIndex(row.a, aCount, reverseA);
+      const bi = this.mapLogicalToPhysicalAnchorIndex(row.b, bCount, reverseB);
+      lines.push(`I${row.i - 1} <- A${ai} + B${bi} (${row.mode})`);
     }
     for (const note of map.notes || []) {
       lines.push(`note: ${note}`);
     }
     return lines;
+  }
+
+  extractCubicAnchorData(segments, maxAnchorCount = -1) {
+    if (!Array.isArray(segments) || !segments.length) {
+      return null;
+    }
+    const rawCount = segments.length + 1;
+    const count = maxAnchorCount > 1 ? Math.min(rawCount, maxAnchorCount | 0) : rawCount;
+    if (count < 2) {
+      return null;
+    }
+    const anchors = new Array(count);
+    const out = new Array(count);
+    const inbound = new Array(count);
+    for (let i = 0; i < count; i += 1) {
+      anchors[i] = { x: 0, y: 0 };
+      out[i] = { x: 0, y: 0 };
+      inbound[i] = { x: 0, y: 0 };
+    }
+    anchors[0].x = segments[0].p0.x;
+    anchors[0].y = segments[0].p0.y;
+    const segCount = count - 1;
+    for (let i = 0; i < segCount; i += 1) {
+      const seg = segments[i];
+      const end = seg.type === "C" ? seg.p3 : seg.p1;
+      anchors[i + 1].x = end.x;
+      anchors[i + 1].y = end.y;
+      if (seg.type === "C") {
+        out[i].x = seg.p1.x - seg.p0.x;
+        out[i].y = seg.p1.y - seg.p0.y;
+        inbound[i + 1].x = seg.p2.x - end.x;
+        inbound[i + 1].y = seg.p2.y - end.y;
+      } else {
+        out[i].x = end.x - seg.p0.x;
+        out[i].y = end.y - seg.p0.y;
+      }
+    }
+    return { count, anchors, out, inbound };
+  }
+
+  ensureIntermediatePocSegmentBuffer(segmentCount) {
+    const target = Math.max(0, segmentCount | 0);
+    while (this.cubicIntermediatePoc.length < target) {
+      this.cubicIntermediatePoc.push({
+        type: "C",
+        p0: { x: 0, y: 0 },
+        p1: { x: 0, y: 0 },
+        p2: { x: 0, y: 0 },
+        p3: { x: 0, y: 0 }
+      });
+    }
+    if (this.cubicIntermediatePoc.length > target) {
+      this.cubicIntermediatePoc.length = target;
+    }
+  }
+
+  writeCubicSegmentsToCurve(segments, outCurve) {
+    if (!Array.isArray(segments) || !segments.length || !outCurve?.length) {
+      return false;
+    }
+    const segCount = segments.length;
+    outCurve[0] = segments[0].p0.x;
+    outCurve[1] = segments[0].p0.y;
+    let write = 1;
+    let remaining = this.n - 1;
+    for (let i = 0; i < segCount; i += 1) {
+      const seg = segments[i];
+      const segmentsLeft = segCount - i;
+      const steps = Math.max(1, Math.floor(remaining / segmentsLeft));
+      for (let j = 1; j <= steps && write < this.n; j += 1) {
+        const p = this.cubicPoint(seg, j / steps);
+        const k = write * 2;
+        outCurve[k] = p.x;
+        outCurve[k + 1] = p.y;
+        write += 1;
+      }
+      remaining -= steps;
+    }
+    const tail = segments[segCount - 1].p3;
+    while (write < this.n) {
+      const k = write * 2;
+      outCurve[k] = tail.x;
+      outCurve[k + 1] = tail.y;
+      write += 1;
+    }
+    return true;
+  }
+
+  buildIntermediatePocTargetFromMovedCubic() {
+    const effectiveA = Math.max(0, (this.constraintAnchorA.length / 2) | 0);
+    const effectiveB = Math.max(0, (this.constraintAnchorB.length / 2) | 0);
+    if (
+      effectiveA < 2 ||
+      effectiveB < 2 ||
+      this.constraintHandleOutA.length < effectiveA * 2 ||
+      this.constraintHandleInA.length < effectiveA * 2 ||
+      this.constraintHandleOutB.length < effectiveB * 2 ||
+      this.constraintHandleInB.length < effectiveB * 2
+    ) {
+      return null;
+    }
+    const map = this.buildIntermediateAnchorMapRows(effectiveA, effectiveB);
+    const rows = map.rows || [];
+    if (rows.length < 2) {
+      return null;
+    }
+
+    const vecLen = rows.length * 2;
+    const anchors = new Float32Array(vecLen);
+    const out = new Float32Array(vecLen);
+    const inbound = new Float32Array(vecLen);
+    const mapA = new Int32Array(rows.length);
+    const mapB = new Int32Array(rows.length);
+    const reverseA = !!this.primaryBlendPocReverseA;
+    const reverseB = !!this.primaryBlendPocReverseB;
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i];
+      const ai = this.mapLogicalToPhysicalAnchorIndex(row.a, effectiveA, reverseA);
+      const bi = this.mapLogicalToPhysicalAnchorIndex(row.b, effectiveB, reverseB);
+      mapA[i] = ai;
+      mapB[i] = bi;
+      const ak = ai * 2;
+      const bk = bi * 2;
+      const k = i * 2;
+      anchors[k] = 0.5 * (this.constraintAnchorA[ak] + this.constraintAnchorB[bk]);
+      anchors[k + 1] = 0.5 * (this.constraintAnchorA[ak + 1] + this.constraintAnchorB[bk + 1]);
+      out[k] = 0.5 * (this.constraintHandleOutA[ak] + this.constraintHandleOutB[bk]);
+      out[k + 1] = 0.5 * (this.constraintHandleOutA[ak + 1] + this.constraintHandleOutB[bk + 1]);
+      inbound[k] = 0.5 * (this.constraintHandleInA[ak] + this.constraintHandleInB[bk]);
+      inbound[k + 1] = 0.5 * (this.constraintHandleInA[ak + 1] + this.constraintHandleInB[bk + 1]);
+    }
+
+    return {
+      count: rows.length,
+      anchors,
+      out,
+      inbound,
+      mapA,
+      mapB
+    };
+  }
+
+  buildIntermediatePocCurveFromMovedCubic(dtSeconds = 0) {
+    const target = this.buildIntermediatePocTargetFromMovedCubic();
+    if (!target) {
+      this.intermediatePocAnchorCount = 0;
+      this.constraintIntermediatePoc = new Float32Array(0);
+      this.cubicIntermediatePoc.length = 0;
+      this.resetIntermediatePocTransitionState();
+      return false;
+    }
+
+    const state = this.intermediatePocTransition;
+    this.ensureIntermediatePocTransitionCapacity(target.count);
+    const count = state.count;
+    const vecLen = count * 2;
+    let mappingChanged = false;
+    if (!state.primed) {
+      mappingChanged = true;
+    } else {
+      for (let i = 0; i < count; i += 1) {
+        if (target.mapA[i] !== state.prevMapA[i] || target.mapB[i] !== state.prevMapB[i]) {
+          mappingChanged = true;
+          break;
+        }
+      }
+    }
+
+    if (!state.primed) {
+      state.targetAnchors.set(target.anchors);
+      state.targetOut.set(target.out);
+      state.targetIn.set(target.inbound);
+      state.workAnchors.set(target.anchors);
+      state.workOut.set(target.out);
+      state.workIn.set(target.inbound);
+      state.prevMapA.set(target.mapA);
+      state.prevMapB.set(target.mapB);
+      state.primed = true;
+      state.active = false;
+      state.lastMappingChanged = false;
+    } else {
+      if (mappingChanged) {
+        if (state.active) {
+          state.fromAnchors.set(state.workAnchors);
+          state.fromOut.set(state.workOut);
+          state.fromIn.set(state.workIn);
+          state.restarts += 1;
+        } else {
+          state.fromAnchors.set(state.targetAnchors);
+          state.fromOut.set(state.targetOut);
+          state.fromIn.set(state.targetIn);
+          state.starts += 1;
+        }
+        state.elapsedSec = 0;
+        const nextSeconds = this.estimateIntermediatePocNextSnapSeconds();
+        const fallback = Number.isFinite(state.durationSec) ? state.durationSec : 0.35;
+        state.durationSec = clamp(
+          Number.isFinite(nextSeconds) ? nextSeconds : fallback,
+          this.intermediatePocMinDurationSec,
+          this.intermediatePocMaxDurationSec
+        );
+        state.active = true;
+      }
+
+      state.targetAnchors.set(target.anchors);
+      state.targetOut.set(target.out);
+      state.targetIn.set(target.inbound);
+      state.prevMapA.set(target.mapA);
+      state.prevMapB.set(target.mapB);
+      state.lastMappingChanged = mappingChanged;
+
+      if (state.active) {
+        state.elapsedSec += Math.max(0, Number(dtSeconds) || 0);
+        const t = clamp(state.elapsedSec / Math.max(1e-6, state.durationSec), 0, 1);
+        const w = this.easeBlendMapTransition(t);
+        const inv = 1 - w;
+        for (let i = 0; i < vecLen; i += 1) {
+          state.workAnchors[i] = state.fromAnchors[i] * inv + state.targetAnchors[i] * w;
+          state.workOut[i] = state.fromOut[i] * inv + state.targetOut[i] * w;
+          state.workIn[i] = state.fromIn[i] * inv + state.targetIn[i] * w;
+        }
+        if (t >= 1 - 1e-6) {
+          state.active = false;
+          state.workAnchors.set(state.targetAnchors);
+          state.workOut.set(state.targetOut);
+          state.workIn.set(state.targetIn);
+        }
+      } else {
+        state.workAnchors.set(state.targetAnchors);
+        state.workOut.set(state.targetOut);
+        state.workIn.set(state.targetIn);
+      }
+    }
+
+    const segCount = count - 1;
+    this.ensureIntermediatePocSegmentBuffer(segCount);
+    for (let i = 0; i < segCount; i += 1) {
+      const seg = this.cubicIntermediatePoc[i];
+      const k0 = i * 2;
+      const k1 = (i + 1) * 2;
+      seg.type = "C";
+      seg.p0.x = state.workAnchors[k0];
+      seg.p0.y = state.workAnchors[k0 + 1];
+      seg.p1.x = state.workAnchors[k0] + state.workOut[k0];
+      seg.p1.y = state.workAnchors[k0 + 1] + state.workOut[k0 + 1];
+      seg.p3.x = state.workAnchors[k1];
+      seg.p3.y = state.workAnchors[k1 + 1];
+      seg.p2.x = state.workAnchors[k1] + state.workIn[k1];
+      seg.p2.y = state.workAnchors[k1 + 1] + state.workIn[k1 + 1];
+    }
+
+    this.intermediatePocAnchorCount = count;
+    this.constraintIntermediatePoc = state.workAnchors.slice(0, vecLen);
+    return this.writeCubicSegmentsToCurve(this.cubicIntermediatePoc, this.waveIntermediatePoc);
   }
 
   updateBlendModeButton() {
@@ -2227,6 +2669,7 @@ class WaveOriginalRenderer {
     this.primaryBlendMode = mode;
     this.resetPrimaryBlendPhase();
     this.resetBlendMapTransitions();
+    this.resetIntermediatePocTransitionState();
     this.resetBlendDebugStats();
     this.updateBlendModeButton();
     this.buildVertices();
@@ -3068,6 +3511,14 @@ class WaveOriginalRenderer {
     if (this.systemEnabled[this.activeWaveSet]) {
       this.drawAnchorLabelSet(this.constraintAnchorA, "A", "rgba(255, 230, 240, 0.98)");
       this.drawAnchorLabelSet(this.constraintAnchorB, "B", "rgba(182, 255, 255, 0.98)");
+      if (this.primaryBlendPocIntermediate && this.constraintIntermediatePoc.length) {
+        this.drawAnchorLabelSet(
+          this.constraintIntermediatePoc,
+          "I",
+          "rgba(255, 255, 210, 0.98)",
+          { dx: 0, dy: 12 }
+        );
+      }
       if (this.showBaselines) {
         this.drawAnchorLabelSet(
           this.baselineAnchorPointsA,
@@ -4702,6 +5153,7 @@ class WaveOriginalRenderer {
     this.waveSecondaryArcU0A.set(this.baseSecondaryArcA);
     this.waveSecondaryArcU0B.set(this.baseSecondaryArcB);
     this.resetBlendMapTransitions();
+    this.resetIntermediatePocTransitionState();
     this.updateTravelWaves();
   }
 
@@ -4775,6 +5227,10 @@ class WaveOriginalRenderer {
     this.constraintBaseB = new Float32Array(this.anchorStateB.length * 2);
     this.constraintAnchorA = new Float32Array(this.anchorStateA.length * 2);
     this.constraintAnchorB = new Float32Array(this.anchorStateB.length * 2);
+    this.constraintHandleOutA = new Float32Array(this.anchorStateA.length * 2);
+    this.constraintHandleInA = new Float32Array(this.anchorStateA.length * 2);
+    this.constraintHandleOutB = new Float32Array(this.anchorStateB.length * 2);
+    this.constraintHandleInB = new Float32Array(this.anchorStateB.length * 2);
     this.constraintSecondaryBaseA = new Float32Array(this.anchorSecondaryStateA.length * 2);
     this.constraintSecondaryBaseB = new Float32Array(this.anchorSecondaryStateB.length * 2);
     this.constraintSecondaryAnchorA = new Float32Array(this.anchorSecondaryStateA.length * 2);
@@ -4797,6 +5253,7 @@ class WaveOriginalRenderer {
     this.waveSecondarySkipBStart = -1;
     this.waveSecondarySkipBEnd = -1;
     this.resetBlendMapTransitions();
+    this.resetIntermediatePocTransitionState();
     this.updateTravelWaves();
   }
 
@@ -5172,6 +5629,8 @@ class WaveOriginalRenderer {
     const adjustFirstAnchorByNeighbors = !!options?.adjustFirstAnchorByNeighbors;
     const preserveIndexOrder = !!options?.preserveIndexOrder;
     const breakRenderSeam = !!options?.breakRenderSeam;
+    const outTangentOut = options?.outTangentOut || null;
+    const outTangentIn = options?.outTangentIn || null;
     let maxOrthDot = 0;
     let maxHandleLenErrorPx = 0;
 
@@ -5414,6 +5873,21 @@ class WaveOriginalRenderer {
             y: (-dirY * handleLenPx) / ch
           };
         }
+      }
+    }
+
+    if (outTangentOut?.length >= anchorCount * 2) {
+      for (let i = 0; i < anchorCount; i += 1) {
+        const k = i * 2;
+        outTangentOut[k] = tangentOut[i].x;
+        outTangentOut[k + 1] = tangentOut[i].y;
+      }
+    }
+    if (outTangentIn?.length >= anchorCount * 2) {
+      for (let i = 0; i < anchorCount; i += 1) {
+        const k = i * 2;
+        outTangentIn[k] = tangentIn[i].x;
+        outTangentIn[k + 1] = tangentIn[i].y;
       }
     }
 
@@ -5805,7 +6279,9 @@ class WaveOriginalRenderer {
           enforcePeriodicEdgeTangents: true,
           adjustFirstAnchorByNeighbors: true,
           preserveIndexOrder: false,
-          breakRenderSeam: false
+          breakRenderSeam: false,
+          outTangentOut: this.constraintHandleOutA,
+          outTangentIn: this.constraintHandleInA
         }
       );
       this.waveSkipAStart = seamA.skipStart;
@@ -5856,7 +6332,9 @@ class WaveOriginalRenderer {
           enforcePeriodicEdgeTangents: true,
           adjustFirstAnchorByNeighbors: true,
           preserveIndexOrder: false,
-          breakRenderSeam: false
+          breakRenderSeam: false,
+          outTangentOut: this.constraintHandleOutB,
+          outTangentIn: this.constraintHandleInB
         }
       );
       this.waveSkipBStart = seamB.skipStart;
@@ -5913,6 +6391,7 @@ class WaveOriginalRenderer {
       this.waveStableB
     );
     this.updateBlendMapTransitions(dtSeconds);
+    this.buildIntermediatePocCurveFromMovedCubic(dtSeconds);
 
     if (this.cubicSecondaryA.length && this.anchorSecondaryStateA.length) {
       const seamSecondaryA = this.writeMovedCubicWave(
@@ -6124,6 +6603,255 @@ class WaveOriginalRenderer {
         color
       );
     }
+    return ptr;
+  }
+
+  pushPolylineBuffer(ptr, curve, widthPx, color) {
+    const count = (curve.length / 2) | 0;
+    if (count < 2) {
+      return ptr;
+    }
+    for (let i = 0; i < count - 1; i += 1) {
+      const k0 = i * 2;
+      const k1 = (i + 1) * 2;
+      ptr = this.pushSegment(
+        ptr,
+        curve[k0],
+        curve[k0 + 1],
+        curve[k1],
+        curve[k1 + 1],
+        widthPx,
+        color
+      );
+    }
+    return ptr;
+  }
+
+  buildSeamOrderedVisibleChain(curve, skipStart, skipEnd, reverse = false) {
+    const count = (curve.length / 2) | 0;
+    if (count < 2) {
+      return new Float32Array(0);
+    }
+
+    const hasSkip = this.hasSkipRange(skipStart, skipEnd);
+    let outCount = count;
+    if (hasSkip) {
+      const start = clamp(skipEnd | 0, 0, count - 1);
+      const end = clamp(skipStart | 0, 0, count - 1);
+      outCount = Math.max(2, count - Math.max(0, start - end - 1));
+    }
+    const out = new Float32Array(outCount * 2);
+    let write = 0;
+    const pushIndex = (index) => {
+      if (write >= outCount) {
+        return;
+      }
+      const k = index * 2;
+      const w = write * 2;
+      out[w] = curve[k];
+      out[w + 1] = curve[k + 1];
+      write += 1;
+    };
+
+    if (!hasSkip) {
+      for (let i = 0; i < count; i += 1) {
+        pushIndex(i);
+      }
+    } else {
+      const start = clamp(skipEnd | 0, 0, count - 1);
+      const end = clamp(skipStart | 0, 0, count - 1);
+      for (let i = start; i < count; i += 1) {
+        pushIndex(i);
+      }
+      for (let i = 0; i <= end; i += 1) {
+        pushIndex(i);
+      }
+    }
+
+    if (write < outCount) {
+      return out.subarray(0, write * 2);
+    }
+
+    if (!reverse) {
+      return out;
+    }
+
+    const reversed = new Float32Array(out.length);
+    for (let i = 0; i < outCount; i += 1) {
+      const src = i * 2;
+      const dst = (outCount - 1 - i) * 2;
+      reversed[dst] = out[src];
+      reversed[dst + 1] = out[src + 1];
+    }
+    return reversed;
+  }
+
+  trimChainEndpoints(curve, trimPoints = 1) {
+    const count = (curve.length / 2) | 0;
+    const trim = Math.max(0, trimPoints | 0);
+    const start = Math.min(count - 1, trim);
+    const end = Math.max(start + 1, count - trim);
+    const nextCount = Math.max(0, end - start);
+    const out = new Float32Array(nextCount * 2);
+    for (let i = 0; i < nextCount; i += 1) {
+      const src = (start + i) * 2;
+      const dst = i * 2;
+      out[dst] = curve[src];
+      out[dst + 1] = curve[src + 1];
+    }
+    return out;
+  }
+
+  float2ToSvgLinePath(curve) {
+    const count = (curve.length / 2) | 0;
+    if (count < 2) {
+      return "";
+    }
+    let path = `M${curve[0].toFixed(6)},${curve[1].toFixed(6)}`;
+    for (let i = 1; i < count; i += 1) {
+      const k = i * 2;
+      path += `L${curve[k].toFixed(6)},${curve[k + 1].toFixed(6)}`;
+    }
+    return path;
+  }
+
+  parseSvgLinePathToFloat2(pathText, expectedCount = -1) {
+    if (!pathText || typeof pathText !== "string") {
+      return new Float32Array(0);
+    }
+    const numbers = pathText.match(/[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?/g);
+    if (!numbers || numbers.length < 4) {
+      return new Float32Array(0);
+    }
+    const count = Math.floor(numbers.length / 2);
+    const out = new Float32Array(count * 2);
+    for (let i = 0; i < count; i += 1) {
+      const k = i * 2;
+      out[k] = Number(numbers[k]);
+      out[k + 1] = Number(numbers[k + 1]);
+    }
+    if (expectedCount > 1 && count !== expectedCount) {
+      return resampleOpenFloat2(out, expectedCount);
+    }
+    return out;
+  }
+
+  prepareCenterLockD3Context(
+    fromCurve,
+    toCurve,
+    reverseFrom,
+    fromSkipStart,
+    fromSkipEnd,
+    toSkipStart,
+    toSkipEnd
+  ) {
+    const interpolatePathFn = this.d3InterpolatePath;
+    if (typeof interpolatePathFn !== "function") {
+      this.centerLockD3LastError = "d3 interpolatePath unavailable";
+      return null;
+    }
+
+    let fromChain = this.buildSeamOrderedVisibleChain(
+      fromCurve,
+      fromSkipStart,
+      fromSkipEnd,
+      reverseFrom
+    );
+    let toChain = this.buildSeamOrderedVisibleChain(toCurve, toSkipStart, toSkipEnd, false);
+    const fromCount = (fromChain.length / 2) | 0;
+    const toCount = (toChain.length / 2) | 0;
+    if (fromCount < 4 || toCount < 4) {
+      this.centerLockD3LastError = "insufficient chain points";
+      return null;
+    }
+
+    const fullCount = Math.max(4, Math.min(this.n, Math.max(fromCount, toCount)));
+    if (fromCount !== fullCount) {
+      fromChain = resampleOpenFloat2(fromChain, fullCount);
+    }
+    if (toCount !== fullCount) {
+      toChain = resampleOpenFloat2(toChain, fullCount);
+    }
+
+    const fromTrimmed = this.trimChainEndpoints(fromChain, this.centerLockD3TrimPoints);
+    const toTrimmed = this.trimChainEndpoints(toChain, this.centerLockD3TrimPoints);
+    const trimmedFromCount = (fromTrimmed.length / 2) | 0;
+    const trimmedToCount = (toTrimmed.length / 2) | 0;
+    if (trimmedFromCount < 2 || trimmedToCount < 2) {
+      this.centerLockD3LastError = "trim removed all interior points";
+      return null;
+    }
+
+    const interiorCount = Math.max(
+      16,
+      Math.min(this.centerLockD3InteriorSamples, trimmedFromCount, trimmedToCount)
+    );
+    const fromInterior =
+      trimmedFromCount === interiorCount
+        ? fromTrimmed
+        : resampleOpenFloat2(fromTrimmed, interiorCount);
+    const toInterior =
+      trimmedToCount === interiorCount ? toTrimmed : resampleOpenFloat2(toTrimmed, interiorCount);
+
+    const fromPath = this.float2ToSvgLinePath(fromInterior);
+    const toPath = this.float2ToSvgLinePath(toInterior);
+    if (!fromPath || !toPath) {
+      this.centerLockD3LastError = "failed to build d3 line paths";
+      return null;
+    }
+
+    try {
+      this.centerLockD3LastError = "";
+      return {
+        interpolator: interpolatePathFn(fromPath, toPath),
+        interiorCount,
+        fromStartX: fromChain[0],
+        fromStartY: fromChain[1],
+        fromEndX: fromChain[fromChain.length - 2],
+        fromEndY: fromChain[fromChain.length - 1],
+        toStartX: toChain[0],
+        toStartY: toChain[1],
+        toEndX: toChain[toChain.length - 2],
+        toEndY: toChain[toChain.length - 1]
+      };
+    } catch (error) {
+      this.centerLockD3LastError = String(error?.message || error);
+      return null;
+    }
+  }
+
+  pushCenterLockD3SeamBlend(ptr, context, t, widthPx, color) {
+    if (!context || typeof context.interpolator !== "function") {
+      return ptr;
+    }
+    let interior = new Float32Array(0);
+    try {
+      const pathText = context.interpolator(clamp(t, 0, 1));
+      interior = this.parseSvgLinePathToFloat2(pathText, context.interiorCount);
+    } catch (error) {
+      this.centerLockD3LastError = String(error?.message || error);
+      return ptr;
+    }
+
+    const interiorCount = (interior.length / 2) | 0;
+    if (interiorCount < 2) {
+      return ptr;
+    }
+
+    const tc = clamp(t, 0, 1);
+    const startX = lerp(context.fromStartX, context.toStartX, tc);
+    const startY = lerp(context.fromStartY, context.toStartY, tc);
+    const endX = lerp(context.fromEndX, context.toEndX, tc);
+    const endY = lerp(context.fromEndY, context.toEndY, tc);
+    const firstX = interior[0];
+    const firstY = interior[1];
+    const lastK = (interiorCount - 1) * 2;
+    const lastX = interior[lastK];
+    const lastY = interior[lastK + 1];
+
+    ptr = this.pushSegment(ptr, startX, startY, firstX, firstY, widthPx, color);
+    ptr = this.pushPolylineBuffer(ptr, interior, widthPx, color);
+    ptr = this.pushSegment(ptr, lastX, lastY, endX, endY, widthPx, color);
     return ptr;
   }
 
@@ -7105,11 +7833,12 @@ class WaveOriginalRenderer {
     const activeEnabled = !!this.systemEnabled[this.activeWaveSet];
     const secondaryEnabled = !!this.systemEnabled[this.secondaryWaveSet];
     const primaryBlendWaveCount = Math.max(2, (this.primaryBlendInBetween | 0) + 2);
-    const hideBlendEndpoints = this.hidePrimaryBlendEndpoints && primaryBlendWaveCount > 2;
-    const primaryBlendDrawCount = Math.max(
-      0,
-      primaryBlendWaveCount - (hideBlendEndpoints ? 2 : 0)
-    );
+    const pocIntermediateOnly = !!this.primaryBlendPocIntermediate;
+    const hideBlendEndpoints =
+      !pocIntermediateOnly && this.hidePrimaryBlendEndpoints && primaryBlendWaveCount > 2;
+    const primaryBlendDrawCount = pocIntermediateOnly
+      ? 3
+      : Math.max(0, primaryBlendWaveCount - (hideBlendEndpoints ? 2 : 0));
     const primaryWaveVerts = activeEnabled ? segs * 6 * primaryBlendDrawCount : 0;
     const secondaryWaveVerts = secondaryEnabled ? segs * 6 * 2 : 0;
     const secondaryBReplicaCopies =
@@ -7178,6 +7907,9 @@ class WaveOriginalRenderer {
       if (activeEnabled) {
         guideVerts += this.countCubicGuideVertices(this.cubicMovedA);
         guideVerts += this.countCubicGuideVertices(this.cubicMovedB);
+        if (this.primaryBlendPocIntermediate && this.cubicIntermediatePoc.length) {
+          guideVerts += this.countCubicGuideVertices(this.cubicIntermediatePoc);
+        }
         guideVerts += this.countConstraintVertices(this.constraintBaseA);
         guideVerts += this.countConstraintVertices(this.constraintBaseB);
       }
@@ -7270,6 +8002,18 @@ class WaveOriginalRenderer {
       const blendSegCount = Math.max(0, this.n - 1);
       const phaseBlendMode =
         blendMode === BLEND_MODE_FROZEN_PHASE || blendMode === BLEND_MODE_ARC_LENGTH;
+      const centerLockD3Context =
+        blendMode === BLEND_MODE_CENTER_LOCK_D3_SEAM
+          ? this.prepareCenterLockD3Context(
+              blendFromCurve,
+              blendToCurve,
+              reverseFromForBlend,
+              this.waveSkipBStart,
+              this.waveSkipBEnd,
+              this.waveSkipAStart,
+              this.waveSkipAEnd
+            )
+          : null;
       const frozenPhase = phaseBlendMode
         ? this.getPrimaryFrozenBlendPhase(
               blendFromCurve,
@@ -7291,93 +8035,147 @@ class WaveOriginalRenderer {
         blendFromCurve,
         blendToCurve
       });
-      for (let i = 0; i < primaryBlendWaveCount; i += 1) {
-        if (hideBlendEndpoints && (i === 0 || i === primaryBlendWaveCount - 1)) {
-          continue;
+      if (pocIntermediateOnly) {
+        const widthB = CONFIG.stroke.widthB;
+        const widthA = CONFIG.stroke.widthA;
+        ptr = this.pushPolylineSkipRange(
+          ptr,
+          this.waveTravelB,
+          widthB,
+          this.interpolatePrimaryBlendColor(0),
+          this.waveSkipBStart,
+          this.waveSkipBEnd
+        );
+        if (this.intermediatePocAnchorCount >= 2) {
+          const midT = 0.5;
+          ptr = this.pushPolyline(
+            ptr,
+            this.waveIntermediatePoc,
+            lerp(widthB, widthA, midT),
+            this.interpolatePrimaryBlendColor(midT)
+          );
         }
-        const t = i / denom;
-        const color = this.interpolatePrimaryBlendColor(t);
-        const width = lerp(CONFIG.stroke.widthB, CONFIG.stroke.widthA, t);
-        if (i === 0) {
-          ptr = this.pushPolylineSkipRange(
-            ptr,
-            this.waveTravelB,
-            width,
-            color,
-            this.waveSkipBStart,
-            this.waveSkipBEnd
-          );
-          continue;
-        }
-        if (i === primaryBlendWaveCount - 1) {
-          ptr = this.pushPolylineSkipRange(
-            ptr,
-            this.waveTravelA,
-            width,
-            color,
-            this.waveSkipAStart,
-            this.waveSkipAEnd
-          );
-          continue;
-        }
-        if (blendMode === BLEND_MODE_FROZEN_PHASE) {
-          ptr = this.pushLerpedPolylineWithPhase(
-            ptr,
-            blendFromCurve,
-            blendToCurve,
-            t,
-            width,
-            color,
-            frozenPhase,
-            reverseFromForBlend,
-            this.waveSkipBStart,
-            this.waveSkipBEnd,
-            this.waveSkipAStart,
-            this.waveSkipAEnd
-          );
-        } else if (blendMode === BLEND_MODE_ARC_LENGTH) {
-          ptr = this.pushArcLengthLerpedPolyline(
-            ptr,
-            blendFromCurve,
-            blendToCurve,
-            t,
-            width,
-            color,
-            frozenPhase,
-            reverseFromForBlend,
-            this.waveSkipBStart,
-            this.waveSkipBEnd,
-            this.waveSkipAStart,
-            this.waveSkipAEnd
-          );
-        } else if (blendMode === BLEND_MODE_SEAM_INVARIANT) {
-          ptr = this.pushLerpedPolylineSkipRanges(
-            ptr,
-            blendFromCurve,
-            blendToCurve,
-            t,
-            width,
-            color,
-            -1,
-            -1,
-            -1,
-            -1,
-            reverseFromForBlend
-          );
-        } else {
-          ptr = this.pushLerpedPolylineSkipRanges(
-            ptr,
-            blendFromCurve,
-            blendToCurve,
-            t,
-            width,
-            color,
-            this.waveSkipBStart,
-            this.waveSkipBEnd,
-            this.waveSkipAStart,
-            this.waveSkipAEnd,
-            reverseFromForBlend
-          );
+        ptr = this.pushPolylineSkipRange(
+          ptr,
+          this.waveTravelA,
+          widthA,
+          this.interpolatePrimaryBlendColor(1),
+          this.waveSkipAStart,
+          this.waveSkipAEnd
+        );
+      } else {
+        for (let i = 0; i < primaryBlendWaveCount; i += 1) {
+          if (hideBlendEndpoints && (i === 0 || i === primaryBlendWaveCount - 1)) {
+            continue;
+          }
+          const t = i / denom;
+          const color = this.interpolatePrimaryBlendColor(t);
+          const width = lerp(CONFIG.stroke.widthB, CONFIG.stroke.widthA, t);
+          if (i === 0) {
+            ptr = this.pushPolylineSkipRange(
+              ptr,
+              this.waveTravelB,
+              width,
+              color,
+              this.waveSkipBStart,
+              this.waveSkipBEnd
+            );
+            continue;
+          }
+          if (i === primaryBlendWaveCount - 1) {
+            ptr = this.pushPolylineSkipRange(
+              ptr,
+              this.waveTravelA,
+              width,
+              color,
+              this.waveSkipAStart,
+              this.waveSkipAEnd
+            );
+            continue;
+          }
+          if (blendMode === BLEND_MODE_FROZEN_PHASE) {
+            ptr = this.pushLerpedPolylineWithPhase(
+              ptr,
+              blendFromCurve,
+              blendToCurve,
+              t,
+              width,
+              color,
+              frozenPhase,
+              reverseFromForBlend,
+              this.waveSkipBStart,
+              this.waveSkipBEnd,
+              this.waveSkipAStart,
+              this.waveSkipAEnd
+            );
+          } else if (blendMode === BLEND_MODE_ARC_LENGTH) {
+            ptr = this.pushArcLengthLerpedPolyline(
+              ptr,
+              blendFromCurve,
+              blendToCurve,
+              t,
+              width,
+              color,
+              frozenPhase,
+              reverseFromForBlend,
+              this.waveSkipBStart,
+              this.waveSkipBEnd,
+              this.waveSkipAStart,
+              this.waveSkipAEnd
+            );
+          } else if (blendMode === BLEND_MODE_CENTER_LOCK_D3_SEAM) {
+            if (centerLockD3Context) {
+              ptr = this.pushCenterLockD3SeamBlend(
+                ptr,
+                centerLockD3Context,
+                t,
+                width,
+                color
+              );
+            } else {
+              ptr = this.pushLerpedPolylineSkipRanges(
+                ptr,
+                blendFromCurve,
+                blendToCurve,
+                t,
+                width,
+                color,
+                this.waveSkipBStart,
+                this.waveSkipBEnd,
+                this.waveSkipAStart,
+                this.waveSkipAEnd,
+                reverseFromForBlend
+              );
+            }
+          } else if (blendMode === BLEND_MODE_SEAM_INVARIANT) {
+            ptr = this.pushLerpedPolylineSkipRanges(
+              ptr,
+              blendFromCurve,
+              blendToCurve,
+              t,
+              width,
+              color,
+              -1,
+              -1,
+              -1,
+              -1,
+              reverseFromForBlend
+            );
+          } else {
+            ptr = this.pushLerpedPolylineSkipRanges(
+              ptr,
+              blendFromCurve,
+              blendToCurve,
+              t,
+              width,
+              color,
+              this.waveSkipBStart,
+              this.waveSkipBEnd,
+              this.waveSkipAStart,
+              this.waveSkipAEnd,
+              reverseFromForBlend
+            );
+          }
         }
       }
     }
@@ -7411,6 +8209,9 @@ class WaveOriginalRenderer {
       if (activeEnabled) {
         ptr = this.pushCubicGuides(ptr, this.cubicMovedA, COLORS.handleGuideA);
         ptr = this.pushCubicGuides(ptr, this.cubicMovedB, COLORS.handleGuideB);
+        if (this.primaryBlendPocIntermediate && this.cubicIntermediatePoc.length) {
+          ptr = this.pushCubicGuides(ptr, this.cubicIntermediatePoc, [1.0, 0.98, 0.72, 0.72]);
+        }
         ptr = this.pushConstraintGuides(
           ptr,
           this.constraintBaseA,
@@ -7694,6 +8495,8 @@ class WaveOriginalRenderer {
     const intersectionB = this.baselineEdgeIntersectionDetailsB || [];
     const activeMarkerA = (this.markerPosA.length / 2) | 0;
     const activeMarkerB = (this.markerPosB.length / 2) | 0;
+    const activeConstraintA = (this.constraintAnchorA.length / 2) | 0;
+    const activeConstraintB = (this.constraintAnchorB.length / 2) | 0;
     const endpointGapActiveA = this.endpointGapPx(this.constraintAnchorA);
     const endpointGapActiveB = this.endpointGapPx(this.constraintAnchorB);
     const fmtIntersections = (entries, prefix) => {
@@ -7728,21 +8531,34 @@ class WaveOriginalRenderer {
       this.travelDirectionA * this.travelDirectionB < 0 ? "reversed-from-B" : "direct"
     }`;
     const blendModeInfo = `blend mode ${this.getPrimaryBlendModeLabel(this.primaryBlendMode)}`;
+    const blendD3Info = `blend d3 ${
+      this.d3InterpolatePath ? "ready" : "missing"
+    } | interior ${this.centerLockD3InteriorSamples} trim ${this.centerLockD3TrimPoints}${
+      this.centerLockD3LastError ? ` | err ${this.centerLockD3LastError}` : ""
+    }`;
     const blendEndpointInfo = `blend key endpoints ${this.hidePrimaryBlendEndpoints ? "hidden" : "shown"}`;
+    const pocTransition = this.intermediatePocTransition;
+    const blendPocInfo = `blend PoC intermediate ${this.primaryBlendPocIntermediate ? "on" : "off"} | anchors ${this.intermediatePocAnchorCount} | tr ${pocTransition.active ? "active" : "idle"} ${pocTransition.elapsedSec.toFixed(3)}/${pocTransition.durationSec.toFixed(3)}s starts ${pocTransition.starts} restarts ${pocTransition.restarts}`;
     const blendMapInfo = this.isBlendMapTransitionMode()
       ? `blend map-interp A ${this.blendMapA.active ? "active" : "idle"} ${this.blendMapA.elapsedSec.toFixed(3)}/${this.blendMapA.durationSec.toFixed(3)}s | B ${this.blendMapB.active ? "active" : "idle"} ${this.blendMapB.elapsedSec.toFixed(3)}/${this.blendMapB.durationSec.toFixed(3)}s`
       : null;
     const scrubInfo = `scrub ${this.motionScrubMode ? "on" : "off"} | step ${(this.motionScrubStepSeconds * 1000).toFixed(2)}ms`;
     const blendDebugLines = this.getBlendDebugSectionLines();
-    const intermediateMapLines = this.getIntermediateAnchorMapHudLines(keyAnchorA, keyAnchorB);
+    const intermediatePocDebugLines = this.getIntermediatePocDebugLines();
+    const intermediateMapLines = this.getIntermediateAnchorMapHudLines(
+      activeConstraintA || keyAnchorA,
+      activeConstraintB || keyAnchorB
+    );
 
     this.hud.textContent = [
       `Profile: ${suffix}`,
       "wave set key",
       `blend ${Math.max(2, (this.primaryBlendInBetween | 0) + 2)} waves (${Math.max(0, this.primaryBlendInBetween | 0)} in-between)`,
       blendModeInfo,
+      blendD3Info,
       blendDirInfo,
       blendEndpointInfo,
+      blendPocInfo,
       blendMapInfo,
       blurInfo,
       blurErrorInfo,
@@ -7775,6 +8591,8 @@ class WaveOriginalRenderer {
       extraMessage || `Reference file: key ${REFERENCE_IMAGE_BY_SET.key}`,
       "",
       ...intermediateMapLines,
+      "",
+      ...intermediatePocDebugLines,
       "",
       ...blendDebugLines
     ]

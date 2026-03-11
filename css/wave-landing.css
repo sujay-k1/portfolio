@@ -1,15 +1,30 @@
 @import url("https://fonts.googleapis.com/css2?family=Bitcount:CRSV,ELSH,ELXP,slnt,wght@0..1,0..100,0..100,-8..0,200..700&family=Unbounded:wght@400;500;600;700&display=swap");
 
 :root {
-  --bg-0: #1d0838;
-  --bg-1: #2a0f4c;
-  --bg-2: #2d1152;
-  --headline: #cf9ee6;
-  --headline-sub: #9e8fb8;
-  --nav: #f0d7ee;
-  --nav-active: #c2f542;
-  --top-size: clamp(32px, 6.4vw, 118px);
-  --complex-space: 0.18em;
+  --bg-0: #1f0a3f;
+  --bg-1: #2d1152;
+  --bg-2: #31165a;
+  --txt-main: #c7b0da;
+  --txt-bright: #f0e8dc;
+  --txt-outline: #d4c4dd;
+  --txt-lime: #b4d624;
+  --txt-nav: #f6dfef;
+  --txt-nav-active: #c6ec24;
+  --txt-status: #54f342;
+  --intro-main-size: clamp(52px, 4.18vw, 80px);
+  --intro-bitcount-size: calc(var(--intro-main-size) * 1.4516);
+  --intro-small-size: calc(var(--intro-main-size) * 0.5161);
+  --intro-left: clamp(122px, 8vw, 170px);
+  --intro-top: clamp(320px, 33.2vh, 402px);
+  --intro-line2-offset: clamp(66px, 4.3vw, 96px);
+  --intro-line3-offset: clamp(458px, 30.2vw, 610px);
+  --case-pad: clamp(122px, 8vw, 176px);
+  --case-top: clamp(176px, 18vh, 226px);
+  --case-year-size: clamp(72px, 5.9vw, 118px);
+  --case-statement-size: calc(var(--case-year-size) * 24 / 90);
+  --case-keyword-size: calc(var(--case-statement-size) * 1.5);
+  --case-nav-size: calc(var(--case-statement-size) * 2 / 3);
+  --case-logo-block-width: clamp(220px, 15vw, 300px);
 }
 
 * {
@@ -20,32 +35,43 @@ html,
 body {
   margin: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
-  overflow: hidden;
   background:
-    radial-gradient(130vw 110vh at -12% 112%, rgba(168, 104, 220, 0.14), transparent 48%),
-    linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 48%, var(--bg-2) 100%);
-  color: var(--headline);
+    radial-gradient(120vw 100vh at 18% 112%, rgba(122, 76, 180, 0.2), transparent 58%),
+    linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 44%, var(--bg-2) 100%);
+  color: var(--txt-main);
   font-family: "Unbounded", "Avenir Next", "Futura", sans-serif;
+  overflow-x: hidden;
+}
+
+.story-scroll {
+  height: 760vh;
+}
+
+.story-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .top-nav {
-  position: fixed;
-  top: clamp(42px, 4.8vh, 56px);
-  left: clamp(78px, 6vw, 96px);
-  z-index: 10;
+  position: absolute;
+  top: clamp(42px, 4.3vh, 56px);
+  left: clamp(62px, 6.2vw, 112px);
+  z-index: 20;
   display: flex;
   align-items: center;
-  gap: clamp(54px, 4.2vw, 72px);
+  gap: clamp(44px, 4vw, 72px);
 }
 
 .brand {
-  color: var(--nav);
+  color: var(--txt-nav);
   text-decoration: none;
-  font-size: clamp(34px, 2.9vw, 48px);
+  font-size: clamp(38px, 2.35vw, 48px);
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.02em;
@@ -54,135 +80,369 @@ body {
 .menu {
   display: flex;
   align-items: center;
-  gap: clamp(58px, 4.4vw, 76px);
+  gap: clamp(54px, 4.1vw, 78px);
 }
 
 .menu-link {
-  color: var(--nav);
+  color: var(--txt-nav);
   text-decoration: none;
-  font-size: clamp(26px, 2.15vw, 38px);
+  font-size: clamp(34px, 2vw, 42px);
   font-weight: 500;
-  line-height: 1;
   letter-spacing: -0.01em;
+  line-height: 1;
 }
 
 .menu-link.is-active {
-  color: var(--nav-active);
+  color: var(--txt-nav-active);
 }
 
-.hero {
+.intro-stage,
+.case-stage {
   position: absolute;
-  left: clamp(118px, 8.6vw, 166px);
-  top: clamp(338px, 36vh, 414px);
-  text-align: left;
+  inset: 0;
+}
+
+.intro-stage {
+  z-index: 9;
+  opacity: 1;
+}
+
+.intro-copy {
+  position: absolute;
+  left: var(--intro-left);
+  top: var(--intro-top);
   width: max-content;
+  pointer-events: none;
 }
 
-.line {
+.intro-line {
   margin: 0;
-  font-family: "Unbounded", "Avenir Next", "Futura", sans-serif;
-  font-style: normal;
-  color: var(--headline);
-  font-weight: 500;
-}
-
-.line-top {
-  font-size: var(--top-size);
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-  margin: 0;
-}
-
-.line-for {
-  font-size: 0.52em;
-  color: var(--headline);
-  vertical-align: baseline;
-  position: relative;
-  top: 0.16em;
-  margin-left: 0.09em;
-}
-
-.vf-text {
-  margin: 0;
-  color: var(--headline);
-  font-family: "Bitcount", "Bitcount Variable", "Avenir Next", "Futura", sans-serif;
-  font-size: calc(var(--top-size) * 90 / 62);
-  font-style: normal;
-  font-weight: 200;
-  line-height: 1.02;
-  letter-spacing: 0.015em;
+  line-height: 0.94;
+  letter-spacing: -0.02em;
   white-space: nowrap;
+}
+
+.intro-line-1 {
+  font-size: var(--intro-main-size);
+  font-weight: 500;
+  color: #c99fe2;
+}
+
+.intro-line-2 {
+  font-size: var(--intro-bitcount-size);
+  font-family: "Bitcount", "Bitcount Variable", "Avenir Next", "Futura", sans-serif;
+  color: #c99fe2;
+  margin-top: clamp(4px, 0.5vh, 8px);
+  margin-left: var(--intro-line2-offset);
+  font-variation-settings: "wght" 220, "ELSH" 8;
+}
+
+.intro-line-3 {
+  font-size: var(--intro-small-size);
+  font-weight: 500;
+  color: #c99fe2;
+  margin-top: clamp(6px, 0.7vh, 12px);
+  margin-left: calc(var(--intro-line3-offset) * 0.75);
+}
+
+.intro-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.intro-word-bitcount {
+  transition: font-variation-settings 90ms linear;
+}
+
+.intro-word-space-left {
+  margin-left: 0.18em;
+}
+
+.intro-word-small {
+  font-size: 0.52em;
+  position: relative;
+  top: 0.2em;
+}
+
+.intro-line-3 .intro-word-small {
+  font-size: 1em;
+  top: 0;
+}
+
+.case-stage {
+  z-index: 10;
+  opacity: 0;
+}
+
+.case-layout {
+  position: absolute;
+  top: var(--case-top);
+  left: 0;
+  right: 0;
+  padding-inline: var(--case-pad);
+}
+
+.case-head {
+  width: 100%;
+  height: calc(var(--case-year-size) * 0.8889);
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+}
+
+.case-year {
+  align-self: stretch;
+  display: flex;
+  align-items: flex-end;
+  font-family: "Bitcount", "Bitcount Variable", "Avenir Next", "Futura", sans-serif;
+  font-size: var(--case-year-size);
+  line-height: 0.8889;
+  letter-spacing: 0.04em;
+  color: var(--txt-lime);
+  font-variation-settings: "wght" 280, "ELSH" 10;
+}
+
+.case-brand {
+  width: var(--case-logo-block-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.case-brand-logo {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.case-brand-logo img {
+  max-width: 100%;
+  max-height: clamp(40px, 6.5vh, 84px);
+  object-fit: contain;
+}
+
+.case-brand-logo .logo-fallback {
+  color: var(--txt-nav);
+  font-size: clamp(30px, 2.4vw, 48px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.case-brand-sub {
+  color: var(--txt-nav);
+  font-size: clamp(15px, 1.08vw, 24px);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.case-copy-wrap {
+  width: calc(100% - var(--case-logo-block-width) - 80px);
+  margin-top: clamp(48px, 4.8vh, 66px);
+}
+
+.case-statement {
+  width: 100%;
+  font-size: var(--case-statement-size);
+  line-height: 1.2;
+  letter-spacing: -0.014em;
+  font-weight: 300;
+  color: var(--txt-main);
+}
+
+.statement-word {
+  display: inline-block;
+  margin-right: 0.24em;
+  opacity: 0;
+}
+
+.statement-word.highlight {
+  color: var(--txt-lime);
+}
+
+.case-keywords {
+  width: 100%;
+  margin-top: clamp(64px, 6vh, 90px);
+}
+
+.keyword-line {
+  margin: 0;
+  min-height: 1.22em;
+  font-size: var(--case-keyword-size);
+  line-height: 1.15;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  color: transparent;
+}
+
+.keyword-svg {
+  display: block;
+  overflow: visible;
+}
+
+.keyword-chip {
+  font-family: "Unbounded", "Avenir Next", "Futura", sans-serif;
+  font-size: var(--case-keyword-size);
+  letter-spacing: -0.006em;
+  font-weight: 400;
+  white-space: pre;
+  opacity: 0;
+  fill: #fff;
+  stroke: none;
+  paint-order: stroke fill;
+}
+
+.keyword-chip.is-filled {
+  fill: var(--txt-bright);
+  font-weight: 600;
+}
+
+.company-nav {
+  position: absolute;
+  left: var(--case-pad);
+  right: var(--case-pad);
+  bottom: clamp(34px, 4vh, 58px);
+  display: grid;
+  grid-template-columns: repeat(4, max-content) 1fr;
+  align-items: center;
+  column-gap: clamp(52px, 4vw, 98px);
+  z-index: 22;
+  opacity: 0;
+}
+
+.company-link {
+  color: rgba(193, 212, 45, 0.78);
+  text-decoration: none;
+  font-size: var(--case-nav-size);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  cursor: default;
   user-select: none;
-  font-synthesis-weight: none;
-  margin-left: clamp(58px, 4.2vw, 88px);
-  margin-top: clamp(2px, 0.5vh, 8px);
+  opacity: 0;
+  transform: translateX(24px);
 }
 
-.vf-char {
-  display: inline-block;
-  font-variation-settings: "wght" 200, "ELSH" 10;
-  will-change: font-variation-settings;
+.company-link.is-active {
+  color: #d2f532;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  text-decoration-thickness: 0.06em;
 }
 
-.vf-space {
-  display: inline-block;
-  width: var(--complex-space);
+.status-pill {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  color: var(--txt-status);
+  font-size: var(--case-nav-size);
+  line-height: 1;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(24px);
 }
 
-.line-bottom {
-  font-size: clamp(27px, 3.05vw, 56px);
-  line-height: 1.03;
-  letter-spacing: -0.015em;
-  margin-top: clamp(10px, 1.4vh, 18px);
-  margin-left: clamp(458px, 30vw, 532px);
+.status-dot {
+  width: 0.84em;
+  height: 0.84em;
+  border-radius: 50%;
+  background: var(--txt-status);
+  box-shadow: 0 0 0.45em rgba(84, 243, 66, 0.58);
 }
 
 @media (max-width: 1200px) {
-  :root {
-    --top-size: clamp(34px, 8.4vw, 72px);
+  .story-scroll {
+    height: 980vh;
   }
 
   .top-nav {
-    top: 34px;
-    left: 34px;
-    gap: 30px;
+    left: 24px;
+    top: 24px;
+    gap: 20px;
   }
 
   .brand {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .menu {
-    gap: 30px;
+    gap: 16px;
   }
 
   .menu-link {
     font-size: 18px;
   }
 
-  .hero {
-    position: static;
+  :root {
+    --intro-main-size: clamp(34px, 9.4vw, 56px);
+    --intro-bitcount-size: calc(var(--intro-main-size) * 1.4516);
+    --intro-small-size: calc(var(--intro-main-size) * 0.5161);
+    --intro-left: 24px;
+    --intro-top: 30vh;
+    --intro-line2-offset: clamp(16px, 4.6vw, 30px);
+    --intro-line3-offset: clamp(148px, 40vw, 268px);
+    --case-pad: 24px;
+    --case-top: 16vh;
+    --case-year-size: clamp(62px, 16vw, 90px);
+    --case-logo-block-width: 160px;
+  }
+
+  .intro-copy {
+    left: var(--intro-left);
+    top: var(--intro-top);
+    width: calc(100vw - 48px);
+  }
+
+  .case-layout {
+    padding-inline: var(--case-pad);
+  }
+
+  .case-head {
+    height: calc(var(--case-year-size) * 0.8889);
+  }
+
+  .case-brand-logo img {
+    max-width: 100%;
+  }
+
+  .case-brand-sub {
+    font-size: 13px;
+  }
+
+  .case-copy-wrap {
     width: 100%;
-    height: 100%;
-    display: grid;
-    place-content: center;
-    justify-items: center;
-    text-align: center;
-    padding: 0 24px;
+    margin-top: 28px;
   }
 
-  .line-bottom {
-    font-size: clamp(24px, 4.5vw, 42px);
-    margin-left: 0;
-    margin-top: 8px;
+  .case-keywords {
+    margin-top: 24px;
   }
 
-  .vf-text {
-    margin-left: 0;
-    margin-top: 4px;
+  .keyword-line {
+    white-space: normal;
+    color: transparent;
   }
 
-  .vf-space {
-    width: 0.28em;
+  .company-nav {
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+    grid-template-columns: repeat(2, max-content);
+    row-gap: 8px;
+    column-gap: 20px;
+  }
+
+  .company-link {
+    font-size: var(--case-nav-size);
+  }
+
+  .status-pill {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: var(--case-nav-size);
   }
 }
