@@ -5,39 +5,257 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Curious Designer for Complex Systems</title>
   <meta name="description" content="Scroll-sequenced portfolio narrative with animated typography.">
+  <link rel="preconnect" href="https://rsms.me">
   <link rel="stylesheet" href="css/wave-landing.css">
 </head>
-<body>
+<body class="snap-mode app-loading">
+  <div class="startup-loader" id="startup-loader" aria-hidden="true">
+    <div class="startup-loader-stage">
+      <span class="startup-loader-measure" id="startup-loader-measure"></span>
+      <div class="startup-loader-box-shadow" id="startup-loader-box-shadow"></div>
+      <div class="startup-loader-box-wrap" id="startup-loader-box-wrap">
+        <div class="startup-loader-box" id="startup-loader-box">
+          <span class="startup-loader-handle startup-loader-handle-tl"></span>
+          <span class="startup-loader-handle startup-loader-handle-tr"></span>
+          <span class="startup-loader-handle startup-loader-handle-bl"></span>
+          <span class="startup-loader-handle startup-loader-handle-br"></span>
+          <div class="startup-loader-content" id="startup-loader-content">
+            <div class="startup-loader-mask" id="startup-loader-mask">
+              <div class="startup-loader-mask-group" id="startup-loader-mask-group">
+                <span class="startup-loader-mask-left" id="startup-loader-mask-left"></span>
+                <span class="startup-loader-mask-right" id="startup-loader-mask-right"></span>
+              </div>
+            </div>
+            <div class="startup-loader-typing" id="startup-loader-typing">
+              <span class="startup-loader-typing-text" id="startup-loader-typing-text"></span>
+              <span class="startup-loader-caret" id="startup-loader-caret"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="startup-loader-cursor" id="startup-loader-cursor">
+        <svg class="startup-loader-cursor-arrow" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 3.2L17.8 9.3L11.4 11.5L9.2 17.8L3 3.2Z" fill="#0A0A0A" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+        </svg>
+        <svg class="startup-loader-cursor-resize" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.2 9H15.8" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M5.4 5.8L2.2 9L5.4 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12.6 5.8L15.8 9L12.6 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+    </div>
+  </div>
   <header class="top-nav" aria-label="Primary navigation">
-    <a class="brand" href="/" aria-label="Home">sk</a>
+    <a class="brand" href="/" aria-label="Home">
+      <span class="brand-loader-slot" id="brand-loader-slot" aria-hidden="true"></span>
+    </a>
     <nav class="menu" aria-label="Main menu">
       <a class="menu-link is-active" href="/">about</a>
       <a class="menu-link" href="/work">work</a>
       <a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a>
     </nav>
   </header>
-
-  <section class="intro-stage" id="intro-stage" aria-label="Hero statement">
-    <div class="intro-copy" id="intro-copy">
-      <div class="intro-line intro-line-1">
-        <span class="intro-word" data-order="0">curious</span>
-        <span class="intro-word" data-order="1">designer</span>
-        <span class="intro-word intro-word-small" data-order="2">for</span>
-      </div>
-      <div class="intro-line intro-line-2">
-        <span class="intro-word intro-word-bitcount" data-order="3">complex</span>
-        <span class="intro-word intro-word-bitcount intro-word-space-left" data-order="4">systems</span>
-      </div>
-      <div class="intro-line intro-line-3">
-        <span class="intro-word intro-word-small" data-order="5">that</span>
-        <span class="intro-word intro-word-small" data-order="6">need</span>
-        <span class="intro-word intro-word-small" data-order="7">to</span>
-        <span class="intro-word intro-word-small" data-order="8">scale</span>
-      </div>
+  <div class="folio-status folio-status-persistent" aria-hidden="true">
+    <span class="folio-status-dot" aria-hidden="true"></span>
+    <span>open to opportunities</span>
+  </div>
+  <div class="folio-bottom-nav folio-bottom-nav-persistent" aria-hidden="true">
+    <div class="folio-bottom-nav-items">
+      <span class="active">BRND STUDIO</span>
+      <span>JioTesseract</span>
+      <span>Biz2X</span>
+      <span>Saison Omni</span>
     </div>
-  </section>
+    <span class="folio-bottom-nav-indicator" aria-hidden="true">
+      <span class="folio-bottom-nav-indicator-fill" aria-hidden="true"></span>
+    </span>
+  </div>
+  <div class="section-transition-layer" id="section-transition-layer" aria-hidden="true">
+    <svg class="section-transition-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="section-transition-gradient" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
+          <stop id="section-transition-stop-top" offset="0%" stop-color="var(--section-transition-top, var(--bg-0))"></stop>
+          <stop id="section-transition-stop-bottom" offset="100%" stop-color="var(--section-transition-bottom, var(--bg-2))"></stop>
+        </linearGradient>
+      </defs>
+      <path class="section-transition-fill" id="section-transition-fill" fill="url(#section-transition-gradient)"></path>
+      <path class="section-transition-edge" id="section-transition-edge" fill="none"></path>
+    </svg>
+    <div class="section-transition-label" id="section-transition-label">scroll</div>
+  </div>
+
+  <main class="snap-root" id="snap-root" aria-label="Snap sections">
+    <div class="snap-track" id="snap-track">
+      <section class="snap-section snap-section-first" data-section="1" aria-label="Section 1">
+        <section class="intro-stage" id="intro-stage" aria-label="Hero statement">
+          <div class="intro-copy" id="intro-copy">
+            <div class="intro-line intro-line-1">
+              <span class="intro-word" data-order="0">curious</span>
+              <span class="intro-word" data-order="1">designer</span>
+              <span class="intro-word intro-word-small" data-order="2">for</span>
+            </div>
+            <div class="intro-line intro-line-2">
+              <span class="intro-word intro-word-bitcount" data-order="3">complex</span>
+              <span class="intro-word intro-word-bitcount intro-word-space-left" data-order="4">systems</span>
+            </div>
+            <div class="intro-line intro-line-3">
+              <span class="intro-word intro-word-small" data-order="5">that</span>
+              <span class="intro-word intro-word-small" data-order="6">need</span>
+              <span class="intro-word intro-word-small" data-order="7">to</span>
+              <span class="intro-word intro-word-small" data-order="8">scale</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="snap-section" data-section="2" aria-label="Section 2">
+        <article class="folio-about">
+          <div class="folio-about-copy">
+            <p><span class="nowrap">I have <span class="scroll-fill">built and transformed enterprise</span></span> products that power core operational workflows.</p>
+            <p>I lead product design to help users accomplish critical work with <span class="scroll-fill">less effort and more confidence.</span></p>
+            <p>As a manager, I foster <span class="scroll-fill">empathetic collaboration</span> and enable a thriving culture of growth!</p>
+            <p>Outside work, I share my insights and expertise as a design educator. I teach at MIT-WPU as visiting faculty and mentor designers at Designerrs Academy.</p>
+          </div>
+          <div class="folio-about-media" aria-hidden="true">
+            <div class="folio-about-model" id="section2-model"></div>
+          </div>
+          <div class="folio-status">
+            <span class="folio-status-dot" aria-hidden="true"></span>
+            <span>open to opportunities</span>
+          </div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="3" aria-label="Section 3">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2020</div>
+            <div class="folio-brand">
+              <img src="Assets/Aangan-white-logo.png" alt="Aangan logo">
+              <div class="folio-brand-sub">@BRND STUDIO</div>
+            </div>
+          </div>
+          <p class="folio-statement"><span class="hl">Scaled risk identification</span> by standardizing audits for NGOs and government adoption.</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Data Viz</span> <span class="outline">• Enterprise suite</span></p>
+            <p class="folio-key-row"><span class="fill">social service</span> <span class="outline">• Brand strategy</span></p>
+            <p class="folio-key-row"><span class="outline">Usability Testing</span> <span class="outline">• CMS</span> <span class="outline">• Design system</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="4" aria-label="Section 4">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2021</div>
+            <div class="folio-brand">
+              <img src="Assets/byju's-logo-white.png" alt="BYJU'S logo">
+              <div class="folio-brand-sub">@BRND STUDIO</div>
+            </div>
+          </div>
+          <p class="folio-statement">Improved <span class="hl">subscription renewal</span> by scaling “real” mentorship with MentorConnect</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Chatbot</span> <span class="outline">• CMS</span> <span class="outline">• Primary Research</span></p>
+            <p class="folio-key-row"><span class="fill">Education</span> <span class="outline">• A/B Testing</span> <span class="outline">• Smartfeed</span></p>
+            <p class="folio-key-row"><span class="outline">Personalization</span> <span class="outline">• Data Driven Design</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="5" aria-label="Section 5">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2022</div>
+            <div class="folio-brand">
+              <img src="Assets/prime-video-logo-white.png" alt="Prime Video logo">
+              <div class="folio-brand-sub">@BRND STUDIO</div>
+            </div>
+          </div>
+          <p class="folio-statement">Strengthened accessibility by shipping <span class="hl">AI-enabled audio description</span> workflows.</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Accessibility</span> <span class="outline">• Editing tool</span></p>
+            <p class="folio-key-row"><span class="fill">Entertainment</span> <span class="outline">• Asset management</span></p>
+            <p class="folio-key-row"><span class="outline">Project management tool</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="6" aria-label="Section 6">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2023</div>
+            <div class="folio-brand">
+              <img src="Assets/jiotesseract-logo-white.png" alt="JioTesseract logo">
+              <div class="folio-brand-sub">JioTesseract</div>
+            </div>
+          </div>
+          <p class="folio-statement"><span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">LMS</span> <span class="outline">• System design</span> <span class="outline">• Dashboard</span></p>
+            <p class="folio-key-row"><span class="fill">Immersive Learning</span> <span class="outline">• No-code tool</span></p>
+            <p class="folio-key-row"><span class="outline">Enterprise Training</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="7" aria-label="Section 7">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2023</div>
+            <div class="folio-brand">
+              <img src="Assets/jiotesseract-logo-white.png" alt="JioTesseract logo">
+              <div class="folio-brand-sub">JioTesseract</div>
+            </div>
+          </div>
+          <p class="folio-statement"><span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Design Foundation</span> <span class="outline">• System Design</span></p>
+            <p class="folio-key-row"><span class="fill">XR Platform</span> <span class="outline">• Design Patterns</span></p>
+            <p class="folio-key-row"><span class="outline">Spatial Design</span> <span class="outline">• Interaction Design</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="8" aria-label="Section 8">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2024-25</div>
+            <div class="folio-brand">
+              <img src="Assets/biz2x-logo-white.png" alt="Biz2X logo">
+              <div class="folio-brand-sub">Biz2X</div>
+            </div>
+          </div>
+          <p class="folio-statement"><span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Design Patterns</span> <span class="outline">• Configurable Journey</span></p>
+            <p class="folio-key-row"><span class="fill">Lending</span> <span class="outline">• System Design</span> <span class="outline">• CRM</span></p>
+            <p class="folio-key-row"><span class="outline">Data Driven Design</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+      <section class="snap-section" data-section="9" aria-label="Section 9">
+        <article class="folio-case">
+          <div class="folio-case-top">
+            <div class="folio-year">2025-26</div>
+            <div class="folio-brand">
+              <img src="Assets/saison-omni-logo-white.png" alt="Saison Omni logo">
+              <div class="folio-brand-sub">Dissolved by Saison International</div>
+            </div>
+          </div>
+          <p class="folio-statement"><span class="hl">Scaled product, fueled operations</span> by building reusable governance modules and design patterns</p>
+          <div class="folio-keywords">
+            <p class="folio-key-row"><span class="outline">Design Patterns</span> <span class="outline">• Configurable modules</span></p>
+            <p class="folio-key-row"><span class="fill">Lending</span> <span class="outline">• System Design</span> <span class="outline">• Design Ops</span></p>
+            <p class="folio-key-row"><span class="outline">Data Driven Design</span></p>
+          </div>
+          <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+        </article>
+      </section>
+    </div>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://assets.codepen.io/16327/SplitText3.min.js"></script>
   <script type="module" src="js/intro-only.js"></script>
 </body>
 </html>

@@ -699,7 +699,7 @@ body.work-page .header {
 	justify-content: flex-start;
 	align-items:center;
 	position: sticky;
-  	top: 0;
+  	top: 76px;
 	overflow: hidden;
 	width: 100%;
 	width: 30%;
@@ -733,6 +733,60 @@ body.work-page .header {
 	text-transform: uppercase;
 }
 
+body.case-study-page.case-study-index-enabled .section-heading-block {
+	position: static;
+	top: auto;
+	overflow: visible;
+	visibility: hidden;
+}
+
+body.case-study-page.case-study-index-enabled .case-study-index-item {
+	color: #888;
+	font-family: DM Sans;
+	font-size: 20px;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 32px;
+	text-decoration: none;
+	text-transform: uppercase;
+	transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+body.case-study-page.case-study-index-enabled .case-study-index-item:hover {
+	color: #bbb;
+}
+
+body.case-study-page.case-study-index-enabled .case-study-index-item.is-active {
+	color: #ddd;
+	text-decoration-line: underline;
+	text-underline-offset: 25%;
+	text-decoration-thickness: 1.5px;
+}
+
+body.case-study-page.case-study-index-enabled .case-study-index-shell {
+	position: sticky;
+	top: 76px;
+	height: 0;
+	margin-left: 20px;
+	margin-top: 48px;
+	width: calc(30% - 24px);
+	align-self: flex-start;
+	z-index: 360;
+	pointer-events: none;
+}
+
+body.case-study-page.case-study-index-enabled .case-study-index {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	padding-right: 30px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	background: linear-gradient(180deg, #222222 72%, rgba(34, 34, 34, 0.00) 100%);
+	pointer-events: auto;
+}
+
 
 .content-section-block {
 	display: flex;
@@ -743,9 +797,10 @@ body.work-page .header {
 	gap: var(--Passcode-font-size, 24px);
 	flex: 1 0 0;
 	width: 70%;
-	margin-top: 100px;
+	margin-bottom: 48px;
 	margin-botton: -150px;
 }
+
 
 .section-title {
 	color: var(--Grey-Monochromes-Grey---100, #ddd);
@@ -765,7 +820,7 @@ body.case-study-page .section-title {
 	top: 76px;
 	z-index: 350;
 	background: linear-gradient(180deg, #222222 80%, rgba(34, 34, 34, 0.00) 100%);
-	padding: 12px 0 16px 0;
+	padding: 12px 0 0 0;
 }
 
 .heading3 {
