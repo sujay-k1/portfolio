@@ -550,8 +550,8 @@ function ProceduralWaveBlendDemo() {
         c.height = h;
         const cctx = c.getContext("2d");
         const g = cctx.createLinearGradient(0, 0, w, h);
-        g.addColorStop(0, "#1e142e");
-        g.addColorStop(1, "#3e2f4a");
+        g.addColorStop(0, "#15101A");
+        g.addColorStop(1, "#2A2433");
         cctx.fillStyle = g;
         cctx.fillRect(0, 0, w, h);
         if (bgSprite.texture) bgSprite.texture.destroy(true);
@@ -763,7 +763,7 @@ function ProceduralWaveBlendDemo() {
             if (!shouldDraw) continue;
             const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
             const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-            const color = blendColorInt("#412b63", "#7451ad", raw);
+            const color = blendColorInt("#605e63", "#0c0912", raw);
             if (lineIndex % blurLineStride === 0) {
               const blurPts = [];
               for (let i = 0; i < reducedPoints1.length; i += 1) {
@@ -783,7 +783,7 @@ function ProceduralWaveBlendDemo() {
               if (!shouldDraw) continue;
               const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
               const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-              const color = blendColorInt("#412b63", "#7451ad", raw);
+              const color = blendColorInt("#605e63", "#0c0912", raw);
               const sharpPts = [];
               for (let i = 0; i < sampleCount; i += 1) {
                 sharpPts.push({
@@ -796,11 +796,11 @@ function ProceduralWaveBlendDemo() {
           }
         } else if (showEndpoints) {
           if (focusRevealActive) {
-            drawPolylinePixi(focusSharpGraphics, points1, 0x412b63, lineWidth + 0.3, 1);
-            drawPolylinePixi(focusSharpGraphics, points2, 0x7451ad, lineWidth + 0.3, 1);
+            drawPolylinePixi(focusSharpGraphics, points1, 0x605e63, lineWidth + 0.3, 1);
+            drawPolylinePixi(focusSharpGraphics, points2, 0x0c0912, lineWidth + 0.3, 1);
           }
-          drawPolylinePixi(blurWaveGraphics, points1, 0x412b63, lineWidth + 0.9, 0.55);
-          drawPolylinePixi(blurWaveGraphics, points2, 0x7451ad, lineWidth + 0.9, 0.55);
+          drawPolylinePixi(blurWaveGraphics, points1, 0x605e63, lineWidth + 0.9, 0.55);
+          drawPolylinePixi(blurWaveGraphics, points2, 0x0c0912, lineWidth + 0.9, 0.55);
         }
       };
 
