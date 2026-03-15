@@ -83,16 +83,50 @@
     </svg>
     <div class="section-transition-label" id="section-transition-label">scroll</div>
   </div>
-
+  <!-- Debug UI: hidden via CSS on purpose. Keep this markup intact so the
+       section 2/3 fresh-input sampler can be resurfaced quickly later. -->
+  <div class="main-scroll-debug-controls" aria-label="Scroll debug sampling controls">
+    <button class="main-scroll-debug-button" data-scroll-debug-sample="10" type="button">10ms</button>
+    <button class="main-scroll-debug-button" data-scroll-debug-sample="50" type="button">50ms</button>
+    <button class="main-scroll-debug-button" data-scroll-debug-sample="100" type="button">100ms</button>
+    <button class="main-scroll-debug-button is-active" data-scroll-debug-sample="200" type="button">200ms</button>
+  </div>
+  <div class="main-scroll-debug-controls main-scroll-debug-controls-mode" aria-label="Scroll debug plot mode controls">
+    <button class="main-scroll-debug-button" data-scroll-debug-mode="absolute" type="button">Absolute</button>
+    <button class="main-scroll-debug-button is-active" data-scroll-debug-mode="average" type="button">Average</button>
+  </div>
+  <aside class="main-scroll-debug-hud" aria-live="polite">
+    <div class="main-scroll-debug-title">Raw Wheel</div>
+    <div class="main-scroll-debug-row"><span>Section</span><strong id="main-scroll-debug-section">1 / 10</strong></div>
+    <div class="main-scroll-debug-row"><span>Delta X</span><strong id="main-scroll-debug-delta-x">0</strong></div>
+    <div class="main-scroll-debug-row"><span>Delta Y</span><strong id="main-scroll-debug-delta-y">0</strong></div>
+    <div class="main-scroll-debug-row"><span>Primary</span><strong id="main-scroll-debug-primary">0</strong></div>
+    <div class="main-scroll-debug-row"><span>Accumulator</span><strong id="main-scroll-debug-accumulator">0</strong></div>
+    <div class="main-scroll-debug-row"><span>Direction</span><strong id="main-scroll-debug-direction">none</strong></div>
+    <div class="main-scroll-debug-row"><span>Heuristic</span><strong id="main-scroll-debug-heuristic">idle</strong></div>
+    <div class="main-scroll-debug-row"><span>Sampling</span><strong id="main-scroll-debug-sampling">200ms</strong></div>
+    <div class="main-scroll-debug-row"><span>Mode</span><strong id="main-scroll-debug-mode">average</strong></div>
+    <div class="main-scroll-debug-row"><span>Animating</span><strong id="main-scroll-debug-animating">no</strong></div>
+    <div class="main-scroll-debug-row"><span>Fresh Gate</span><strong id="main-scroll-debug-cooldown">off</strong></div>
+  </aside>
+  <section class="main-scroll-debug-graph-shell" aria-label="Raw delta graph">
+    <div class="main-scroll-debug-graph-title" id="main-scroll-debug-graph-title">Delta X / Delta Y sampled every 200ms</div>
+    <canvas class="main-scroll-debug-graph" id="main-scroll-debug-graph" width="1400" height="260"></canvas>
+    <div class="main-scroll-debug-tooltip" id="main-scroll-debug-tooltip" aria-hidden="true"></div>
+  </section>
   <main class="snap-root" id="snap-root" aria-label="Snap sections">
     <div class="snap-track" id="snap-track">
       <section class="snap-section snap-section-first" data-section="1" aria-label="Section 1">
         <section class="intro-stage" id="intro-stage" aria-label="Hero statement">
           <div class="intro-copy" id="intro-copy">
             <div class="intro-line intro-line-1">
-              <span class="intro-word" data-order="0">curious</span>
-              <span class="intro-word" data-order="1">designer</span>
-              <span class="intro-word intro-word-small" data-order="2">for</span>
+              <div class="intro-line-1-main">
+                <span class="intro-word" data-order="0">curious</span>
+                <span class="intro-word" data-order="1">designer</span>
+              </div>
+              <div class="intro-line-1-tail">
+                <span class="intro-word intro-word-small" data-order="2">for</span>
+              </div>
             </div>
             <div class="intro-line intro-line-2">
               <span class="intro-word intro-word-bitcount" data-order="3">complex</span>
@@ -125,7 +159,12 @@
           </div>
         </article>
       </section>
-      <section class="snap-section" data-section="3" aria-label="Section 3">
+      <section class="snap-section snap-section-horizon" data-section="3" aria-label="Selected work cards">
+        <section class="folio-horizon" id="folio-horizon">
+          <div class="folio-horizon-rail" id="folio-horizon-rail" aria-live="polite"></div>
+        </section>
+      </section>
+      <section class="snap-section" data-section="4" aria-label="Section 4">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2020</div>
@@ -143,7 +182,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="4" aria-label="Section 4">
+      <section class="snap-section" data-section="5" aria-label="Section 5">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2021</div>
@@ -161,7 +200,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="5" aria-label="Section 5">
+      <section class="snap-section" data-section="6" aria-label="Section 6">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2022</div>
@@ -179,7 +218,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="6" aria-label="Section 6">
+      <section class="snap-section" data-section="7" aria-label="Section 7">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2023</div>
@@ -197,7 +236,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="7" aria-label="Section 7">
+      <section class="snap-section" data-section="8" aria-label="Section 8">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2023</div>
@@ -215,7 +254,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="8" aria-label="Section 8">
+      <section class="snap-section" data-section="9" aria-label="Section 9">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2024-25</div>
@@ -233,7 +272,7 @@
           <div class="folio-status"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
         </article>
       </section>
-      <section class="snap-section" data-section="9" aria-label="Section 9">
+      <section class="snap-section" data-section="10" aria-label="Section 10">
         <article class="folio-case">
           <div class="folio-case-top">
             <div class="folio-year">2025-26</div>

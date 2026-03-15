@@ -7,8 +7,14 @@ const snapRoot = document.getElementById('snap-root');
 const snapTrack = document.getElementById('snap-track');
 const snapSections = Array.from(document.querySelectorAll('.snap-section'));
 const section2 = document.querySelector('.snap-section[data-section="2"]');
+const finalHorizonSection = document.querySelector('.snap-section[data-section="3"]');
+const finalHorizonScroller = document.getElementById('folio-horizon');
+const finalHorizonRail = document.getElementById('folio-horizon-rail');
 const section2ModelMount = document.getElementById('section2-model');
-const animatedSections = snapSections.filter((section) => Number(section.dataset.section || 0) >= 3);
+const animatedSections = snapSections.filter((section) => {
+  const sectionNumber = Number(section.dataset.section || 0);
+  return sectionNumber >= 4 && sectionNumber <= 10;
+});
 const persistentBottomNav = document.querySelector('.folio-bottom-nav-persistent');
 const persistentStatus = document.querySelector('.folio-status-persistent');
 const startupLoader = document.getElementById('startup-loader');
@@ -19,6 +25,25 @@ const sectionTransitionGradient = document.getElementById('section-transition-gr
 const sectionTransitionStopTop = document.getElementById('section-transition-stop-top');
 const sectionTransitionStopBottom = document.getElementById('section-transition-stop-bottom');
 const sectionTransitionLabel = document.getElementById('section-transition-label');
+const mainScrollDebugGraph = document.getElementById('main-scroll-debug-graph');
+const mainScrollDebugGraphCtx = mainScrollDebugGraph?.getContext('2d') || null;
+const mainScrollDebugTooltip = document.getElementById('main-scroll-debug-tooltip');
+const mainScrollDebugGraphTitle = document.getElementById('main-scroll-debug-graph-title');
+const mainScrollDebugSampleButtons = Array.from(document.querySelectorAll('[data-scroll-debug-sample]'));
+const mainScrollDebugModeButtons = Array.from(document.querySelectorAll('[data-scroll-debug-mode]'));
+const mainScrollDebugHud = {
+  section: document.getElementById('main-scroll-debug-section'),
+  deltaX: document.getElementById('main-scroll-debug-delta-x'),
+  deltaY: document.getElementById('main-scroll-debug-delta-y'),
+  primary: document.getElementById('main-scroll-debug-primary'),
+  accumulator: document.getElementById('main-scroll-debug-accumulator'),
+  direction: document.getElementById('main-scroll-debug-direction'),
+  heuristic: document.getElementById('main-scroll-debug-heuristic'),
+  sampling: document.getElementById('main-scroll-debug-sampling'),
+  mode: document.getElementById('main-scroll-debug-mode'),
+  animating: document.getElementById('main-scroll-debug-animating'),
+  cooldown: document.getElementById('main-scroll-debug-cooldown')
+};
 let animatedStage = null;
 
 const SNAP_STATE = {
@@ -34,6 +59,9 @@ const SNAP_STATE = {
   section2ParagraphLockUntil: 0,
   section2EdgeAccumulator: 0,
   section2EdgeDirection: 0,
+  lastPrimaryInputDelta: 0,
+  finalCardsAccumulator: 0,
+  finalCardsDirection: 0,
   sectionAnimationRaf: 0,
   sectionAnimationLastTs: 0
 };
@@ -95,6 +123,149 @@ const SECTION_MORPH_TRANSITION_DURATION = 0.78;
 const SECTION_MORPH_HINT_DELAY_MS = 420;
 const SECTION_MORPH_HINT_PEAK = 82;
 const SECTION_MORPH_HANDOFF_THRESHOLD = 0.4;
+const FINAL_HORIZON_SECTION_INDEX = 2;
+const FINAL_HORIZON_WHEEL_SNAP_THRESHOLD = 2;
+const FINAL_HORIZON_SNAP_DURATION = 0.8;
+const FINAL_HORIZON_WHEEL_COOLDOWN_MS = 0;
+const MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS = 3000;
+const MAIN_SCROLL_DEBUG_DEFAULT_SAMPLE_MS = 200;
+const finalHorizonCardsData = [
+  {
+    kind: 'opportunity',
+    year: '',
+    logo: '',
+    logoAlt: '',
+    logoSub: '',
+    statement: '',
+    keywords: [],
+    meta: '',
+    image: ''
+  },
+  {
+    year: '2025-26',
+    logo: 'Assets/saison-omni-logo-white.png',
+    logoAlt: 'Saison Omni logo',
+    logoSub: 'Dissolved by Saison International',
+    statement: '<span class="hl">Scaled product, fueled operations</span> by building reusable governance modules and design patterns',
+    keywords: ['Design Patterns', 'Configurable modules', 'Lending', 'System Design', 'Design Ops', 'Data Driven Design'],
+    meta: 'Enterprise // Entertainment',
+    image: 'Assets/card-01.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px',
+    imageAlign: 'start',
+    imageWidth: '100%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  },
+  {
+    year: '2024-25',
+    logo: 'Assets/biz2x-logo-white.png',
+    logoAlt: 'Biz2X logo',
+    logoSub: 'Biz2X',
+    statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
+    keywords: ['Design Patterns', 'Configurable Journey', 'Lending', 'System Design', 'CRM', 'Data Driven Design'],
+    meta: 'SaaS // Social Sector',
+    image: 'Assets/card-02.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px 18px 18px',
+    imageAlign: 'start',
+    imageWidth: '37%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  },
+  {
+    year: '2024',
+    logo: 'Assets/jiotesseract-logo-white.png',
+    logoAlt: 'JioTesseract logo',
+    logoSub: 'JioTesseract',
+    statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
+    keywords: ['Design Foundation', 'System Design', 'XR Platform', 'Design Patterns', 'Spatial Design', 'Interaction Design'],
+    meta: 'Platform // XR (AR/VR/MR)',
+    backgroundImage: 'Assets/JioPlatformBG',
+    image: 'Assets/card-03.png',
+    imageFit: 'cover',
+    imagePosition: '50% 50%',
+    imageScale: 1,
+    imagePadding: '0',
+    imageAlign: 'center'
+  },
+  {
+    year: '2023',
+    logo: 'Assets/jiotesseract-logo-white.png',
+    logoAlt: 'JioTesseract logo',
+    logoSub: 'JioTesseract',
+    statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
+    keywords: ['LMS', 'System Design', 'Dashboard', 'Immersive Learning', 'No-code Tool', 'Enterprise Training'],
+    meta: 'Enterprise // Immersive L&D',
+    image: 'Assets/card-04.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px',
+    imageAlign: 'start',
+    imageWidth: '100%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  },
+  {
+    year: '2022',
+    logo: 'Assets/prime-video-logo-white.png',
+    logoAlt: 'Prime Video logo',
+    logoSub: '@BRND STUDIO',
+    statement: '<span class="hl">Strengthened accessibility</span> by shipping AI-enabled audio description workflows.',
+    keywords: ['Accessibility', 'Editing Tool', 'Entertainment', 'Asset Management', 'Project Management Tool'],
+    meta: 'Enterprise // Entertainment',
+    image: 'Assets/card-05.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px',
+    imageAlign: 'start',
+    imageWidth: '100%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  },
+  {
+    year: '2021',
+    logo: 'Assets/byju\'s-logo-white.png',
+    logoAlt: 'BYJU’S logo',
+    logoSub: '@BRND STUDIO',
+    statement: '<span class="hl">Improved subscription renewal</span> by scaling “real” mentorship with MentorConnect',
+    keywords: ['Chatbot', 'CMS', 'Primary Research', 'Education', 'A/B Testing', 'Smartfeed', 'Personalization', 'Data Driven Design'],
+    meta: 'Consumer // Education',
+    image: 'Assets/card-06.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px 18px 18px',
+    imageAlign: 'start',
+    imageWidth: '37%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  },
+  {
+    year: '2020',
+    logo: 'Assets/Aangan-white-logo.png',
+    logoAlt: 'Aangan logo',
+    logoSub: '@BRND STUDIO',
+    statement: '<span class="hl">Scaled risk identification</span> by standardizing audits for NGOs and government adoption.',
+    keywords: ['Data Viz', 'Enterprise Suite', 'Social Service', 'Brand Strategy', 'Usability Testing', 'CMS', 'Design System'],
+    meta: 'SaaS // Social Sector',
+    image: 'Assets/card-07.png',
+    imageFit: 'contain',
+    imagePosition: '50% 0%',
+    imageScale: 1,
+    imagePadding: '24px 18px 18px',
+    imageAlign: 'start',
+    imageWidth: '37%',
+    imageHeight: 'auto',
+    imageMaxHeight: 'none'
+  }
+];
 let section2FillTargets = [];
 let section2YellowFillTotalUnits = 0;
 let section2WhiteFillTotalUnits = 0;
@@ -112,6 +283,40 @@ let sectionMorphHintTimeout = 0;
 let sectionMorphMode = 'idle';
 let sectionMorphHintProgress = 0;
 const sectionMorphNextHintAt = new Map();
+const FINAL_HORIZON_STATE = {
+  index: 1,
+  snapIndex: 1,
+  x: 0,
+  snapPoints: [],
+  sharedLeftAnchor: 0,
+  specialExpansionDelta: 0,
+  specialCollapseTimer: 0,
+  specialCollapsing: false,
+  cards: [],
+  isAnimating: false,
+  expanded: false,
+  hasEntered: false,
+  pointerX: window.innerWidth * 0.5
+};
+const MAIN_SCROLL_DEBUG_STATE = {
+  graphSampleMs: MAIN_SCROLL_DEBUG_DEFAULT_SAMPLE_MS,
+  plotMode: 'average',
+  startAt: performance.now(),
+  sampleTimer: 0,
+  lastDeltaX: 0,
+  lastDeltaY: 0,
+  lastPrimaryDelta: 0,
+  lastDirection: 0,
+  zeroSinceAt: 0,
+  rawEvents: [],
+  graphSamples: [],
+  renderedPoints: [],
+  heuristic: 'idle',
+  heuristicMarkers: [],
+  motionMarkers: [],
+  requireFreshSection3Entry: false,
+  requireFreshSpecialExit: false
+};
 
 function cubicBezierPoint(t, p1, p2) {
   const inv = 1 - t;
@@ -518,13 +723,21 @@ function createSectionAnimationState(sectionIndex, durationSeconds) {
 }
 
 function syncBodySectionState(index) {
+  document.body.dataset.section = String(index + 1);
+  document.documentElement.classList.toggle('horizon-overscroll-lock', index === FINAL_HORIZON_SECTION_INDEX);
   document.body.classList.toggle('section-2-active', index === 1);
-  document.body.classList.toggle('status-persistent-active', index >= 1);
-  document.body.classList.toggle('persistent-bottom-nav-active', index >= 2);
+  document.body.classList.toggle(
+    'status-persistent-active',
+    index === 1 || (index >= 3 && index <= 9)
+  );
+  document.body.classList.toggle(
+    'persistent-bottom-nav-active',
+    index >= 3 && index <= 9
+  );
   if (persistentBottomNav) {
     persistentBottomNav.dataset.sectionIndex = String(index);
   }
-  if (index >= 2) {
+  if (index >= 3) {
     if (persistentBottomNav) {
       persistentBottomNav.style.opacity = '';
       persistentBottomNav.style.transform = '';
@@ -536,6 +749,9 @@ function syncBodySectionState(index) {
   }
   updatePersistentBottomNav(index);
   refreshSection2ModelVisibility();
+  if (index === FINAL_HORIZON_SECTION_INDEX && !SNAP_STATE.isAnimating) {
+    activateFinalHorizonSection(SNAP_STATE.index);
+  }
 }
 
 function updateSection2ModelVisibility(isActive) {
@@ -814,14 +1030,14 @@ function handleAnimatedSectionScroll(state, deltaY) {
   if (deltaY > 0 && state.progressSeconds >= state.durationSeconds - 0.0001) {
     return false;
   }
-  if (deltaY < 0 && state.sectionIndex === 2 && state.progressSeconds <= 0.0001) {
+  if (deltaY < 0 && state.sectionIndex === 3 && state.progressSeconds <= 0.0001) {
     return false;
   }
   const nextProgress = state.progressSeconds + deltaY / state.scrollPixelsPerSecond;
   if (deltaY < 0 && nextProgress <= 0.0001) {
     setSectionAnimationProgress(state, 0);
     state.lastInteractionAt = performance.now();
-    if (state.sectionIndex === 2) {
+    if (state.sectionIndex === 3) {
       ensureSectionAnimationLoop();
       return true;
     }
@@ -1620,6 +1836,9 @@ function startCoreApp() {
     return;
   }
   appBooted = true;
+  renderFinalHorizonSection();
+  refreshFinalHorizonSnapPoints();
+  goToFinalHorizonCard(0, true);
   renderSectionTransitionShape();
   initSectionAnimations();
   initBitcountChars();
@@ -2447,7 +2666,7 @@ function getExitDuration(refs) {
 }
 
 function isAnimatedSectionIndex(index) {
-  return index >= 2;
+  return index >= 3 && index <= 9;
 }
 
 function beginAnimatedSectionTransition(targetIndex, direction, carryDelta = 0) {
@@ -2600,6 +2819,850 @@ function shuffleArray(items) {
     [next[i], next[j]] = [next[j], next[i]];
   }
   return next;
+}
+
+function buildFinalHorizonRows(keywords, cardIndex) {
+  return Array.from({ length: 5 }, (_, rowIndex) => {
+    const rotated = keywords.map((_, keywordIndex) => keywords[(keywordIndex + rowIndex) % keywords.length]);
+    const repeated = [...rotated, ...rotated];
+    const direction = ((cardIndex + rowIndex) % 2 === 0) ? 'normal' : 'reverse';
+    const duration = 14 + (cardIndex * 1.4) + (rowIndex * 1.15);
+    return `
+      <div class="folio-hcard-keyrow">
+        <div class="folio-hcard-keyrow-track" style="--row-duration:${duration.toFixed(2)}s; --row-direction:${direction};">
+          ${repeated.map((keyword) => `<span>${keyword}</span><span>•</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFinalHorizonSection() {
+  if (!finalHorizonRail) {
+    return;
+  }
+  finalHorizonRail.innerHTML = finalHorizonCardsData.map((card, index) => {
+    if (card.kind === 'opportunity') {
+      return `
+        <article class="folio-hcard-wrap is-opportunity ${index === 0 ? 'is-active' : ''}" data-card-index="${index}">
+          <div class="folio-hcard-year"></div>
+          <div class="folio-opportunity-card">
+            <div class="folio-hcard-frame"></div>
+            <div class="folio-opportunity-pill"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
+          </div>
+        </article>
+      `;
+    }
+    return `
+      <article
+        class="folio-hcard-wrap ${index === 1 ? 'is-active' : ''}"
+        data-card-index="${index}"
+        style="
+          --folio-image-position:${card.imagePosition || '50% 50%'};
+          --folio-image-fit:${card.imageFit || 'cover'};
+          --folio-image-scale:${card.imageScale || 1};
+          --folio-image-padding:${card.imagePadding || '24px 18px 18px'};
+          --folio-image-align:${card.imageAlign || 'center'};
+          --folio-image-width:${card.imageWidth || '100%'};
+          --folio-image-height:${card.imageHeight || '100%'};
+          --folio-image-max-height:${card.imageMaxHeight || '100%'};
+          --folio-image-translate-y:${card.imageTranslateY || '0px'};
+          --folio-image-position-mobile:${card.imagePositionMobile || card.imagePosition || '50% 50%'};
+          --folio-image-fit-mobile:${card.imageFitMobile || card.imageFit || 'cover'};
+          --folio-image-scale-mobile:${card.imageScaleMobile || card.imageScale || 1};
+          --folio-image-padding-mobile:${card.imagePaddingMobile || card.imagePadding || '24px 18px 18px'};
+          --folio-image-align-mobile:${card.imageAlignMobile || card.imageAlign || 'center'};
+          --folio-image-width-mobile:${card.imageWidthMobile || card.imageWidth || '100%'};
+          --folio-image-height-mobile:${card.imageHeightMobile || card.imageHeight || '100%'};
+          --folio-image-max-height-mobile:${card.imageMaxHeightMobile || card.imageMaxHeight || '100%'};
+          --folio-image-translate-y-mobile:${card.imageTranslateYMobile || card.imageTranslateY || '0px'};
+        "
+      >
+        <div class="folio-hcard-year">${card.year}</div>
+        <div class="folio-hcard-logo"><img src="${card.logo}" alt="${card.logoAlt}"><div class="folio-hcard-logo-sub">${card.logoSub}</div></div>
+        <div class="folio-hcard">
+          <div class="folio-hcard-frame">
+            <div class="folio-hcard-media">
+              ${card.backgroundImage ? `<div class="folio-hcard-background"><img src="${card.backgroundImage}" alt=""></div>` : ''}
+              <div class="folio-hcard-noise"></div>
+              <div class="folio-hcard-keyflow">${buildFinalHorizonRows(card.keywords, index)}</div>
+              ${
+                index === 1
+                  ? `<div class="folio-hcard-image folio-hcard-image-split">
+                       <div class="folio-hcard-image-stack">
+                         <img class="folio-hcard-image-base" src="Assets/card-01-01.png" alt="">
+                         <img class="folio-hcard-image-overlay" src="${card.image}" alt="">
+                       </div>
+                     </div>`
+                  : `<div class="folio-hcard-image"><img src="${card.image}" alt=""></div>`
+              }
+            </div>
+            <div class="folio-hcard-copy">
+              <p class="folio-hcard-statement">${card.statement}</p>
+              <p class="folio-hcard-meta">${card.meta}</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+  FINAL_HORIZON_STATE.cards = Array.from(finalHorizonRail.querySelectorAll('.folio-hcard-wrap'));
+}
+
+function refreshFinalHorizonSnapPoints() {
+  if (!finalHorizonRail || !FINAL_HORIZON_STATE.cards.length) {
+    return;
+  }
+  const railStyles = getComputedStyle(finalHorizonRail);
+  const lead = parseFloat(railStyles.paddingLeft) || 0;
+  const gap = parseFloat(railStyles.columnGap || railStyles.gap) || 0;
+  const baseYearOffset = clamp(window.innerWidth * 0.017, 18, 28);
+  const sharedLeftAnchor = Math.max(0, lead - baseYearOffset);
+  const specialWidth = Math.max(0, sharedLeftAnchor - gap - window.innerWidth * 0.01);
+  const specialExpandedWidth = specialWidth * 6;
+  FINAL_HORIZON_STATE.sharedLeftAnchor = sharedLeftAnchor;
+  FINAL_HORIZON_STATE.specialExpansionDelta = specialExpandedWidth - specialWidth;
+  finalHorizonRail.style.setProperty('--folio-special-card-width', `${specialWidth}px`);
+  finalHorizonRail.style.setProperty('--folio-special-card-expanded-width', `${specialExpandedWidth}px`);
+  FINAL_HORIZON_STATE.snapPoints = FINAL_HORIZON_STATE.cards.map((card) => {
+    const adjustedLeft =
+      FINAL_HORIZON_STATE.specialCollapsing && card.dataset.cardIndex !== '0'
+        ? card.offsetLeft - FINAL_HORIZON_STATE.specialExpansionDelta
+        : card.offsetLeft;
+    return Math.max(0, adjustedLeft - sharedLeftAnchor);
+  });
+}
+
+function updateFinalHorizonVisuals() {
+  if (!FINAL_HORIZON_STATE.cards.length) {
+    return;
+  }
+  let activeIndex = 0;
+  let maxVisible = -1;
+  const viewportWidth = window.innerWidth;
+  FINAL_HORIZON_STATE.cards.forEach((card, index) => {
+    const rect = card.getBoundingClientRect();
+    const visible = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+    if (visible > maxVisible) {
+      maxVisible = visible;
+      activeIndex = index;
+    }
+    if (index === 1) {
+      updateFinalHorizonCardOneSplit(card, index === activeIndex);
+    }
+  });
+  if (FINAL_HORIZON_STATE.snapIndex === 0) {
+    activeIndex = 0;
+  }
+  FINAL_HORIZON_STATE.index = activeIndex;
+  FINAL_HORIZON_STATE.cards.forEach((card, index) => {
+    card.classList.toggle('is-active', index === activeIndex);
+    card.classList.toggle('is-left-of-active', index < activeIndex);
+    card.classList.toggle('is-right-of-active', index > activeIndex);
+    const image = card.querySelector('.folio-hcard-image');
+    if (image) {
+      const rect = card.getBoundingClientRect();
+      const restingX = FINAL_HORIZON_STATE.snapPoints[index] ?? 0;
+      const currentShift = FINAL_HORIZON_STATE.x - restingX;
+      const normalized = clamp(currentShift / Math.max(rect.width, 1), -1, 1);
+      const offset = normalized * -128;
+      image.style.transform = `translate3d(${offset.toFixed(2)}px, 0, 0)`;
+    }
+  });
+}
+
+function getMainScrollDebugAccumulator() {
+  if (SNAP_STATE.index === FINAL_HORIZON_SECTION_INDEX) {
+    return SNAP_STATE.finalCardsAccumulator;
+  }
+  if (SNAP_STATE.index === 1) {
+    return SNAP_STATE.section2EdgeAccumulator;
+  }
+  return SNAP_STATE.wheelAccumulator;
+}
+
+function recordMainScrollDebugMotion(type) {
+  const t = performance.now() - MAIN_SCROLL_DEBUG_STATE.startAt;
+  MAIN_SCROLL_DEBUG_STATE.motionMarkers.push({ t, type });
+  while (
+    MAIN_SCROLL_DEBUG_STATE.motionMarkers.length &&
+    t - MAIN_SCROLL_DEBUG_STATE.motionMarkers[0].t > MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS
+  ) {
+    MAIN_SCROLL_DEBUG_STATE.motionMarkers.shift();
+  }
+}
+
+function resizeMainScrollDebugGraph() {
+  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
+    return;
+  }
+  const rect = mainScrollDebugGraph.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  mainScrollDebugGraph.width = Math.max(1, Math.round(rect.width * dpr));
+  mainScrollDebugGraph.height = Math.max(1, Math.round(rect.height * dpr));
+  mainScrollDebugGraphCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawMainScrollDebugGraph();
+}
+
+function getMainScrollDebugWindowPrimary(now) {
+  if (MAIN_SCROLL_DEBUG_STATE.plotMode === 'average') {
+    const startAt = now - MAIN_SCROLL_DEBUG_STATE.graphSampleMs;
+    let total = 0;
+    let count = 0;
+    for (let i = MAIN_SCROLL_DEBUG_STATE.rawEvents.length - 1; i >= 0; i -= 1) {
+      const event = MAIN_SCROLL_DEBUG_STATE.rawEvents[i];
+      if (event.t < startAt) {
+        break;
+      }
+      total += event.primaryDelta;
+      count += 1;
+    }
+    return count ? total / count : 0;
+  }
+
+  const elapsed = now - MAIN_SCROLL_DEBUG_STATE.startAt;
+  for (let i = MAIN_SCROLL_DEBUG_STATE.graphSamples.length - 1; i >= 0; i -= 1) {
+    const sample = MAIN_SCROLL_DEBUG_STATE.graphSamples[i];
+    if (elapsed - sample.t >= MAIN_SCROLL_DEBUG_STATE.graphSampleMs) {
+      return sample.primaryDelta;
+    }
+  }
+  return MAIN_SCROLL_DEBUG_STATE.lastPrimaryDelta;
+}
+
+function sampleMainScrollDebugGraph() {
+  const now = performance.now();
+  if (Math.abs(MAIN_SCROLL_DEBUG_STATE.lastDeltaX) <= 1 && Math.abs(MAIN_SCROLL_DEBUG_STATE.lastDeltaY) <= 1) {
+    if (!MAIN_SCROLL_DEBUG_STATE.zeroSinceAt) {
+      MAIN_SCROLL_DEBUG_STATE.zeroSinceAt = now;
+    }
+    if (now - MAIN_SCROLL_DEBUG_STATE.zeroSinceAt > 500) {
+      return;
+    }
+  } else {
+    MAIN_SCROLL_DEBUG_STATE.zeroSinceAt = 0;
+  }
+
+  const t = now - MAIN_SCROLL_DEBUG_STATE.startAt;
+  const getAverage = (key) => {
+    const startAt = now - MAIN_SCROLL_DEBUG_STATE.graphSampleMs;
+    let total = 0;
+    let count = 0;
+    for (let i = MAIN_SCROLL_DEBUG_STATE.rawEvents.length - 1; i >= 0; i -= 1) {
+      const event = MAIN_SCROLL_DEBUG_STATE.rawEvents[i];
+      if (event.t < startAt) {
+        break;
+      }
+      total += event[key];
+      count += 1;
+    }
+    return count ? total / count : 0;
+  };
+
+  const deltaX = MAIN_SCROLL_DEBUG_STATE.plotMode === 'average'
+    ? getAverage('deltaX')
+    : MAIN_SCROLL_DEBUG_STATE.lastDeltaX;
+  const deltaY = MAIN_SCROLL_DEBUG_STATE.plotMode === 'average'
+    ? getAverage('deltaY')
+    : MAIN_SCROLL_DEBUG_STATE.lastDeltaY;
+  const primaryDelta = MAIN_SCROLL_DEBUG_STATE.plotMode === 'average'
+    ? getAverage('primaryDelta')
+    : MAIN_SCROLL_DEBUG_STATE.lastPrimaryDelta;
+
+  MAIN_SCROLL_DEBUG_STATE.graphSamples.push({ t, deltaX, deltaY, primaryDelta });
+  while (
+    MAIN_SCROLL_DEBUG_STATE.graphSamples.length &&
+    t - MAIN_SCROLL_DEBUG_STATE.graphSamples[0].t > MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS
+  ) {
+    MAIN_SCROLL_DEBUG_STATE.graphSamples.shift();
+  }
+
+  const sampleCount = MAIN_SCROLL_DEBUG_STATE.graphSamples.length;
+  const currentSample = MAIN_SCROLL_DEBUG_STATE.graphSamples[sampleCount - 1];
+  const previousSample = sampleCount > 1 ? MAIN_SCROLL_DEBUG_STATE.graphSamples[sampleCount - 2] : null;
+  const currentAbs = Math.abs(currentSample.primaryDelta);
+  const previousAbs = previousSample ? Math.abs(previousSample.primaryDelta) : 0;
+  let nextHeuristic = 'existing';
+  if (currentAbs <= 1) {
+    nextHeuristic = 'idle';
+  } else if (previousSample && currentAbs > previousAbs) {
+    nextHeuristic = 'fresh';
+  }
+  if (nextHeuristic !== MAIN_SCROLL_DEBUG_STATE.heuristic) {
+    MAIN_SCROLL_DEBUG_STATE.heuristic = nextHeuristic;
+    MAIN_SCROLL_DEBUG_STATE.heuristicMarkers.push({ t, heuristic: nextHeuristic });
+  }
+  while (
+    MAIN_SCROLL_DEBUG_STATE.heuristicMarkers.length &&
+    t - MAIN_SCROLL_DEBUG_STATE.heuristicMarkers[0].t > MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS
+  ) {
+    MAIN_SCROLL_DEBUG_STATE.heuristicMarkers.shift();
+  }
+
+  drawMainScrollDebugGraph();
+}
+
+function drawMainScrollDebugGraph() {
+  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
+    return;
+  }
+  const rect = mainScrollDebugGraph.getBoundingClientRect();
+  const width = rect.width;
+  const height = rect.height;
+  if (!width || !height) {
+    return;
+  }
+
+  mainScrollDebugGraphCtx.clearRect(0, 0, width, height);
+  mainScrollDebugGraphCtx.fillStyle = 'rgba(255,255,255,0.02)';
+  mainScrollDebugGraphCtx.fillRect(0, 0, width, height);
+
+  mainScrollDebugGraphCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+  mainScrollDebugGraphCtx.lineWidth = 1;
+  for (let i = 0; i <= 4; i += 1) {
+    const y = (height / 4) * i;
+    mainScrollDebugGraphCtx.beginPath();
+    mainScrollDebugGraphCtx.moveTo(0, y);
+    mainScrollDebugGraphCtx.lineTo(width, y);
+    mainScrollDebugGraphCtx.stroke();
+  }
+
+  const latestT = MAIN_SCROLL_DEBUG_STATE.graphSamples.length
+    ? MAIN_SCROLL_DEBUG_STATE.graphSamples[MAIN_SCROLL_DEBUG_STATE.graphSamples.length - 1].t
+    : MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS;
+  const minT = Math.max(0, latestT - MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS);
+  const visibleSamples = MAIN_SCROLL_DEBUG_STATE.graphSamples.filter((sample) => sample.t >= minT);
+  const maxAbs = Math.max(
+    1,
+    ...visibleSamples.map((sample) => Math.max(Math.abs(sample.deltaX), Math.abs(sample.deltaY)))
+  );
+  const centerY = height * 0.5;
+  const scaleY = (height * 0.42) / maxAbs;
+
+  mainScrollDebugGraphCtx.strokeStyle = 'rgba(255,255,255,0.18)';
+  mainScrollDebugGraphCtx.lineWidth = 1;
+  mainScrollDebugGraphCtx.beginPath();
+  mainScrollDebugGraphCtx.moveTo(0, centerY);
+  mainScrollDebugGraphCtx.lineTo(width, centerY);
+  mainScrollDebugGraphCtx.stroke();
+
+  const drawLine = (key, color) => {
+    mainScrollDebugGraphCtx.strokeStyle = color;
+    mainScrollDebugGraphCtx.lineWidth = 1.6;
+    mainScrollDebugGraphCtx.beginPath();
+    visibleSamples.forEach((sample, index) => {
+      const x = ((sample.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      const y = centerY - sample[key] * scaleY;
+      if (index === 0) {
+        mainScrollDebugGraphCtx.moveTo(x, y);
+      } else {
+        mainScrollDebugGraphCtx.lineTo(x, y);
+      }
+    });
+    mainScrollDebugGraphCtx.stroke();
+  };
+
+  const drawDeltaYLine = () => {
+    if (visibleSamples.length < 2) {
+      drawLine('deltaY', '#edf6b1');
+      return;
+    }
+    mainScrollDebugGraphCtx.lineWidth = 1.6;
+    for (let i = 1; i < visibleSamples.length; i += 1) {
+      const prev = visibleSamples[i - 1];
+      const current = visibleSamples[i];
+      const x1 = ((prev.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      const y1 = centerY - prev.deltaY * scaleY;
+      const x2 = ((current.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      const y2 = centerY - current.deltaY * scaleY;
+      mainScrollDebugGraphCtx.strokeStyle = current.deltaY > prev.deltaY ? '#56ff8a' : '#edf6b1';
+      mainScrollDebugGraphCtx.beginPath();
+      mainScrollDebugGraphCtx.moveTo(x1, y1);
+      mainScrollDebugGraphCtx.lineTo(x2, y2);
+      mainScrollDebugGraphCtx.stroke();
+    }
+  };
+
+  const drawNegativeAbsoluteYLine = () => {
+    if (visibleSamples.length < 2) {
+      return;
+    }
+    mainScrollDebugGraphCtx.lineWidth = 1.2;
+    for (let i = 1; i < visibleSamples.length; i += 1) {
+      const prev = visibleSamples[i - 1];
+      const current = visibleSamples[i];
+      if (prev.deltaY >= 0 || current.deltaY >= 0) {
+        continue;
+      }
+      const x1 = ((prev.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      const y1 = centerY - Math.abs(prev.deltaY) * scaleY;
+      const x2 = ((current.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      const y2 = centerY - Math.abs(current.deltaY) * scaleY;
+      mainScrollDebugGraphCtx.strokeStyle =
+        Math.abs(current.deltaY) > Math.abs(prev.deltaY) ? '#0f6b43' : '#ff9c43';
+      mainScrollDebugGraphCtx.beginPath();
+      mainScrollDebugGraphCtx.moveTo(x1, y1);
+      mainScrollDebugGraphCtx.lineTo(x2, y2);
+      mainScrollDebugGraphCtx.stroke();
+    }
+  };
+
+  drawLine('deltaX', '#56a6ff');
+  drawDeltaYLine();
+  drawNegativeAbsoluteYLine();
+
+  MAIN_SCROLL_DEBUG_STATE.heuristicMarkers
+    .filter((marker) => marker.t >= minT)
+    .forEach((marker) => {
+      const x = ((marker.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      mainScrollDebugGraphCtx.fillStyle =
+        marker.heuristic === 'fresh' ? '#9b6bff' : marker.heuristic === 'existing' ? '#ff78d2' : '#ff9c43';
+      mainScrollDebugGraphCtx.beginPath();
+      mainScrollDebugGraphCtx.arc(x, 10, 4, 0, Math.PI * 2);
+      mainScrollDebugGraphCtx.fill();
+    });
+
+  MAIN_SCROLL_DEBUG_STATE.motionMarkers
+    .filter((marker) => marker.t >= minT)
+    .forEach((marker) => {
+      const x = ((marker.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+      mainScrollDebugGraphCtx.strokeStyle =
+        marker.type === 'start' ? 'rgba(255, 92, 92, 0.95)' : 'rgba(255, 120, 210, 0.95)';
+      mainScrollDebugGraphCtx.lineWidth = 1;
+      mainScrollDebugGraphCtx.beginPath();
+      mainScrollDebugGraphCtx.moveTo(x, 0);
+      mainScrollDebugGraphCtx.lineTo(x, height);
+      mainScrollDebugGraphCtx.stroke();
+    });
+
+  MAIN_SCROLL_DEBUG_STATE.renderedPoints = [];
+  visibleSamples.forEach((sample) => {
+    const x = ((sample.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
+    const yX = centerY - sample.deltaX * scaleY;
+    const yY = centerY - sample.deltaY * scaleY;
+    mainScrollDebugGraphCtx.fillStyle = '#56a6ff';
+    mainScrollDebugGraphCtx.beginPath();
+    mainScrollDebugGraphCtx.arc(x, yX, 2.2, 0, Math.PI * 2);
+    mainScrollDebugGraphCtx.fill();
+    if (sample.deltaY >= 0) {
+      mainScrollDebugGraphCtx.fillStyle = '#edf6b1';
+      mainScrollDebugGraphCtx.beginPath();
+      mainScrollDebugGraphCtx.arc(x, yY, 2.2, 0, Math.PI * 2);
+      mainScrollDebugGraphCtx.fill();
+    }
+    MAIN_SCROLL_DEBUG_STATE.renderedPoints.push({ x, y: yX, axis: 'X', sample });
+    if (sample.deltaY >= 0) {
+      MAIN_SCROLL_DEBUG_STATE.renderedPoints.push({ x, y: yY, axis: 'Y', sample });
+    }
+  });
+}
+
+function hideMainScrollDebugTooltip() {
+  if (mainScrollDebugTooltip) {
+    mainScrollDebugTooltip.classList.remove('is-visible');
+  }
+}
+
+function showMainScrollDebugTooltip(point) {
+  if (!mainScrollDebugTooltip || !mainScrollDebugGraph) {
+    return;
+  }
+  const rect = mainScrollDebugGraph.getBoundingClientRect();
+  const shellRect = mainScrollDebugGraph.closest('.main-scroll-debug-graph-shell')?.getBoundingClientRect();
+  if (!shellRect) {
+    return;
+  }
+  const signedValue = point.axis === 'X' ? point.sample.deltaX : point.sample.deltaY;
+  mainScrollDebugTooltip.textContent =
+    `axis ${point.axis}\nmode ${MAIN_SCROLL_DEBUG_STATE.plotMode}\nplotted ${Math.abs(signedValue).toFixed(2)}\nsigned ${signedValue.toFixed(2)}\ndeltaX ${point.sample.deltaX.toFixed(2)}\ndeltaY ${point.sample.deltaY.toFixed(2)}\nprimary ${point.sample.primaryDelta.toFixed(2)}\ntime ${(point.sample.t / 1000).toFixed(2)}s`;
+  mainScrollDebugTooltip.classList.add('is-visible');
+
+  const rawLeft = (rect.left - shellRect.left) + point.x;
+  const rawTop = (rect.top - shellRect.top) + point.y;
+  const tipRect = mainScrollDebugTooltip.getBoundingClientRect();
+  const halfWidth = tipRect.width * 0.5;
+  const minLeft = halfWidth + 8;
+  const maxLeft = shellRect.width - halfWidth - 8;
+  const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
+  const minTop = tipRect.height + 16;
+  const maxTop = shellRect.height - 8;
+  const clampedTop = Math.max(minTop, Math.min(maxTop, rawTop));
+
+  mainScrollDebugTooltip.style.left = `${clampedLeft}px`;
+  mainScrollDebugTooltip.style.top = `${clampedTop}px`;
+}
+
+function handleMainScrollDebugGraphHover(event) {
+  if (!mainScrollDebugGraph) {
+    return;
+  }
+  const rect = mainScrollDebugGraph.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  let closest = null;
+  let closestDistance = 10;
+
+  MAIN_SCROLL_DEBUG_STATE.renderedPoints.forEach((point) => {
+    const dx = point.x - x;
+    const dy = point.y - y;
+    const distance = Math.hypot(dx, dy);
+    if (distance <= closestDistance) {
+      closestDistance = distance;
+      closest = point;
+    }
+  });
+
+  if (!closest) {
+    hideMainScrollDebugTooltip();
+    return;
+  }
+  showMainScrollDebugTooltip(closest);
+}
+
+function updateMainScrollDebugHud() {
+  if (mainScrollDebugHud.section) {
+    mainScrollDebugHud.section.textContent = `${SNAP_STATE.index + 1} / ${snapSections.length}`;
+  }
+  if (mainScrollDebugHud.deltaX) {
+    mainScrollDebugHud.deltaX.textContent = MAIN_SCROLL_DEBUG_STATE.lastDeltaX.toFixed(2);
+  }
+  if (mainScrollDebugHud.deltaY) {
+    mainScrollDebugHud.deltaY.textContent = MAIN_SCROLL_DEBUG_STATE.lastDeltaY.toFixed(2);
+  }
+  if (mainScrollDebugHud.primary) {
+    mainScrollDebugHud.primary.textContent = MAIN_SCROLL_DEBUG_STATE.lastPrimaryDelta.toFixed(2);
+  }
+  if (mainScrollDebugHud.accumulator) {
+    mainScrollDebugHud.accumulator.textContent = getMainScrollDebugAccumulator().toFixed(2);
+  }
+  if (mainScrollDebugHud.direction) {
+    mainScrollDebugHud.direction.textContent =
+      MAIN_SCROLL_DEBUG_STATE.lastDirection > 0 ? 'forward' : MAIN_SCROLL_DEBUG_STATE.lastDirection < 0 ? 'back' : 'none';
+  }
+  if (mainScrollDebugHud.heuristic) {
+    mainScrollDebugHud.heuristic.textContent = MAIN_SCROLL_DEBUG_STATE.heuristic;
+  }
+  if (mainScrollDebugHud.sampling) {
+    mainScrollDebugHud.sampling.textContent = `${MAIN_SCROLL_DEBUG_STATE.graphSampleMs}ms`;
+  }
+  if (mainScrollDebugHud.mode) {
+    mainScrollDebugHud.mode.textContent = MAIN_SCROLL_DEBUG_STATE.plotMode;
+  }
+  if (mainScrollDebugHud.animating) {
+    mainScrollDebugHud.animating.textContent = SNAP_STATE.isAnimating || FINAL_HORIZON_STATE.isAnimating ? 'yes' : 'no';
+  }
+  if (mainScrollDebugHud.cooldown) {
+    const gateActive =
+      MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry ||
+      MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit;
+    mainScrollDebugHud.cooldown.textContent = gateActive ? 'fresh' : 'off';
+  }
+  if (mainScrollDebugGraphTitle) {
+    mainScrollDebugGraphTitle.textContent = `Delta X / Delta Y sampled every ${MAIN_SCROLL_DEBUG_STATE.graphSampleMs}ms`;
+  }
+}
+
+function restartMainScrollDebugSampling() {
+  if (MAIN_SCROLL_DEBUG_STATE.sampleTimer) {
+    clearInterval(MAIN_SCROLL_DEBUG_STATE.sampleTimer);
+  }
+  MAIN_SCROLL_DEBUG_STATE.sampleTimer = window.setInterval(
+    sampleMainScrollDebugGraph,
+    MAIN_SCROLL_DEBUG_STATE.graphSampleMs
+  );
+  mainScrollDebugSampleButtons.forEach((button) => {
+    button.classList.toggle('is-active', Number(button.dataset.scrollDebugSample) === MAIN_SCROLL_DEBUG_STATE.graphSampleMs);
+  });
+  mainScrollDebugModeButtons.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.scrollDebugMode === MAIN_SCROLL_DEBUG_STATE.plotMode);
+  });
+  updateMainScrollDebugHud();
+}
+
+function recordMainScrollDebugInput(deltaX, deltaY) {
+  const now = performance.now();
+  const primaryDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+  MAIN_SCROLL_DEBUG_STATE.lastDeltaX = deltaX;
+  MAIN_SCROLL_DEBUG_STATE.lastDeltaY = deltaY;
+  MAIN_SCROLL_DEBUG_STATE.lastPrimaryDelta = primaryDelta;
+  MAIN_SCROLL_DEBUG_STATE.lastDirection = primaryDelta === 0 ? 0 : primaryDelta > 0 ? 1 : -1;
+  MAIN_SCROLL_DEBUG_STATE.rawEvents.push({ t: now, deltaX, deltaY, primaryDelta });
+  while (
+    MAIN_SCROLL_DEBUG_STATE.rawEvents.length &&
+    now - MAIN_SCROLL_DEBUG_STATE.rawEvents[0].t > MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS + MAIN_SCROLL_DEBUG_STATE.graphSampleMs
+  ) {
+    MAIN_SCROLL_DEBUG_STATE.rawEvents.shift();
+  }
+  updateMainScrollDebugHud();
+}
+
+function consumeMainScrollDebugFreshGate() {
+  updateMainScrollDebugHud();
+  if (MAIN_SCROLL_DEBUG_STATE.heuristic !== 'fresh') {
+    return false;
+  }
+  MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry = false;
+  MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = false;
+  updateMainScrollDebugHud();
+  return true;
+}
+
+function initMainScrollDebug() {
+  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
+    return;
+  }
+  resizeMainScrollDebugGraph();
+  restartMainScrollDebugSampling();
+  updateMainScrollDebugHud();
+
+  mainScrollDebugSampleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextMs = Number(button.dataset.scrollDebugSample);
+      if (!nextMs || nextMs === MAIN_SCROLL_DEBUG_STATE.graphSampleMs) {
+        return;
+      }
+      MAIN_SCROLL_DEBUG_STATE.graphSampleMs = nextMs;
+      restartMainScrollDebugSampling();
+      drawMainScrollDebugGraph();
+    });
+  });
+
+  mainScrollDebugModeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextMode = button.dataset.scrollDebugMode;
+      if (!nextMode || nextMode === MAIN_SCROLL_DEBUG_STATE.plotMode) {
+        return;
+      }
+      MAIN_SCROLL_DEBUG_STATE.plotMode = nextMode;
+      restartMainScrollDebugSampling();
+      drawMainScrollDebugGraph();
+    });
+  });
+
+  mainScrollDebugGraph.addEventListener('mousemove', handleMainScrollDebugGraphHover);
+  mainScrollDebugGraph.addEventListener('mouseleave', hideMainScrollDebugTooltip);
+}
+
+function updateFinalHorizonCardOneSplit(card, isActive) {
+  const overlay = card.querySelector('.folio-hcard-image-overlay');
+  if (!overlay) {
+    return;
+  }
+  if (!isActive) {
+    overlay.style.setProperty('--folio-split-progress', '0%');
+    return;
+  }
+  const mediaRect = card.querySelector('.folio-hcard-media')?.getBoundingClientRect();
+  if (!mediaRect) {
+    return;
+  }
+  const split = clamp(FINAL_HORIZON_STATE.pointerX - mediaRect.left, 0, mediaRect.width);
+  overlay.style.setProperty('--folio-split-progress', `${((split / mediaRect.width) * 100).toFixed(3)}%`);
+}
+
+function setFinalHorizonX(x) {
+  FINAL_HORIZON_STATE.x = x;
+  if (finalHorizonScroller) {
+    finalHorizonScroller.scrollLeft = x;
+  }
+  updateFinalHorizonVisuals();
+}
+
+function settleFinalHorizonCardSnap() {
+  SNAP_STATE.finalCardsAccumulator = 0;
+  SNAP_STATE.finalCardsDirection = 0;
+  SNAP_STATE.wheelCooldownUntil = 0;
+}
+
+function goToFinalHorizonCard(index, immediate = false, targetOverride = null) {
+  if (!FINAL_HORIZON_STATE.snapPoints.length || !finalHorizonScroller) {
+    return false;
+  }
+  const clamped = clamp(index, 0, FINAL_HORIZON_STATE.cards.length - 1);
+  FINAL_HORIZON_STATE.snapIndex = clamped;
+  const targetX = targetOverride ?? FINAL_HORIZON_STATE.snapPoints[clamped] ?? 0;
+  if (immediate) {
+    FINAL_HORIZON_STATE.isAnimating = false;
+    setFinalHorizonX(targetX);
+    return true;
+  }
+  recordMainScrollDebugMotion('start');
+  FINAL_HORIZON_STATE.isAnimating = true;
+  gsap.killTweensOf(FINAL_HORIZON_STATE);
+  gsap.to(FINAL_HORIZON_STATE, {
+    x: targetX,
+    duration: FINAL_HORIZON_SNAP_DURATION,
+    ease: (t) => evaluateCubicBezier(t, 0.74, 0.25, 0.63, 0.97),
+    onUpdate: () => setFinalHorizonX(FINAL_HORIZON_STATE.x),
+    onComplete: () => {
+      FINAL_HORIZON_STATE.isAnimating = false;
+      setFinalHorizonX(targetX);
+      recordMainScrollDebugMotion('end');
+      settleFinalHorizonCardSnap();
+    }
+  });
+  return true;
+}
+
+function setFinalOpportunityExpanded(expanded) {
+  if (FINAL_HORIZON_STATE.expanded === expanded && !FINAL_HORIZON_STATE.specialCollapsing) {
+    return;
+  }
+  if (FINAL_HORIZON_STATE.specialCollapseTimer) {
+    clearTimeout(FINAL_HORIZON_STATE.specialCollapseTimer);
+    FINAL_HORIZON_STATE.specialCollapseTimer = 0;
+  }
+  FINAL_HORIZON_STATE.expanded = expanded;
+  FINAL_HORIZON_STATE.specialCollapsing = !expanded;
+  const card = FINAL_HORIZON_STATE.cards[0];
+  if (!card) {
+    return;
+  }
+  card.classList.toggle('is-expanded', expanded);
+  refreshFinalHorizonSnapPoints();
+  if (!expanded) {
+    FINAL_HORIZON_STATE.specialCollapseTimer = window.setTimeout(() => {
+      FINAL_HORIZON_STATE.specialCollapsing = false;
+      FINAL_HORIZON_STATE.specialCollapseTimer = 0;
+      refreshFinalHorizonSnapPoints();
+    }, 800);
+  }
+}
+
+function prepareFinalHorizonEntryState() {
+  if (!FINAL_HORIZON_STATE.cards.length) {
+    return;
+  }
+  gsap.killTweensOf(FINAL_HORIZON_STATE.cards);
+  gsap.set(FINAL_HORIZON_STATE.cards, {
+    x: 96,
+    opacity: 0
+  });
+}
+
+function activateFinalHorizonSection(fromIndex) {
+  if (!FINAL_HORIZON_STATE.cards.length) {
+    return;
+  }
+  FINAL_HORIZON_STATE.hasEntered = true;
+  MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry = false;
+  MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = false;
+  SNAP_STATE.finalCardsAccumulator = 0;
+  SNAP_STATE.finalCardsDirection = 0;
+  if (fromIndex !== FINAL_HORIZON_SECTION_INDEX) {
+    if (FINAL_HORIZON_STATE.specialCollapseTimer) {
+      clearTimeout(FINAL_HORIZON_STATE.specialCollapseTimer);
+      FINAL_HORIZON_STATE.specialCollapseTimer = 0;
+    }
+    FINAL_HORIZON_STATE.expanded = false;
+    FINAL_HORIZON_STATE.specialCollapsing = false;
+    FINAL_HORIZON_STATE.cards[0]?.classList.add('is-resetting');
+    FINAL_HORIZON_STATE.cards[0]?.classList.remove('is-expanded');
+    refreshFinalHorizonSnapPoints();
+    requestAnimationFrame(() => {
+      refreshFinalHorizonSnapPoints();
+      goToFinalHorizonCard(1, true);
+      if (fromIndex === 1) {
+        MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry = true;
+        SNAP_STATE.wheelCooldownUntil = 0;
+      }
+      updateMainScrollDebugHud();
+      requestAnimationFrame(() => {
+        FINAL_HORIZON_STATE.cards[0]?.classList.remove('is-resetting');
+      });
+    });
+    gsap.to(FINAL_HORIZON_STATE.cards, {
+      x: 0,
+      opacity: 1,
+      duration: 0.7,
+      ease: 'power4.out',
+      stagger: 0.05,
+      clearProps: 'opacity,transform'
+    });
+  } else {
+    refreshFinalHorizonSnapPoints();
+    goToFinalHorizonCard(FINAL_HORIZON_STATE.snapIndex, true);
+  }
+}
+
+function handleFinalHorizonScroll(deltaX, deltaY) {
+  if (!FINAL_HORIZON_STATE.cards.length) {
+    return false;
+  }
+  if (SNAP_STATE.isAnimating || FINAL_HORIZON_STATE.isAnimating || performance.now() < SNAP_STATE.wheelCooldownUntil) {
+    return true;
+  }
+  const primaryDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
+  const direction = primaryDelta > 0 ? 1 : primaryDelta < 0 ? -1 : 0;
+  if (!direction) {
+    return true;
+  }
+  if (MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry) {
+    if (!consumeMainScrollDebugFreshGate()) {
+      return true;
+    }
+  }
+  if (MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit && FINAL_HORIZON_STATE.snapIndex === 0 && direction < 0) {
+    if (!consumeMainScrollDebugFreshGate()) {
+      return true;
+    }
+  }
+  if (SNAP_STATE.finalCardsDirection !== direction) {
+    SNAP_STATE.finalCardsAccumulator = 0;
+  }
+  SNAP_STATE.finalCardsDirection = direction;
+  SNAP_STATE.finalCardsAccumulator += primaryDelta;
+  if (Math.abs(SNAP_STATE.finalCardsAccumulator) < FINAL_HORIZON_WHEEL_SNAP_THRESHOLD) {
+    return true;
+  }
+  SNAP_STATE.finalCardsAccumulator = 0;
+  SNAP_STATE.wheelCooldownUntil = performance.now() + FINAL_HORIZON_WHEEL_COOLDOWN_MS;
+  if (direction < 0) {
+    if (FINAL_HORIZON_STATE.snapIndex > 1) {
+      setFinalOpportunityExpanded(false);
+      goToFinalHorizonCard(FINAL_HORIZON_STATE.snapIndex - 1);
+      return true;
+    }
+    if (FINAL_HORIZON_STATE.snapIndex === 1) {
+      MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = true;
+      setFinalOpportunityExpanded(true);
+      goToFinalHorizonCard(0);
+      return true;
+    }
+    SNAP_STATE.finalCardsAccumulator = 0;
+    SNAP_STATE.finalCardsDirection = 0;
+    SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+    refreshFinalHorizonSnapPoints();
+    goToFinalHorizonCard(0, true);
+    goToSection(FINAL_HORIZON_SECTION_INDEX - 1, false, { allowIncomingCarry: true });
+    return true;
+  }
+  if (FINAL_HORIZON_STATE.expanded) {
+    const cardOne = FINAL_HORIZON_STATE.cards[1];
+    setFinalOpportunityExpanded(false);
+    if (FINAL_HORIZON_STATE.snapIndex === 0 && cardOne) {
+      MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = false;
+      updateMainScrollDebugHud();
+      const collapsedTarget = Math.max(
+        0,
+        cardOne.offsetLeft - FINAL_HORIZON_STATE.sharedLeftAnchor - FINAL_HORIZON_STATE.specialExpansionDelta
+      );
+      goToFinalHorizonCard(1, false, collapsedTarget);
+      return true;
+    }
+  }
+  if (FINAL_HORIZON_STATE.snapIndex === 0) {
+    MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = false;
+    updateMainScrollDebugHud();
+    goToFinalHorizonCard(1);
+    return true;
+  }
+  if (FINAL_HORIZON_STATE.snapIndex < FINAL_HORIZON_STATE.cards.length - 1) {
+    goToFinalHorizonCard(FINAL_HORIZON_STATE.snapIndex + 1);
+  } else {
+    settleFinalHorizonCardSnap();
+  }
+  return true;
 }
 
 function initSection2FillTargets() {
@@ -2810,14 +3873,16 @@ function handleSection2Scroll(deltaY) {
 
   if (Math.abs(SNAP_STATE.section2EdgeAccumulator) >= WHEEL_SNAP_THRESHOLD) {
     SNAP_STATE.section2EdgeAccumulator = 0;
+    SNAP_STATE.lastPrimaryInputDelta = deltaY;
     queueOrGo(edgeDirection);
   }
   return true;
 }
 
 function goToSection(nextIndex, immediate = false, options = {}) {
-  const { suppressMorph = false } = options;
+  const { suppressMorph = false, allowIncomingCarry = false } = options;
   const clamped = clamp(nextIndex, 0, snapSections.length - 1);
+  const previousIndex = SNAP_STATE.index;
   if (clamped === SNAP_STATE.index && !immediate) {
     return;
   }
@@ -2835,17 +3900,25 @@ function goToSection(nextIndex, immediate = false, options = {}) {
   if (immediate) {
     gsap.set(snapTrack, { y: targetY });
     SNAP_STATE.index = clamped;
-    if (clamped === 1) {
-      SNAP_STATE.section2ParagraphLockUntil = performance.now() + WHEEL_COOLDOWN_MS;
-    }
     syncBodySectionState(clamped);
     refreshSection2ModelVisibility();
+    if (clamped === FINAL_HORIZON_SECTION_INDEX) {
+      activateFinalHorizonSection(previousIndex);
+    }
     activateSectionAnimation(clamped);
     settleAfterSectionChange();
+    if (allowIncomingCarry && clamped === 1) {
+      SNAP_STATE.wheelCooldownUntil = 0;
+      SNAP_STATE.section2ParagraphLockUntil = 0;
+    }
     return;
   }
 
   SNAP_STATE.isAnimating = true;
+  recordMainScrollDebugMotion('start');
+  if (clamped === FINAL_HORIZON_SECTION_INDEX && previousIndex !== FINAL_HORIZON_SECTION_INDEX) {
+    prepareFinalHorizonEntryState();
+  }
   gsap.to(snapTrack, {
     y: targetY,
     duration: 0.78,
@@ -2854,7 +3927,7 @@ function goToSection(nextIndex, immediate = false, options = {}) {
       if (!suppressMorph && clamped !== SNAP_STATE.index) {
         playSectionMorphTransition(clamped > SNAP_STATE.index ? 1 : -1, clamped);
       }
-      if (clamped === 1 && clamped !== SNAP_STATE.index) {
+      if (clamped === 1 && clamped !== SNAP_STATE.index && !allowIncomingCarry) {
         SNAP_STATE.section2ParagraphLockUntil = performance.now() + WHEEL_COOLDOWN_MS;
       }
       syncBodySectionState(clamped);
@@ -2865,9 +3938,17 @@ function goToSection(nextIndex, immediate = false, options = {}) {
     onComplete: () => {
       SNAP_STATE.index = clamped;
       SNAP_STATE.isAnimating = false;
+      recordMainScrollDebugMotion('end');
       refreshSection2ModelVisibility();
+      if (clamped === FINAL_HORIZON_SECTION_INDEX) {
+        activateFinalHorizonSection(previousIndex);
+      }
       activateSectionAnimation(clamped);
       settleAfterSectionChange();
+      if (allowIncomingCarry && clamped === 1) {
+        SNAP_STATE.wheelCooldownUntil = 0;
+        SNAP_STATE.section2ParagraphLockUntil = 0;
+      }
     }
   });
 }
@@ -2900,15 +3981,6 @@ function queueOrGo(direction) {
       return;
     }
   }
-  if (dir < 0 && SNAP_STATE.index === 2) {
-    const state = getSectionAnimationState(SNAP_STATE.index);
-    if (state && state.progressSeconds > 0.0001) {
-      return;
-    }
-    if (beginSection3To2Transition()) {
-      return;
-    }
-  }
   goToSection(SNAP_STATE.index + dir);
 }
 
@@ -2918,12 +3990,48 @@ function initSnapScroll() {
   }
 
   goToSection(0, true);
+  initMainScrollDebug();
+
+  if (finalHorizonScroller) {
+    finalHorizonScroller.addEventListener(
+      'scroll',
+      () => {
+        if (FINAL_HORIZON_STATE.isAnimating) {
+          return;
+        }
+        FINAL_HORIZON_STATE.x = finalHorizonScroller.scrollLeft;
+        updateFinalHorizonVisuals();
+      },
+      { passive: true }
+    );
+  }
+
+  window.addEventListener(
+    'pointermove',
+    (event) => {
+      FINAL_HORIZON_STATE.pointerX = event.clientX;
+      if (document.body.dataset.section === String(FINAL_HORIZON_SECTION_INDEX + 1) && FINAL_HORIZON_STATE.index === 1) {
+        const card = FINAL_HORIZON_STATE.cards[1];
+        if (card) {
+          updateFinalHorizonCardOneSplit(card, true);
+        }
+      }
+    },
+    { passive: true }
+  );
 
   window.addEventListener(
     'wheel',
     (event) => {
       event.preventDefault();
       const now = performance.now();
+      SNAP_STATE.lastPrimaryInputDelta =
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      recordMainScrollDebugInput(event.deltaX, event.deltaY);
+      if (SNAP_STATE.index === FINAL_HORIZON_SECTION_INDEX && !SNAP_STATE.isAnimating) {
+        handleFinalHorizonScroll(event.deltaX, event.deltaY);
+        return;
+      }
       if (SNAP_STATE.index === 1 && !SNAP_STATE.isAnimating) {
         handleSection2Scroll(event.deltaY);
         return;
@@ -2961,6 +4069,18 @@ function initSnapScroll() {
   window.addEventListener(
     'keydown',
     (event) => {
+      if (SNAP_STATE.index === FINAL_HORIZON_SECTION_INDEX && !SNAP_STATE.isAnimating) {
+        if (event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          handleFinalHorizonScroll(0, WHEEL_SNAP_THRESHOLD);
+          return;
+        }
+        if (event.key === 'ArrowUp' || event.key === 'PageUp') {
+          event.preventDefault();
+          handleFinalHorizonScroll(0, -WHEEL_SNAP_THRESHOLD);
+          return;
+        }
+      }
       const animatedState = getSectionAnimationState(SNAP_STATE.index);
       if (event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') {
         event.preventDefault();
@@ -3011,6 +4131,10 @@ function initSnapScroll() {
       if (Math.abs(dy) < 40) {
         return;
       }
+      if (SNAP_STATE.index === FINAL_HORIZON_SECTION_INDEX && !SNAP_STATE.isAnimating) {
+        handleFinalHorizonScroll(0, dy);
+        return;
+      }
       const animatedState = getSectionAnimationState(SNAP_STATE.index);
       if (animatedState) {
         if (handleAnimatedSectionScroll(animatedState, dy)) {
@@ -3025,9 +4149,14 @@ function initSnapScroll() {
   window.addEventListener(
     'resize',
     () => {
+      resizeMainScrollDebugGraph();
       renderSectionTransitionShape();
       goToSection(SNAP_STATE.index, true);
       updatePersistentBottomNav(SNAP_STATE.index);
+      refreshFinalHorizonSnapPoints();
+      if (SNAP_STATE.index === FINAL_HORIZON_SECTION_INDEX) {
+        goToFinalHorizonCard(FINAL_HORIZON_STATE.snapIndex, true);
+      }
       scheduleSectionMorphHint();
     },
     { passive: true }
