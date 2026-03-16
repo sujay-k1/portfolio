@@ -1111,6 +1111,11 @@ body[data-section="3"] {
   width: min(60vw, 920px);
   min-width: 640px;
   height: clamp(594px, 73.92vh, 740px);
+  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.folio-hcard-wrap.is-right-of-active {
+  transform: translateY(calc(100% - 108px));
 }
 
 .folio-hcard-wrap.is-opportunity {
