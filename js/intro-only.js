@@ -1,8 +1,14 @@
+import { initSectionOneProceduralWave } from './procedural-wave-section1.js';
+
 const introWords = Array.from(document.querySelectorAll('.intro-word')).sort(
   (a, b) => Number(a.dataset.order || 0) - Number(b.dataset.order || 0)
 );
 const bitcountWords = Array.from(document.querySelectorAll('.intro-word-bitcount'));
 const bitcountChars = [];
+const introStage = document.getElementById('intro-stage');
+const introWaveViz = document.getElementById('intro-wave-viz');
+const introLine1Main = document.getElementById('intro-line-1-main');
+const introLine1Tail = document.getElementById('intro-line-1-tail');
 const snapRoot = document.getElementById('snap-root');
 const snapTrack = document.getElementById('snap-track');
 const snapSections = Array.from(document.querySelectorAll('.snap-section'));
@@ -18,13 +24,20 @@ const animatedSections = snapSections.filter((section) => {
 const persistentBottomNav = document.querySelector('.folio-bottom-nav-persistent');
 const persistentStatus = document.querySelector('.folio-status-persistent');
 const startupLoader = document.getElementById('startup-loader');
-const sectionTransitionLayer = document.getElementById('section-transition-layer');
-const sectionTransitionFill = document.getElementById('section-transition-fill');
-const sectionTransitionEdge = document.getElementById('section-transition-edge');
-const sectionTransitionGradient = document.getElementById('section-transition-gradient');
-const sectionTransitionStopTop = document.getElementById('section-transition-stop-top');
-const sectionTransitionStopBottom = document.getElementById('section-transition-stop-bottom');
-const sectionTransitionLabel = document.getElementById('section-transition-label');
+const sectionTransitionLayers = new Map(
+  Array.from(document.querySelectorAll('.section-transition-layer-local')).map((layer) => [
+    layer.dataset.transitionKey,
+    {
+      layer,
+      fill: layer.querySelector('.section-transition-fill'),
+      edge: layer.querySelector('.section-transition-edge'),
+      gradient: layer.querySelector('linearGradient'),
+      stopTop: layer.querySelector('.section-transition-stop-top'),
+      stopBottom: layer.querySelector('.section-transition-stop-bottom'),
+      label: layer.querySelector('.section-transition-label')
+    }
+  ])
+);
 const mainScrollDebugGraph = document.getElementById('main-scroll-debug-graph');
 const mainScrollDebugGraphCtx = mainScrollDebugGraph?.getContext('2d') || null;
 const mainScrollDebugTooltip = document.getElementById('main-scroll-debug-tooltip');
@@ -283,6 +296,15 @@ let sectionMorphHintTimeout = 0;
 let sectionMorphMode = 'idle';
 let sectionMorphHintProgress = 0;
 const sectionMorphNextHintAt = new Map();
+let activeSectionTransitionKey = null;
+const activeSectionRevealMask = {
+  index: null,
+  direction: 0
+};
+const activeSectionStacking = {
+  fromIndex: null,
+  toIndex: null
+};
 const FINAL_HORIZON_STATE = {
   index: 1,
   snapIndex: 1,
@@ -294,6 +316,7 @@ const FINAL_HORIZON_STATE = {
   specialCollapsing: false,
   cards: [],
   isAnimating: false,
+  entryTweenStarted: false,
   expanded: false,
   hasEntered: false,
   pointerX: window.innerWidth * 0.5
@@ -317,6 +340,18 @@ const MAIN_SCROLL_DEBUG_STATE = {
   requireFreshSection3Entry: false,
   requireFreshSpecialExit: false
 };
+
+function updateIntroLine1TailOffset() {
+  if (!introLine1Main || !introLine1Tail) {
+    return;
+  }
+  /*
+    Keep the "for" offset tied to the rendered width of "curious designer".
+    Change the 1.02 multiplier here if this hero relationship needs retuning.
+  */
+  const mainWidth = introLine1Main.getBoundingClientRect().width || 0;
+  introLine1Tail.style.setProperty('--intro-line1-tail-offset-dynamic', `${mainWidth * 1.02}px`);
+}
 
 function cubicBezierPoint(t, p1, p2) {
   const inv = 1 - t;
@@ -347,23 +382,145 @@ function easePower4Out(t) {
   return 1 - ((1 - clamped) ** 4);
 }
 
+function getSectionTransitionKey(sectionIndex, direction) {
+  if (sectionIndex === 0 && direction > 0) {
+    return '1-2';
+  }
+  if (sectionIndex === 1 && direction < 0) {
+    return '2-1';
+  }
+  if (sectionIndex === 1 && direction > 0) {
+    return '2-3';
+  }
+  if (sectionIndex === 2 && direction < 0) {
+    return '3-2';
+  }
+  return null;
+}
+
+function getActiveSectionTransitionRefs() {
+  return activeSectionTransitionKey ? sectionTransitionLayers.get(activeSectionTransitionKey) || null : null;
+}
+
+function activateSectionTransitionLayer(sectionIndex, direction) {
+  const nextKey = getSectionTransitionKey(sectionIndex, direction);
+  activeSectionTransitionKey = nextKey;
+  return getActiveSectionTransitionRefs();
+}
+
+function clearSectionTransitionLayers() {
+  sectionTransitionLayers.forEach((refs) => {
+    refs.layer.classList.remove('is-active', 'is-up', 'is-hint');
+  });
+  activeSectionTransitionKey = null;
+}
+
+function buildSectionRevealClipPath(edge, peak, direction) {
+  const samples = 24;
+  const curvePoints = [];
+  for (let i = 0; i <= samples; i += 1) {
+    const t = i / samples;
+    const x = t * 100;
+    const y = ((1 - t) * (1 - t) * edge) + (2 * (1 - t) * t * peak) + (t * t * edge);
+    curvePoints.push([x, direction > 0 ? y : 100 - y]);
+  }
+
+  if (direction > 0) {
+    const points = [
+      [0, 100],
+      [0, curvePoints[0][1]],
+      ...curvePoints,
+      [100, 100]
+    ];
+    return `polygon(${points.map(([x, y]) => `${x.toFixed(3)}% ${y.toFixed(3)}%`).join(',')})`;
+  }
+
+  const points = [
+    [0, 0],
+    [0, curvePoints[0][1]],
+    ...curvePoints,
+    [100, 0]
+  ];
+  return `polygon(${points.map(([x, y]) => `${x.toFixed(3)}% ${y.toFixed(3)}%`).join(',')})`;
+}
+
+function applyActiveSectionRevealMask() {
+  if (activeSectionRevealMask.index == null) {
+    return;
+  }
+  const section = snapSections[activeSectionRevealMask.index];
+  if (!section) {
+    return;
+  }
+  /*
+    Keep the incoming masked section attached to the boundary line in both
+    directions. Forward travel lifts by the current edge height; reverse
+    travel drops by the same amount.
+  */
+  const translateYPercent =
+    activeSectionRevealMask.direction > 0 ? -sectionMorphState.edge : sectionMorphState.edge;
+  section.style.transform = `translate3d(0, ${translateYPercent.toFixed(3)}%, 0)`;
+  section.style.clipPath = buildSectionRevealClipPath(
+    sectionMorphState.edge,
+    sectionMorphState.peak,
+    activeSectionRevealMask.direction
+  );
+}
+
+function applyActiveSectionStacking() {
+  const { fromIndex, toIndex } = activeSectionStacking;
+  if (fromIndex == null || toIndex == null) {
+    return;
+  }
+  snapSections.forEach((section, index) => {
+    if (index === toIndex) {
+      section.style.zIndex = '3';
+    } else if (index === fromIndex) {
+      section.style.zIndex = '2';
+    } else {
+      section.style.zIndex = '1';
+    }
+  });
+}
+
+function clearActiveSectionStacking() {
+  snapSections.forEach((section) => {
+    section.style.removeProperty('z-index');
+  });
+  activeSectionStacking.fromIndex = null;
+  activeSectionStacking.toIndex = null;
+}
+
+function clearActiveSectionRevealMask() {
+  if (activeSectionRevealMask.index != null) {
+    const section = snapSections[activeSectionRevealMask.index];
+    section?.style.removeProperty('clip-path');
+    section?.style.removeProperty('transform');
+  }
+  activeSectionRevealMask.index = null;
+  activeSectionRevealMask.direction = 0;
+  clearActiveSectionStacking();
+}
+
 function resetSectionTransitionLabel() {
-  if (!window.gsap || !sectionTransitionLabel) {
+  const refs = getActiveSectionTransitionRefs();
+  if (!window.gsap || !refs?.label) {
     return;
   }
   const archVisualCenter = SECTION_MORPH_HINT_PEAK + (100 - SECTION_MORPH_HINT_PEAK) * 0.75;
-  sectionTransitionLabel.style.top = `${archVisualCenter.toFixed(2)}%`;
-  window.gsap.set(sectionTransitionLabel, {
+  refs.label.style.top = `${archVisualCenter.toFixed(2)}%`;
+  window.gsap.set(refs.label, {
     opacity: 0,
     y: 10
   });
 }
 
 function resetSectionTransitionLayerOpacity() {
-  if (!window.gsap || !sectionTransitionLayer) {
+  const refs = getActiveSectionTransitionRefs();
+  if (!window.gsap || !refs?.layer) {
     return;
   }
-  window.gsap.set(sectionTransitionLayer, { opacity: 1 });
+  window.gsap.set(refs.layer, { opacity: 1 });
 }
 
 function createPointerMaterial(THREE) {
@@ -483,33 +640,37 @@ function buildSectionTransitionPath(edge, peak) {
 }
 
 function renderSectionTransitionShape() {
-  if (!sectionTransitionFill || !sectionTransitionEdge) {
+  const refs = getActiveSectionTransitionRefs();
+  if (!refs?.fill || !refs?.edge) {
+    applyActiveSectionRevealMask();
     return;
   }
   const d = buildSectionTransitionPath(sectionMorphState.edge, sectionMorphState.peak);
-  sectionTransitionFill.setAttribute('d', d);
-  sectionTransitionEdge.setAttribute('d', d);
+  refs.fill.setAttribute('d', d);
+  refs.edge.setAttribute('d', d);
   const visibleTop = clamp(Math.min(sectionMorphState.edge, sectionMorphState.peak), 0, 100);
-  if (sectionTransitionGradient) {
-    sectionTransitionGradient.setAttribute('y1', `${visibleTop.toFixed(2)}`);
-    sectionTransitionGradient.setAttribute('y2', '100');
+  if (refs.gradient) {
+    refs.gradient.setAttribute('y1', `${visibleTop.toFixed(2)}`);
+    refs.gradient.setAttribute('y2', '100');
   }
+  applyActiveSectionRevealMask();
 }
 
 function setSectionTransitionGradient(index, direction = 1) {
-  if (!sectionTransitionLayer) {
+  const refs = getActiveSectionTransitionRefs();
+  if (!refs?.layer) {
     return;
   }
   const gradient = getSectionTransitionGradient(index);
   const isUp = direction < 0;
   const topColor = isUp ? gradient.bottom : gradient.top;
   const bottomColor = isUp ? gradient.top : gradient.bottom;
-  if (sectionTransitionStopTop && sectionTransitionStopBottom) {
-    sectionTransitionStopTop.setAttribute('stop-color', topColor);
-    sectionTransitionStopBottom.setAttribute('stop-color', bottomColor);
+  if (refs.stopTop && refs.stopBottom) {
+    refs.stopTop.setAttribute('stop-color', topColor);
+    refs.stopBottom.setAttribute('stop-color', bottomColor);
   } else {
-    sectionTransitionLayer.style.setProperty('--section-transition-top', topColor);
-    sectionTransitionLayer.style.setProperty('--section-transition-bottom', bottomColor);
+    refs.layer.style.setProperty('--section-transition-top', topColor);
+    refs.layer.style.setProperty('--section-transition-bottom', bottomColor);
   }
 }
 
@@ -531,10 +692,11 @@ function stopSectionMorphAnimation(hideLayer = false) {
     sectionMorphTween.kill();
     sectionMorphTween = null;
   }
-  if (sectionTransitionLayer) {
-    sectionTransitionLayer.classList.remove('is-up', 'is-hint');
+  const refs = getActiveSectionTransitionRefs();
+  if (refs?.layer) {
+    refs.layer.classList.remove('is-up', 'is-hint');
     if (hideLayer) {
-      sectionTransitionLayer.classList.remove('is-active');
+      refs.layer.classList.remove('is-active');
     }
   }
   sectionMorphState.edge = 100;
@@ -544,6 +706,10 @@ function stopSectionMorphAnimation(hideLayer = false) {
   resetSectionTransitionLabel();
   renderSectionTransitionShape();
   sectionMorphMode = 'idle';
+  clearActiveSectionRevealMask();
+  if (hideLayer || !refs?.layer) {
+    clearSectionTransitionLayers();
+  }
 }
 
 function stopSectionMorphHint() {
@@ -563,14 +729,15 @@ function canShowSectionMorphHint() {
 }
 
 function startSectionMorphHint() {
-  if (!window.gsap || !sectionTransitionLayer || !canShowSectionMorphHint()) {
+  const refs = activateSectionTransitionLayer(SNAP_STATE.index, 1);
+  if (!window.gsap || !refs?.layer || !canShowSectionMorphHint()) {
     return;
   }
   stopSectionMorphAnimation(false);
   const activeIndex = SNAP_STATE.index;
   setSectionTransitionGradient(SNAP_STATE.index + 1, 1);
-  sectionTransitionLayer.classList.remove('is-up');
-  sectionTransitionLayer.classList.add('is-active', 'is-hint');
+  refs.layer.classList.remove('is-up');
+  refs.layer.classList.add('is-active', 'is-hint');
   sectionMorphMode = 'hint';
   resetSectionTransitionLayerOpacity();
   resetSectionTransitionLabel();
@@ -603,9 +770,9 @@ function startSectionMorphHint() {
       renderSectionTransitionShape();
     }
   });
-  if (sectionTransitionLabel) {
+  if (refs.label) {
     sectionMorphTween.to(
-      sectionTransitionLabel,
+      refs.label,
       {
         opacity: 1,
         y: 0,
@@ -615,7 +782,7 @@ function startSectionMorphHint() {
       0.18
     );
     sectionMorphTween.to(
-      sectionTransitionLabel,
+      refs.label,
       {
         opacity: 0,
         y: -8,
@@ -626,7 +793,7 @@ function startSectionMorphHint() {
     );
   }
   sectionMorphTween.to(
-    sectionTransitionLayer,
+    refs.layer,
     {
       opacity: 0,
       duration: 2,
@@ -657,7 +824,8 @@ function scheduleSectionMorphHint(delay = SECTION_MORPH_HINT_DELAY_MS) {
 }
 
 function playSectionMorphTransition(direction, incomingIndex, duration = SECTION_MORPH_TRANSITION_DURATION) {
-  if (!window.gsap || !sectionTransitionLayer) {
+  const refs = activateSectionTransitionLayer(SNAP_STATE.index, direction);
+  if (!window.gsap || !refs?.layer) {
     return;
   }
   const safeDuration = Math.max(0.001, duration);
@@ -669,8 +837,8 @@ function playSectionMorphTransition(direction, incomingIndex, duration = SECTION
     sectionMorphTween = null;
   }
   sectionMorphHintProgress = 0;
-  sectionTransitionLayer.classList.toggle('is-up', direction < 0);
-  sectionTransitionLayer.classList.remove('is-hint');
+  refs.layer.classList.toggle('is-up', direction < 0);
+  refs.layer.classList.remove('is-hint');
   resetSectionTransitionLayerOpacity();
   resetSectionTransitionLabel();
   if (shouldResetFromHint) {
@@ -678,34 +846,45 @@ function playSectionMorphTransition(direction, incomingIndex, duration = SECTION
     sectionMorphState.peak = 100;
   }
   setSectionTransitionGradient(incomingIndex, direction);
-  sectionTransitionLayer.classList.add('is-active');
+  activeSectionStacking.fromIndex = SNAP_STATE.index;
+  activeSectionStacking.toIndex = incomingIndex;
+  applyActiveSectionStacking();
+  activeSectionRevealMask.index = incomingIndex;
+  activeSectionRevealMask.direction = direction;
+  refs.layer.classList.add('is-active', 'section-transition-layer-debug');
   sectionMorphMode = 'transition';
   renderSectionTransitionShape();
+  const transitionDriver = { progress: 0 };
   sectionMorphTween = window.gsap.timeline({
     onComplete: () => {
       sectionMorphTween = null;
-      sectionTransitionLayer.classList.remove('is-active', 'is-up');
+      refs.layer.classList.remove('is-active', 'is-up', 'section-transition-layer-debug');
       sectionMorphState.edge = 100;
       sectionMorphState.peak = 100;
       renderSectionTransitionShape();
+      clearActiveSectionRevealMask();
+      clearSectionTransitionLayers();
       scheduleSectionMorphHint();
     }
   });
-  sectionMorphTween
-    .to(sectionMorphState, {
-      edge: 52,
-      peak: 8,
-      duration: safeDuration * 0.42,
-      ease: 'power2.in',
-      onUpdate: renderSectionTransitionShape
-    })
-    .to(sectionMorphState, {
-      edge: 0,
-      peak: 0,
-      duration: safeDuration * 0.58,
-      ease: 'power2.out',
-      onUpdate: renderSectionTransitionShape
-    });
+  sectionMorphTween.to(transitionDriver, {
+    progress: 1,
+    duration: safeDuration,
+    ease: 'power2.inOut',
+    onUpdate: () => {
+      const p = transitionDriver.progress;
+      if (p <= 0.42) {
+        const local = p / 0.42;
+        sectionMorphState.edge = 100 + (52 - 100) * local;
+        sectionMorphState.peak = 100 + (8 - 100) * local;
+      } else {
+        const local = (p - 0.42) / 0.58;
+        sectionMorphState.edge = 52 + (0 - 52) * local;
+        sectionMorphState.peak = 8 + (0 - 8) * local;
+      }
+      renderSectionTransitionShape();
+    }
+  }, 0);
 }
 
 function createSectionAnimationState(sectionIndex, durationSeconds) {
@@ -1836,6 +2015,13 @@ function startCoreApp() {
     return;
   }
   appBooted = true;
+  updateIntroLine1TailOffset();
+  initSectionOneProceduralWave({
+    host: introWaveViz,
+    pointerTarget: introStage
+  }).catch((error) => {
+    console.warn('Section 1 procedural wave failed to initialize.', error);
+  });
   renderFinalHorizonSection();
   refreshFinalHorizonSnapPoints();
   goToFinalHorizonCard(0, true);
@@ -1856,6 +2042,12 @@ function startCoreApp() {
   initSection2Model();
   initSnapScroll();
   scheduleSectionMorphHint();
+  if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+    document.fonts.ready.then(() => {
+      updateIntroLine1TailOffset();
+    });
+  }
+  window.addEventListener('resize', updateIntroLine1TailOffset);
 }
 
 function startLoaderReveal() {
@@ -3533,10 +3725,36 @@ function prepareFinalHorizonEntryState() {
   if (!FINAL_HORIZON_STATE.cards.length) {
     return;
   }
+  FINAL_HORIZON_STATE.entryTweenStarted = false;
+  if (FINAL_HORIZON_STATE.specialCollapseTimer) {
+    clearTimeout(FINAL_HORIZON_STATE.specialCollapseTimer);
+    FINAL_HORIZON_STATE.specialCollapseTimer = 0;
+  }
+  FINAL_HORIZON_STATE.expanded = false;
+  FINAL_HORIZON_STATE.specialCollapsing = false;
+  FINAL_HORIZON_STATE.cards[0]?.classList.add('is-resetting');
+  FINAL_HORIZON_STATE.cards[0]?.classList.remove('is-expanded');
+  refreshFinalHorizonSnapPoints();
+  goToFinalHorizonCard(1, true);
   gsap.killTweensOf(FINAL_HORIZON_STATE.cards);
   gsap.set(FINAL_HORIZON_STATE.cards, {
     x: 96,
     opacity: 0
+  });
+}
+
+function startFinalHorizonEntryTween() {
+  if (!FINAL_HORIZON_STATE.cards.length || FINAL_HORIZON_STATE.entryTweenStarted) {
+    return;
+  }
+  FINAL_HORIZON_STATE.entryTweenStarted = true;
+  gsap.to(FINAL_HORIZON_STATE.cards, {
+    x: 0,
+    opacity: 1,
+    duration: 0.7,
+    ease: 'power4.out',
+    stagger: 0.05,
+    clearProps: 'opacity,transform'
   });
 }
 
@@ -3550,35 +3768,20 @@ function activateFinalHorizonSection(fromIndex) {
   SNAP_STATE.finalCardsAccumulator = 0;
   SNAP_STATE.finalCardsDirection = 0;
   if (fromIndex !== FINAL_HORIZON_SECTION_INDEX) {
-    if (FINAL_HORIZON_STATE.specialCollapseTimer) {
-      clearTimeout(FINAL_HORIZON_STATE.specialCollapseTimer);
-      FINAL_HORIZON_STATE.specialCollapseTimer = 0;
-    }
-    FINAL_HORIZON_STATE.expanded = false;
-    FINAL_HORIZON_STATE.specialCollapsing = false;
-    FINAL_HORIZON_STATE.cards[0]?.classList.add('is-resetting');
-    FINAL_HORIZON_STATE.cards[0]?.classList.remove('is-expanded');
-    refreshFinalHorizonSnapPoints();
     requestAnimationFrame(() => {
       refreshFinalHorizonSnapPoints();
-      goToFinalHorizonCard(1, true);
       if (fromIndex === 1) {
         MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry = true;
         SNAP_STATE.wheelCooldownUntil = 0;
+      } else {
+        goToFinalHorizonCard(1, true);
       }
       updateMainScrollDebugHud();
       requestAnimationFrame(() => {
         FINAL_HORIZON_STATE.cards[0]?.classList.remove('is-resetting');
       });
     });
-    gsap.to(FINAL_HORIZON_STATE.cards, {
-      x: 0,
-      opacity: 1,
-      duration: 0.7,
-      ease: 'power4.out',
-      stagger: 0.05,
-      clearProps: 'opacity,transform'
-    });
+    startFinalHorizonEntryTween();
   } else {
     refreshFinalHorizonSnapPoints();
     goToFinalHorizonCard(FINAL_HORIZON_STATE.snapIndex, true);
@@ -3677,9 +3880,10 @@ function initSection2FillTargets() {
     paragraph.classList.add('scroll-fill-paragraph');
     const sourceNodes = Array.from(paragraph.childNodes);
     const chars = [];
+    const accentWords = [];
     paragraph.textContent = '';
     sourceNodes.forEach((node) => {
-      paragraph.appendChild(buildSection2FillNode(node, false, chars));
+      paragraph.appendChild(buildSection2FillNode(node, false, chars, accentWords));
     });
     const start = yellowCursor;
     const paragraphUnits = chars.reduce((sum, char) => sum + char.yellowDuration, 0);
@@ -3687,7 +3891,8 @@ function initSection2FillTargets() {
       start,
       whiteStart: whiteCursor,
       whiteDuration: 1,
-      chars
+      chars,
+      accentWords
     };
     yellowCursor += paragraphUnits + SECTION2_PARAGRAPH_GAP_UNITS;
     whiteCursor += 1;
@@ -3738,12 +3943,16 @@ function applySection2YellowFill(progressUnits) {
       const fillOpacity = clamp((localUnits - char.start) / char.yellowDuration, 0, 1);
       char.accentFillLayer.style.opacity = fillOpacity.toFixed(3);
     });
+    target.accentWords.forEach((word) => {
+      const wordProgress = clamp((localUnits - word.start) / Math.max(word.duration, 0.0001), 0, 1);
+      word.element.style.setProperty('--scroll-fill-underline-progress', `${(wordProgress * 100).toFixed(3)}%`);
+    });
   });
 }
 
-function buildSection2FillNode(node, accentActive, chars) {
+function buildSection2FillNode(node, accentActive, chars, accentWords) {
   if (node.nodeType === Node.TEXT_NODE) {
-    return buildSection2FillText(node.textContent || '', accentActive, chars);
+    return buildSection2FillText(node.textContent || '', accentActive, chars, accentWords);
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -3754,21 +3963,32 @@ function buildSection2FillNode(node, accentActive, chars) {
   const clone = element.cloneNode(false);
   const nextAccentActive = accentActive || element.classList.contains('scroll-fill');
   Array.from(element.childNodes).forEach((child) => {
-    clone.appendChild(buildSection2FillNode(child, nextAccentActive, chars));
+    clone.appendChild(buildSection2FillNode(child, nextAccentActive, chars, accentWords));
   });
   return clone;
 }
 
-function buildSection2FillText(text, accentActive, chars) {
+function buildSection2FillText(text, accentActive, chars, accentWords) {
   const fragment = document.createDocumentFragment();
   let word = null;
+  let wordStart = 0;
+  let wordEnd = 0;
 
   const flushWord = () => {
     if (!word) {
       return;
     }
+    if (accentActive) {
+      accentWords.push({
+        element: word,
+        start: wordStart,
+        duration: Math.max(wordEnd - wordStart, SECTION2_ACCENT_CHAR_UNITS)
+      });
+    }
     fragment.appendChild(word);
     word = null;
+    wordStart = 0;
+    wordEnd = 0;
   };
 
   [...text].forEach((char) => {
@@ -3781,6 +4001,9 @@ function buildSection2FillText(text, accentActive, chars) {
     if (!word) {
       word = document.createElement('span');
       word.className = 'scroll-fill-word';
+      if (accentActive) {
+        word.classList.add('scroll-fill-word-accent');
+      }
     }
 
     const wrapper = document.createElement('span');
@@ -3811,6 +4034,12 @@ function buildSection2FillText(text, accentActive, chars) {
     const yellowDuration = accentActive ? SECTION2_ACCENT_CHAR_UNITS : SECTION2_WHITE_CHAR_UNITS;
     const start =
       chars.length ? chars[chars.length - 1].start + chars[chars.length - 1].yellowDuration : 0;
+    if (accentActive && word.childNodes.length === 1) {
+      wordStart = start;
+    }
+    if (accentActive) {
+      wordEnd = start + yellowDuration;
+    }
     chars.push({
       start,
       yellowDuration,
@@ -3897,6 +4126,7 @@ function goToSection(nextIndex, immediate = false, options = {}) {
   }
 
   const targetY = -clamped * window.innerHeight;
+  const startY = -previousIndex * window.innerHeight;
   if (immediate) {
     gsap.set(snapTrack, { y: targetY });
     SNAP_STATE.index = clamped;
@@ -3933,6 +4163,14 @@ function goToSection(nextIndex, immediate = false, options = {}) {
       syncBodySectionState(clamped);
     },
     onUpdate: () => {
+      if (previousIndex === 1 && clamped === FINAL_HORIZON_SECTION_INDEX) {
+        const currentY = Number(gsap.getProperty(snapTrack, 'y')) || 0;
+        const travel = targetY - startY;
+        const progress = travel === 0 ? 1 : clamp((currentY - startY) / travel, 0, 1);
+        if (progress >= 0.4) {
+          startFinalHorizonEntryTween();
+        }
+      }
       refreshSection2ModelVisibility();
     },
     onComplete: () => {

@@ -52,7 +52,7 @@
   --space-layout-top: clamp(176px, 18vh, 226px);
   --space-hero-left: var(--space-page-inline);
   --space-hero-top: clamp(320px, 33.2vh, 402px);
-  --space-hero-stack-gap: clamp(10px, 1.05vw, 16px);
+  --space-hero-stack-gap: clamp(20px, 2.1vw, 32px);
   --space-hero-line1-tail-offset: clamp(330px, 45.5vw, 815px);
   --space-hero-line1-overlap: -34px;
   --space-hero-line2-offset: clamp(95px, 4.3vw, 96px);
@@ -211,6 +211,11 @@ body::after {
   position: absolute;
   pointer-events: none;
   will-change: transform, opacity;
+  /*
+    Prevent a first-paint flash at 0,0 before the loader controller runs.
+    JS takes over these coordinates immediately on the first render.
+  */
+  left: 50%;
 }
 
 .startup-loader-box-shadow {
@@ -218,6 +223,13 @@ body::after {
   height: 24px;
   opacity: 0;
   background: transparent;
+  top: calc(50% - 26px);
+  margin-left: -12px;
+}
+
+.startup-loader-box-wrap {
+  top: calc(50% - 26px);
+  margin-left: -12px;
 }
 
 .startup-loader-box {
@@ -324,6 +336,9 @@ body::after {
   width: 22.5px;
   height: 22.5px;
   color: #fff;
+  top: calc(50% + 44px);
+  margin-left: -11.25px;
+  transform: translate(-20%, -20%);
 }
 
 .startup-loader-cursor svg {
@@ -407,15 +422,38 @@ body.snap-mode {
   overflow: hidden;
 }
 
+.snap-section[data-section="1"] {
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-2) 100%);
+}
+
+.snap-section[data-section="2"] {
+  background: linear-gradient(180deg, var(--bg-section-2-top) 0%, var(--bg-section-2-bottom) 100%);
+}
+
+.snap-section[data-section="3"] {
+  background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-2) 100%);
+}
+
 .section-transition-layer {
   --section-transition-top: var(--bg-0);
   --section-transition-bottom: var(--bg-2);
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 4;
+  z-index: 11;
   opacity: 0;
   visibility: hidden;
+}
+
+.section-transition-layer-local {
+  position: absolute;
+  z-index: 2;
+}
+
+.section-transition-layer-debug .section-transition-fill,
+.section-transition-layer-debug .section-transition-edge,
+.section-transition-layer-debug .section-transition-label {
+  opacity: 0;
 }
 
 .section-transition-layer.is-active {
@@ -486,6 +524,11 @@ body.snap-mode {
   padding-right: var(--space-page-inline);
 }
 
+/*
+  Keep section 2 content above the global section transition layer.
+  This is intentionally scoped to section 2 so other sections/pages retain
+  the existing transition stacking behavior.
+*/
 .folio-about-copy {
   display: flex;
   flex-direction: column;
@@ -871,6 +914,13 @@ body.status-persistent-active .snap-section[data-section="10"] .folio-status {
   white-space: nowrap;
 }
 
+.scroll-fill-word-accent {
+  background-image: linear-gradient(to bottom, transparent 20%, rgba(193, 153, 255, 1) 21%);
+  background-position: 0 1.22em;
+  background-repeat: no-repeat;
+  background-size: var(--scroll-fill-underline-progress, 0%) 2px;
+}
+
 .scroll-fill-char-layer {
   grid-area: 1 / 1;
 }
@@ -1098,7 +1148,7 @@ body[data-section="3"] {
 .folio-hcard-logo {
   position: absolute;
   top: clamp(18px, 2.2vh, 28px);
-  right: 0;
+  right: 36px;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -1648,12 +1698,27 @@ body.loader-logo-active .brand-loader-slot {
 .intro-stage {
   z-index: 9;
   opacity: 1;
+  overflow: hidden;
+}
+
+.intro-wave-viz {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.intro-wave-viz canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .intro-copy {
   position: absolute;
   left: var(--intro-left);
   top: var(--intro-top);
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1681,7 +1746,7 @@ body.loader-logo-active .brand-loader-slot {
   font-weight: 700;
   color: var(--txt-intro-main);
   font-family: inherit;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   line-height: 0.9;
 }
 
@@ -1694,8 +1759,9 @@ body.loader-logo-active .brand-loader-slot {
 .intro-line-1-tail {
   display: flex;
   align-items: baseline;
-  padding-left: var(--space-hero-line1-tail-offset);
+  padding-left: var(--intro-line1-tail-offset-dynamic, var(--space-hero-line1-tail-offset));
   margin-top: var(--space-hero-line1-overlap);
+  letter-spacing: 0;
 }
 
 .intro-line-2 {
@@ -1747,7 +1813,7 @@ body.loader-logo-active .brand-loader-slot {
   padding-left: var(--intro-line3-offset);
   margin-top: var(--space-hero-line3-pullup);
   gap: 0.22em;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 0.96;
   font-family: inherit;
 }
@@ -1756,6 +1822,12 @@ body.loader-logo-active .brand-loader-slot {
   display: inline-block;
   opacity: 0;
   transform: translateY(12px);
+}
+
+.intro-word-serif {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
 }
 
 .intro-word-bitcount {
@@ -1975,7 +2047,7 @@ body.loader-logo-active .brand-loader-slot {
     --space-page-inline: 24px;
     --space-hero-left: 24px;
     --space-hero-top: 30vh;
-    --space-hero-stack-gap: 10px;
+    --space-hero-stack-gap: 20px;
     --space-hero-line1-tail-offset: clamp(162px, 44vw, 292px);
     --space-hero-line1-overlap: -18px;
     --space-hero-line2-offset: clamp(16px, 4.6vw, 30px);

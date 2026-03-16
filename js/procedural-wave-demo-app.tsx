@@ -147,6 +147,12 @@ function blendColorInt(aHex, bHex, t) {
   return (r << 16) | (g << 8) | bl;
 }
 
+function sanitizeHexColor(value, fallback) {
+  const raw = String(value || "").trim().replace(/^#/, "");
+  if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toLowerCase()}`;
+  return fallback;
+}
+
 const __scriptLoadCache = {};
 function loadExternalScriptOnce(src) {
   if (__scriptLoadCache[src]) return __scriptLoadCache[src];
@@ -323,9 +329,9 @@ function computeScreenSpaceAlignment(samplesA, samplesB, width, height, interact
 }
 
 const DEFAULT_CONFIG = {
-  wave1: { baseAmplitude: 0.26, ampVariation: 0.25, baseWavelength: 1.14, wavelengthVariation: 0.51, curveAmount: 0, curveFrequency: 4.45, carrierPhase: 0, arcSpan: 0.18, arcRotation: -0.54, arcRadius: 6.66, arcX: -4.64, arcY: 2.68, speed: 0.65 },
-  wave2: { baseAmplitude: 0.22, ampVariation: 1.29, baseWavelength: 0.74, wavelengthVariation: 1.65, curveAmount: 0, curveFrequency: 5.15, carrierPhase: 1.58, arcSpan: 0.19, arcRotation: -0.52, arcRadius: 6.61, arcX: -4.1, arcY: 2.31, speed: 0.9 },
-  global: { blendSteps: 100, sampleCount: 220, lineWidth: 0.5, showEndpoints: true, interpolationEnabled: true, use2DInterpolate: false, showBaselines: false, showArcGuides: false, interactionEnabled: true, interactionRadius: 880, interactionSoftness: 0.88, amplitudeUniformity: 1, wavelengthUniformity: 1, sharedSpeedEnabled: true, showPhaseDensityDebug: false }
+  wave1: { baseAmplitude: 0.26, ampVariation: 0.25, baseWavelength: 1.14, wavelengthVariation: 0.51, curveAmount: 0.18, curveFrequency: 4.45, carrierPhase: 0, arcSpan: 0.18, arcRotation: -0.54, arcRadius: 6.66, arcX: -4.64, arcY: 2.68, speed: 0.65 },
+  wave2: { baseAmplitude: 0.22, ampVariation: 1.29, baseWavelength: 0.74, wavelengthVariation: 1.65, curveAmount: 0.15, curveFrequency: 5.15, carrierPhase: 1.58, arcSpan: 0.19, arcRotation: -0.52, arcRadius: 6.61, arcX: -4.1, arcY: 2.31, speed: 0.9 },
+  global: { blendSteps: 100, sampleCount: 220, lineWidth: 0.5, showEndpoints: true, interpolationEnabled: true, use2DInterpolate: false, showBaselines: true, showArcGuides: true, interactionEnabled: true, interactionRadius: 880, interactionSoftness: 0.88, amplitudeUniformity: 1, wavelengthUniformity: 1, sharedSpeedEnabled: true, showPhaseDensityDebug: false }
 };
 
 const SHARP_LAYER_ALPHA = 0;
@@ -343,6 +349,9 @@ const DYNAMIC_BLEND_FAR_PX = 260;
 const DYNAMIC_BLEND_MIN_STEPS = 25;
 const ALIGNMENT_UPDATE_INTERVAL_ACTIVE = 2;
 const ALIGNMENT_UPDATE_INTERVAL_IDLE = 3;
+const CREST_LOCK_MIN_ANGLE_DEG = 88;
+const CREST_LOCK_MAX_ANGLE_DEG = 92;
+const CREST_LOCK_STABLE_FRAMES = 6;
 
 function safeMergeConfig(input) {
   const merged = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
@@ -370,11 +379,66 @@ function minDistanceToPolylinePoints(points, x, y) {
   return Math.sqrt(minDistSq);
 }
 
+function signedNormalDisplacement(sample) {
+  const dx = sample.point.x - sample.basePoint.x;
+  const dy = sample.point.y - sample.basePoint.y;
+  return dx * sample.normal.x + dy * sample.normal.y;
+}
+
+function findNearestCrestIndex(samples, screenPoints, mouse) {
+  if (!mouse.inside || !samples || samples.length < 3) return -1;
+  let bestIndex = -1;
+  let bestDistSq = Infinity;
+  for (let i = 1; i < samples.length - 1; i += 1) {
+    const prev = signedNormalDisplacement(samples[i - 1]);
+    const curr = signedNormalDisplacement(samples[i]);
+    const next = signedNormalDisplacement(samples[i + 1]);
+    if (!(curr > prev && curr >= next && curr > 0)) continue;
+    const dx = screenPoints[i].x - mouse.x;
+    const dy = screenPoints[i].y - mouse.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq;
+      bestIndex = i;
+    }
+  }
+  return bestIndex;
+}
+
+function angleBetweenVectorsDeg(a, b) {
+  const magA = Math.hypot(a.x, a.y);
+  const magB = Math.hypot(b.x, b.y);
+  if (magA <= 1e-6 || magB <= 1e-6) return null;
+  const dot = (a.x * b.x + a.y * b.y) / (magA * magB);
+  const clamped = Math.max(-1, Math.min(1, dot));
+  return Math.acos(clamped) * (180 / Math.PI);
+}
+
+function toLocalFocusMouse(mouse, offsetX, offsetY, scale) {
+  if (!mouse.inside) return mouse;
+  return {
+    ...mouse,
+    x: (mouse.x - offsetX) / Math.max(1e-6, scale),
+    y: (mouse.y - offsetY) / Math.max(1e-6, scale),
+  };
+}
+
+function tangentFromScreenPoints(points, index) {
+  if (!points || points.length < 2 || index < 0 || index >= points.length) return null;
+  const prev = points[Math.max(0, index - 1)];
+  const next = points[Math.min(points.length - 1, index + 1)];
+  const dx = next.x - prev.x;
+  const dy = next.y - prev.y;
+  const mag = Math.hypot(dx, dy);
+  if (mag <= 1e-6) return null;
+  return { x: dx / mag, y: dy / mag };
+}
+
 function ProceduralWaveBlendDemo() {
   const hostRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, inside: false });
-  const motionRef = useRef({ lastTime: null, wave1Offset: 0, wave2Offset: 0, wave1CurrentSpeed: 0.65, wave2CurrentSpeed: 0.9, speedLocked: false, episodePeakAlignment: 0, nearPeakFrames: 0, interactionEpisodeActive: false });
-  const liveMetricsRef = useRef({ wave1Speed: 0.65, wave2Speed: 0.9, sharedSpeed: 0.775, speedMix: 0, spatialAlignment: 0, indexAlignment: 0, influence: 0, speedLocked: 0, alignmentPairs: 0, avgPairDistance: 0, episodePeakAlignment: 0, nearPeakFrames: 0, avgCarrierSimplification: 0 });
+  const motionRef = useRef({ lastTime: null, wave1Offset: 0, wave2Offset: 0, wave1CurrentSpeed: 0.65, wave2CurrentSpeed: 0.9, speedLocked: false, crestAlignedFrames: 0 });
+  const liveMetricsRef = useRef({ wave1Speed: 0.65, wave2Speed: 0.9, sharedSpeed: 0.775, speedMix: 0, spatialAlignment: 0, indexAlignment: 0, influence: 0, speedLocked: 0, alignmentPairs: 0, avgPairDistance: 0, avgCarrierSimplification: 0, crestAngleDeg: null, crestAngleWave2Deg: null, crestAlignedFrames: 0, crestInRange: 0 });
   const alignmentCacheRef = useRef({ frame: 0, stats: { alignment: 0, pairs: 0, avgDistance: 0, pairLines: [], maxDistance: 0 } });
 
   const [wave1BaseAmplitude, setWave1BaseAmplitude] = useState(DEFAULT_CONFIG.wave1.baseAmplitude);
@@ -417,13 +481,17 @@ function ProceduralWaveBlendDemo() {
   const [amplitudeUniformity, setAmplitudeUniformity] = useState(DEFAULT_CONFIG.global.amplitudeUniformity);
   const [wavelengthUniformity, setWavelengthUniformity] = useState(DEFAULT_CONFIG.global.wavelengthUniformity);
   const [sharedSpeedEnabled, setSharedSpeedEnabled] = useState(DEFAULT_CONFIG.global.sharedSpeedEnabled);
+  const [speedLockEnabled, setSpeedLockEnabled] = useState(false);
   const [showPhaseDensityDebug, setShowPhaseDensityDebug] = useState(DEFAULT_CONFIG.global.showPhaseDensityDebug);
   const [showAlignmentDebug, setShowAlignmentDebug] = useState(false);
+  const [debugTick, setDebugTick] = useState(0);
   const [blurStrength, setBlurStrength] = useState(0.29);
   const [blurInnerRadius, setBlurInnerRadius] = useState(0);
   const [blurRadius, setBlurRadius] = useState(984);
   const [blurCenterX, setBlurCenterX] = useState(0.526);
   const [blurCenterY, setBlurCenterY] = useState(0.447);
+  const [waveAColorInput, setWaveAColorInput] = useState("#605e63");
+  const [waveBColorInput, setWaveBColorInput] = useState("#0c0912");
   const [focusSharpOffsetX, setFocusSharpOffsetX] = useState(-113);
   const [focusSharpOffsetY, setFocusSharpOffsetY] = useState(-53);
   const [focusSharpScale, setFocusSharpScale] = useState(1.135);
@@ -431,6 +499,8 @@ function ProceduralWaveBlendDemo() {
 
   const wave1 = useMemo(() => ({ baseAmplitude: wave1BaseAmplitude, ampVariation: wave1AmpVariation, baseWavelength: wave1BaseWavelength, wavelengthVariation: wave1WavelengthVariation, curveAmount: wave1CurveAmount, curveFrequency: wave1CurveFrequency, carrierPhase: wave1CarrierPhase, arcSpan: wave1ArcSpan, arcRotation: wave1ArcRotation, arcRadius: wave1ArcRadius, arcX: wave1ArcX, arcY: wave1ArcY, speed: wave1Speed }), [wave1BaseAmplitude, wave1AmpVariation, wave1BaseWavelength, wave1WavelengthVariation, wave1CurveAmount, wave1CurveFrequency, wave1CarrierPhase, wave1ArcSpan, wave1ArcRotation, wave1ArcRadius, wave1ArcX, wave1ArcY, wave1Speed]);
   const wave2 = useMemo(() => ({ baseAmplitude: wave2BaseAmplitude, ampVariation: wave2AmpVariation, baseWavelength: wave2BaseWavelength, wavelengthVariation: wave2WavelengthVariation, curveAmount: wave2CurveAmount, curveFrequency: wave2CurveFrequency, carrierPhase: wave2CarrierPhase, arcSpan: wave2ArcSpan, arcRotation: wave2ArcRotation, arcRadius: wave2ArcRadius, arcX: wave2ArcX, arcY: wave2ArcY, speed: wave2Speed }), [wave2BaseAmplitude, wave2AmpVariation, wave2BaseWavelength, wave2WavelengthVariation, wave2CurveAmount, wave2CurveFrequency, wave2CarrierPhase, wave2ArcSpan, wave2ArcRotation, wave2ArcRadius, wave2ArcX, wave2ArcY, wave2Speed]);
+  const waveAColor = useMemo(() => sanitizeHexColor(waveAColorInput, "#605e63"), [waveAColorInput]);
+  const waveBColor = useMemo(() => sanitizeHexColor(waveBColorInput, "#0c0912"), [waveBColorInput]);
   useEffect(() => { motionRef.current.wave1CurrentSpeed = wave1Speed; motionRef.current.wave2CurrentSpeed = wave2Speed; }, [wave1Speed, wave2Speed]);
   useEffect(() => {
     blurParamsRef.current = {
@@ -441,6 +511,11 @@ function ProceduralWaveBlendDemo() {
       centerY: blurCenterY,
     };
   }, [blurStrength, blurInnerRadius, blurRadius, blurCenterX, blurCenterY]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setDebugTick((v) => (v + 1) % 100000), 120);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const host = hostRef.current; if (!host) return undefined;
@@ -500,6 +575,7 @@ function ProceduralWaveBlendDemo() {
       guideLayer.addChild(guideGraphics);
       blurWaveLayer.alpha = 1;
       focusSharpLayer.alpha = 1;
+      guideLayer.visible = false;
 
       // The sharp focus reveal is masked by a feathered alpha texture around the pointer.
       const focusMaskCanvas = document.createElement("canvas");
@@ -643,42 +719,6 @@ function ProceduralWaveBlendDemo() {
         const spatialStats = alignmentCacheRef.current.stats;
         const phaseAlignment = spatialStats.alignment;
         const avgCarrierSimplification = carrierSimplificationSum / Math.max(1, sampleCount);
-        const peakEpsilon = 0.02;
-        const unlockDrop = 0.06;
-        const stabilityFramesRequired = 8;
-        const minInfluence = 0.88;
-        const minPairs = Math.max(80, Math.floor(sampleCount * 0.45));
-        const maxAvgPairDistance = 130;
-        const episodeIsActive = globalInfluence >= 0.55 && interactionEnabled && mouse.inside;
-        if (!episodeIsActive) {
-          motionRef.current.interactionEpisodeActive = false;
-          motionRef.current.episodePeakAlignment = 0;
-          motionRef.current.nearPeakFrames = 0;
-        } else {
-          if (!motionRef.current.interactionEpisodeActive) {
-            motionRef.current.interactionEpisodeActive = true;
-            motionRef.current.episodePeakAlignment = phaseAlignment;
-            motionRef.current.nearPeakFrames = 0;
-          } else {
-            motionRef.current.episodePeakAlignment = Math.max(motionRef.current.episodePeakAlignment, phaseAlignment);
-          }
-          const nearPeak = phaseAlignment >= motionRef.current.episodePeakAlignment - peakEpsilon && globalInfluence >= minInfluence && spatialStats.pairs >= minPairs && spatialStats.avgDistance <= maxAvgPairDistance;
-          motionRef.current.nearPeakFrames = nearPeak ? motionRef.current.nearPeakFrames + 1 : 0;
-        }
-        const shouldLock = sharedSpeedEnabled && episodeIsActive && motionRef.current.nearPeakFrames >= stabilityFramesRequired;
-        const shouldUnlock = !sharedSpeedEnabled || !episodeIsActive || phaseAlignment < motionRef.current.episodePeakAlignment - unlockDrop || spatialStats.pairs < Math.max(30, Math.floor(minPairs * 0.4));
-        if (shouldLock) motionRef.current.speedLocked = true;
-        else if (shouldUnlock) motionRef.current.speedLocked = false;
-        const gatedSpeedMix = motionRef.current.speedLocked ? Math.max(globalInfluence, 0.92) : sharedSpeedEnabled ? globalInfluence * Math.max(0, (phaseAlignment - 0.4) / 0.25) * 0.35 : 0;
-        const speedResponse = motionRef.current.speedLocked ? 1 - Math.exp(-dt * 18) : 1 - Math.exp(-dt * 6.5);
-        const targetWave1Speed = motionRef.current.speedLocked ? sharedSpeed : lerp(wave1.speed, sharedSpeed, gatedSpeedMix);
-        const targetWave2Speed = motionRef.current.speedLocked ? sharedSpeed : lerp(wave2.speed, sharedSpeed, gatedSpeedMix);
-        motionRef.current.wave1CurrentSpeed = lerp(motionRef.current.wave1CurrentSpeed, targetWave1Speed, speedResponse);
-        motionRef.current.wave2CurrentSpeed = lerp(motionRef.current.wave2CurrentSpeed, targetWave2Speed, speedResponse);
-        motionRef.current.wave1Offset += motionRef.current.wave1CurrentSpeed * 0.42 * dt;
-        motionRef.current.wave2Offset += motionRef.current.wave2CurrentSpeed * 0.42 * dt;
-        liveMetricsRef.current = { wave1Speed: motionRef.current.wave1CurrentSpeed, wave2Speed: motionRef.current.wave2CurrentSpeed, sharedSpeed, speedMix: gatedSpeedMix, spatialAlignment: phaseAlignment, indexAlignment, influence: globalInfluence, speedLocked: motionRef.current.speedLocked ? 1 : 0, alignmentPairs: spatialStats.pairs, avgPairDistance: spatialStats.avgDistance, episodePeakAlignment: motionRef.current.episodePeakAlignment, nearPeakFrames: motionRef.current.nearPeakFrames, avgCarrierSimplification };
-
         const points1 = [];
         const points2 = [];
         const base1 = [];
@@ -711,6 +751,49 @@ function ProceduralWaveBlendDemo() {
               minDistanceToPolylinePoints(points2, mouse.x, mouse.y),
             )
           : Infinity;
+        const focusLocalMouse = toLocalFocusMouse(mouse, focusSharpOffsetX, focusSharpOffsetY, focusSharpScale);
+        const nearestCrestIndex1 = findNearestCrestIndex(adj1, points1, focusLocalMouse);
+        const nearestCrestIndex2 = findNearestCrestIndex(adj2, points2, focusLocalMouse);
+        let crestAngleDeg = null;
+        let crestAngleWave2Deg = null;
+        if (nearestCrestIndex1 >= 0 && nearestCrestIndex2 >= 0) {
+          const connector = {
+            x: points2[nearestCrestIndex2].x - points1[nearestCrestIndex1].x,
+            y: points2[nearestCrestIndex2].y - points1[nearestCrestIndex1].y,
+          };
+          const tangent = tangentFromScreenPoints(points1, nearestCrestIndex1);
+          crestAngleDeg = angleBetweenVectorsDeg(tangent, connector);
+          const tangentWave2 = tangentFromScreenPoints(points2, nearestCrestIndex2);
+          crestAngleWave2Deg = angleBetweenVectorsDeg(tangentWave2, { x: -connector.x, y: -connector.y });
+        }
+        const crestInfluenceActive =
+          interactionEnabled &&
+          mouse.inside &&
+          globalInfluence >= 0.55 &&
+          nearestCrestIndex1 >= 0 &&
+          nearestCrestIndex2 >= 0;
+        const crestAngleInRange =
+          crestInfluenceActive &&
+          (
+            (crestAngleDeg != null &&
+              crestAngleDeg >= CREST_LOCK_MIN_ANGLE_DEG &&
+              crestAngleDeg <= CREST_LOCK_MAX_ANGLE_DEG) ||
+            (crestAngleWave2Deg != null &&
+              crestAngleWave2Deg >= CREST_LOCK_MIN_ANGLE_DEG &&
+              crestAngleWave2Deg <= CREST_LOCK_MAX_ANGLE_DEG)
+          );
+        motionRef.current.crestAlignedFrames = crestAngleInRange ? motionRef.current.crestAlignedFrames + 1 : 0;
+        if (!sharedSpeedEnabled || !speedLockEnabled || !crestInfluenceActive) motionRef.current.speedLocked = false;
+        else if (motionRef.current.crestAlignedFrames >= CREST_LOCK_STABLE_FRAMES) motionRef.current.speedLocked = true;
+        const gatedSpeedMix = motionRef.current.speedLocked ? Math.max(globalInfluence, 0.92) : sharedSpeedEnabled ? globalInfluence * Math.max(0, (phaseAlignment - 0.4) / 0.25) * 0.35 : 0;
+        const speedResponse = motionRef.current.speedLocked ? 1 - Math.exp(-dt * 18) : 1 - Math.exp(-dt * 6.5);
+        const targetWave1Speed = motionRef.current.speedLocked ? sharedSpeed : lerp(wave1.speed, sharedSpeed, gatedSpeedMix);
+        const targetWave2Speed = motionRef.current.speedLocked ? sharedSpeed : lerp(wave2.speed, sharedSpeed, gatedSpeedMix);
+        motionRef.current.wave1CurrentSpeed = lerp(motionRef.current.wave1CurrentSpeed, targetWave1Speed, speedResponse);
+        motionRef.current.wave2CurrentSpeed = lerp(motionRef.current.wave2CurrentSpeed, targetWave2Speed, speedResponse);
+        motionRef.current.wave1Offset += motionRef.current.wave1CurrentSpeed * 0.42 * dt;
+        motionRef.current.wave2Offset += motionRef.current.wave2CurrentSpeed * 0.42 * dt;
+        liveMetricsRef.current = { wave1Speed: motionRef.current.wave1CurrentSpeed, wave2Speed: motionRef.current.wave2CurrentSpeed, sharedSpeed, speedMix: gatedSpeedMix, spatialAlignment: phaseAlignment, indexAlignment, influence: globalInfluence, speedLocked: motionRef.current.speedLocked ? 1 : 0, alignmentPairs: spatialStats.pairs, avgPairDistance: spatialStats.avgDistance, avgCarrierSimplification, crestAngleDeg, crestAngleWave2Deg, crestAlignedFrames: motionRef.current.crestAlignedFrames, crestInRange: crestAngleInRange ? 1 : 0 };
         const clampedDistance = Math.max(DYNAMIC_BLEND_NEAR_PX, Math.min(DYNAMIC_BLEND_FAR_PX, nearestWaveDistance));
         const proximityMix = 1 - (clampedDistance - DYNAMIC_BLEND_NEAR_PX) / Math.max(1, DYNAMIC_BLEND_FAR_PX - DYNAMIC_BLEND_NEAR_PX);
         const focusBlendSteps = Math.round(lerp(blendSteps, DYNAMIC_BLEND_MIN_STEPS, proximityMix));
@@ -748,6 +831,65 @@ function ProceduralWaveBlendDemo() {
             drawPolylinePixi(guideGraphics, [{ x: line.ax, y: line.ay }, { x: line.bx, y: line.by }], 0x78dcff, 1, 0.12 + closeness * 0.35);
           }
         }
+        if (focusRevealActive && nearestCrestIndex1 >= 0) {
+          focusSharpGraphics.beginFill(0x3b82f6, 0.95);
+          focusSharpGraphics.drawCircle(points1[nearestCrestIndex1].x, points1[nearestCrestIndex1].y, 5);
+          focusSharpGraphics.endFill();
+          const tangent = tangentFromScreenPoints(points1, nearestCrestIndex1);
+          const tangentLength = 80;
+          if (tangent) {
+            drawPolylinePixi(
+              focusSharpGraphics,
+              [
+                {
+                  x: points1[nearestCrestIndex1].x - tangent.x * tangentLength,
+                  y: points1[nearestCrestIndex1].y - tangent.y * tangentLength,
+                },
+                {
+                  x: points1[nearestCrestIndex1].x + tangent.x * tangentLength,
+                  y: points1[nearestCrestIndex1].y + tangent.y * tangentLength,
+                },
+              ],
+              0x22c55e,
+              1.5,
+              0.95
+            );
+          }
+        }
+        if (focusRevealActive && nearestCrestIndex2 >= 0) {
+          focusSharpGraphics.beginFill(0x3b82f6, 0.95);
+          focusSharpGraphics.drawCircle(points2[nearestCrestIndex2].x, points2[nearestCrestIndex2].y, 5);
+          focusSharpGraphics.endFill();
+          const tangentWave2 = tangentFromScreenPoints(points2, nearestCrestIndex2);
+          const tangentLength = 80;
+          if (tangentWave2) {
+            drawPolylinePixi(
+              focusSharpGraphics,
+              [
+                {
+                  x: points2[nearestCrestIndex2].x - tangentWave2.x * tangentLength,
+                  y: points2[nearestCrestIndex2].y - tangentWave2.y * tangentLength,
+                },
+                {
+                  x: points2[nearestCrestIndex2].x + tangentWave2.x * tangentLength,
+                  y: points2[nearestCrestIndex2].y + tangentWave2.y * tangentLength,
+                },
+              ],
+              0xf59e0b,
+              1.5,
+              0.95
+            );
+          }
+        }
+        if (focusRevealActive && nearestCrestIndex1 >= 0 && nearestCrestIndex2 >= 0) {
+          drawPolylinePixi(
+            focusSharpGraphics,
+            [points1[nearestCrestIndex1], points2[nearestCrestIndex2]],
+            0x3b82f6,
+            1.5,
+            0.9
+          );
+        }
 
         if (interpolationEnabled) {
           const blurTotalLines = blurBlendSteps + 2;
@@ -763,7 +905,7 @@ function ProceduralWaveBlendDemo() {
             if (!shouldDraw) continue;
             const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
             const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-            const color = blendColorInt("#605e63", "#0c0912", raw);
+            const color = blendColorInt(waveAColor, waveBColor, raw);
             if (lineIndex % blurLineStride === 0) {
               const blurPts = [];
               for (let i = 0; i < reducedPoints1.length; i += 1) {
@@ -783,7 +925,7 @@ function ProceduralWaveBlendDemo() {
               if (!shouldDraw) continue;
               const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
               const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-              const color = blendColorInt("#605e63", "#0c0912", raw);
+              const color = blendColorInt(waveAColor, waveBColor, raw);
               const sharpPts = [];
               for (let i = 0; i < sampleCount; i += 1) {
                 sharpPts.push({
@@ -796,11 +938,11 @@ function ProceduralWaveBlendDemo() {
           }
         } else if (showEndpoints) {
           if (focusRevealActive) {
-            drawPolylinePixi(focusSharpGraphics, points1, 0x605e63, lineWidth + 0.3, 1);
-            drawPolylinePixi(focusSharpGraphics, points2, 0x0c0912, lineWidth + 0.3, 1);
+            drawPolylinePixi(focusSharpGraphics, points1, parseInt(waveAColor.slice(1), 16), lineWidth + 0.3, 1);
+            drawPolylinePixi(focusSharpGraphics, points2, parseInt(waveBColor.slice(1), 16), lineWidth + 0.3, 1);
           }
-          drawPolylinePixi(blurWaveGraphics, points1, 0x605e63, lineWidth + 0.9, 0.55);
-          drawPolylinePixi(blurWaveGraphics, points2, 0x0c0912, lineWidth + 0.9, 0.55);
+          drawPolylinePixi(blurWaveGraphics, points1, parseInt(waveAColor.slice(1), 16), lineWidth + 0.9, 0.55);
+          drawPolylinePixi(blurWaveGraphics, points2, parseInt(waveBColor.slice(1), 16), lineWidth + 0.9, 0.55);
         }
       };
 
@@ -818,7 +960,7 @@ function ProceduralWaveBlendDemo() {
       if (app) app.destroy(true, { children: true, texture: true, baseTexture: true });
       if (hostRef.current) hostRef.current.innerHTML = "";
     };
-  }, [wave1, wave2, blendSteps, sampleCount, lineWidth, showEndpoints, interpolationEnabled, use2DInterpolate, showBaselines, showArcGuides, interactionEnabled, interactionRadius, interactionSoftness, amplitudeUniformity, wavelengthUniformity, sharedSpeedEnabled, showPhaseDensityDebug, showAlignmentDebug, focusSharpOffsetX, focusSharpOffsetY, focusSharpScale]);
+  }, [wave1, wave2, waveAColor, waveBColor, blendSteps, sampleCount, lineWidth, showEndpoints, interpolationEnabled, use2DInterpolate, showBaselines, showArcGuides, interactionEnabled, interactionRadius, interactionSoftness, amplitudeUniformity, wavelengthUniformity, sharedSpeedEnabled, speedLockEnabled, showPhaseDensityDebug, showAlignmentDebug, focusSharpOffsetX, focusSharpOffsetY, focusSharpScale]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-950 relative">
@@ -834,6 +976,68 @@ function ProceduralWaveBlendDemo() {
           <label className="block">sharpOffsetX {focusSharpOffsetX.toFixed(0)}<input className="w-full" type="range" min="-400" max="400" step="1" value={focusSharpOffsetX} onChange={(e) => setFocusSharpOffsetX(Number(e.target.value))} /></label>
           <label className="block">sharpOffsetY {focusSharpOffsetY.toFixed(0)}<input className="w-full" type="range" min="-400" max="400" step="1" value={focusSharpOffsetY} onChange={(e) => setFocusSharpOffsetY(Number(e.target.value))} /></label>
           <label className="block">sharpScale {focusSharpScale.toFixed(3)}<input className="w-full" type="range" min="0.7" max="1.5" step="0.005" value={focusSharpScale} onChange={(e) => setFocusSharpScale(Number(e.target.value))} /></label>
+          <label className="flex items-center justify-between gap-3 pt-1">
+            <span>speedLock</span>
+            <input type="checkbox" checked={speedLockEnabled} onChange={(e) => setSpeedLockEnabled(e.target.checked)} />
+          </label>
+        </div>
+        <div className="mt-4 border-t border-slate-800 pt-3">
+          <div className="text-sm font-semibold mb-2">Wave 1</div>
+          <div className="space-y-2 text-xs">
+            <label className="block">amplitude {wave1BaseAmplitude.toFixed(3)}<input className="w-full" type="range" min="0.02" max="0.45" step="0.01" value={wave1BaseAmplitude} onChange={(e) => setWave1BaseAmplitude(Number(e.target.value))} /></label>
+            <label className="block">amplitudeVariation {wave1AmpVariation.toFixed(3)}<input className="w-full" type="range" min="0" max="2.2" step="0.01" value={wave1AmpVariation} onChange={(e) => setWave1AmpVariation(Number(e.target.value))} /></label>
+            <label className="block">frequency {wave1BaseWavelength.toFixed(3)}<input className="w-full" type="range" min="0.2" max="4" step="0.01" value={wave1BaseWavelength} onChange={(e) => setWave1BaseWavelength(Number(e.target.value))} /></label>
+            <label className="block">frequencyVariation {wave1WavelengthVariation.toFixed(3)}<input className="w-full" type="range" min="0" max="2.2" step="0.01" value={wave1WavelengthVariation} onChange={(e) => setWave1WavelengthVariation(Number(e.target.value))} /></label>
+            <label className="block">curveAmount {wave1CurveAmount.toFixed(3)}<input className="w-full" type="range" min="0" max="0.5" step="0.01" value={wave1CurveAmount} onChange={(e) => setWave1CurveAmount(Number(e.target.value))} /></label>
+            <label className="block">curveFrequency {wave1CurveFrequency.toFixed(3)}<input className="w-full" type="range" min="0.2" max="12" step="0.05" value={wave1CurveFrequency} onChange={(e) => setWave1CurveFrequency(Number(e.target.value))} /></label>
+            <label className="block">arcness {wave1ArcSpan.toFixed(3)}<input className="w-full" type="range" min="0.01" max="1" step="0.01" value={wave1ArcSpan} onChange={(e) => setWave1ArcSpan(Number(e.target.value))} /></label>
+          </div>
+        </div>
+        <div className="mt-4 border-t border-slate-800 pt-3">
+          <div className="text-sm font-semibold mb-2">Wave 2</div>
+          <div className="space-y-2 text-xs">
+            <label className="block">amplitude {wave2BaseAmplitude.toFixed(3)}<input className="w-full" type="range" min="0.02" max="0.45" step="0.01" value={wave2BaseAmplitude} onChange={(e) => setWave2BaseAmplitude(Number(e.target.value))} /></label>
+            <label className="block">amplitudeVariation {wave2AmpVariation.toFixed(3)}<input className="w-full" type="range" min="0" max="2.2" step="0.01" value={wave2AmpVariation} onChange={(e) => setWave2AmpVariation(Number(e.target.value))} /></label>
+            <label className="block">frequency {wave2BaseWavelength.toFixed(3)}<input className="w-full" type="range" min="0.2" max="4" step="0.01" value={wave2BaseWavelength} onChange={(e) => setWave2BaseWavelength(Number(e.target.value))} /></label>
+            <label className="block">frequencyVariation {wave2WavelengthVariation.toFixed(3)}<input className="w-full" type="range" min="0" max="2.2" step="0.01" value={wave2WavelengthVariation} onChange={(e) => setWave2WavelengthVariation(Number(e.target.value))} /></label>
+            <label className="block">curveAmount {wave2CurveAmount.toFixed(3)}<input className="w-full" type="range" min="0" max="0.5" step="0.01" value={wave2CurveAmount} onChange={(e) => setWave2CurveAmount(Number(e.target.value))} /></label>
+            <label className="block">curveFrequency {wave2CurveFrequency.toFixed(3)}<input className="w-full" type="range" min="0.2" max="12" step="0.05" value={wave2CurveFrequency} onChange={(e) => setWave2CurveFrequency(Number(e.target.value))} /></label>
+            <label className="block">arcness {wave2ArcSpan.toFixed(3)}<input className="w-full" type="range" min="0.01" max="1" step="0.01" value={wave2ArcSpan} onChange={(e) => setWave2ArcSpan(Number(e.target.value))} /></label>
+          </div>
+        </div>
+        <div className="mt-4 border-t border-slate-800 pt-3">
+          <div className="text-sm font-semibold mb-2">Endpoint Colors</div>
+          <div className="space-y-2 text-xs">
+            <label className="block">
+              <div className="mb-1">Wave A</div>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-slate-100" type="text" value={waveAColorInput} onChange={(e) => setWaveAColorInput(e.target.value)} />
+            </label>
+            <label className="block">
+              <div className="mb-1">Wave B</div>
+              <input className="w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-slate-100" type="text" value={waveBColorInput} onChange={(e) => setWaveBColorInput(e.target.value)} />
+            </label>
+          </div>
+        </div>
+      </div>
+      <div className="absolute top-4 left-[19rem] z-20 w-80 rounded-xl border border-slate-700 bg-slate-950/80 p-3 text-slate-100 backdrop-blur">
+        <div className="text-sm font-semibold mb-2">Speed / Phase Debug</div>
+        <div className="space-y-1 text-xs tabular-nums">
+          <div>tick {debugTick}</div>
+          <div>influence {liveMetricsRef.current.influence.toFixed(3)}</div>
+          <div>indexAlignment {liveMetricsRef.current.indexAlignment.toFixed(3)}</div>
+          <div>spatialAlignment {liveMetricsRef.current.spatialAlignment.toFixed(3)}</div>
+          <div>crestInRange {liveMetricsRef.current.crestInRange ? "yes" : "no"}</div>
+          <div>crestAlignedFrames {liveMetricsRef.current.crestAlignedFrames}</div>
+          <div>alignmentPairs {liveMetricsRef.current.alignmentPairs}</div>
+          <div>avgPairDistance {liveMetricsRef.current.avgPairDistance.toFixed(3)}</div>
+          <div>crestAngleDeg {liveMetricsRef.current.crestAngleDeg == null ? "n/a" : liveMetricsRef.current.crestAngleDeg.toFixed(2)}</div>
+          <div>crestAngleWave2Deg {liveMetricsRef.current.crestAngleWave2Deg == null ? "n/a" : liveMetricsRef.current.crestAngleWave2Deg.toFixed(2)}</div>
+          <div>speedLocked {liveMetricsRef.current.speedLocked ? "yes" : "no"}</div>
+          <div>speedMix {liveMetricsRef.current.speedMix.toFixed(3)}</div>
+          <div>wave1Speed {liveMetricsRef.current.wave1Speed.toFixed(4)}</div>
+          <div>wave2Speed {liveMetricsRef.current.wave2Speed.toFixed(4)}</div>
+          <div>sharedSpeed {liveMetricsRef.current.sharedSpeed.toFixed(4)}</div>
+          <div>avgCarrierSimplification {liveMetricsRef.current.avgCarrierSimplification.toFixed(3)}</div>
         </div>
       </div>
     </div>
