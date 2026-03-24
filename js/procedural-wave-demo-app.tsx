@@ -329,7 +329,7 @@ function computeScreenSpaceAlignment(samplesA, samplesB, width, height, interact
 }
 
 const DEFAULT_CONFIG = {
-  wave1: { baseAmplitude: 0.26, ampVariation: 0.25, baseWavelength: 1.14, wavelengthVariation: 0.51, curveAmount: 0.18, curveFrequency: 4.45, carrierPhase: 0, arcSpan: 0.18, arcRotation: -0.54, arcRadius: 6.66, arcX: -4.64, arcY: 2.68, speed: 0.65 },
+  wave1: { baseAmplitude: 0.26, ampVariation: 0.25, baseWavelength: 1.14, wavelengthVariation: 2.2, curveAmount: 0.18, curveFrequency: 4.45, carrierPhase: 0, arcSpan: 0.18, arcRotation: -0.54, arcRadius: 6.66, arcX: -4.64, arcY: 2.68, speed: 0.65 },
   wave2: { baseAmplitude: 0.22, ampVariation: 1.29, baseWavelength: 0.74, wavelengthVariation: 1.65, curveAmount: 0.15, curveFrequency: 5.15, carrierPhase: 1.58, arcSpan: 0.19, arcRotation: -0.52, arcRadius: 6.61, arcX: -4.1, arcY: 2.31, speed: 0.9 },
   global: { blendSteps: 100, sampleCount: 220, lineWidth: 0.5, showEndpoints: true, interpolationEnabled: true, use2DInterpolate: false, showBaselines: true, showArcGuides: true, interactionEnabled: true, interactionRadius: 880, interactionSoftness: 0.88, amplitudeUniformity: 1, wavelengthUniformity: 1, sharedSpeedEnabled: true, showPhaseDensityDebug: false }
 };
@@ -434,12 +434,22 @@ function tangentFromScreenPoints(points, index) {
   return { x: dx / mag, y: dy / mag };
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function pseudoProximityIndexFromInfluence(influence) {
+  const x = clamp(influence, 0, 1) * 100;
+  return 0.00000156428 * Math.pow(x, 3.9015);
+}
+
 function ProceduralWaveBlendDemo() {
   const hostRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, inside: false });
   const motionRef = useRef({ lastTime: null, wave1Offset: 0, wave2Offset: 0, wave1CurrentSpeed: 0.65, wave2CurrentSpeed: 0.9, speedLocked: false, crestAlignedFrames: 0 });
-  const liveMetricsRef = useRef({ wave1Speed: 0.65, wave2Speed: 0.9, sharedSpeed: 0.775, speedMix: 0, spatialAlignment: 0, indexAlignment: 0, influence: 0, speedLocked: 0, alignmentPairs: 0, avgPairDistance: 0, avgCarrierSimplification: 0, crestAngleDeg: null, crestAngleWave2Deg: null, crestAlignedFrames: 0, crestInRange: 0 });
+  const liveMetricsRef = useRef({ wave1Speed: 0.65, wave2Speed: 0.9, sharedSpeed: 0.775, speedMix: 0, spatialAlignment: 0, indexAlignment: 0, influence: 0, pseudoProximityIndex: 0, complexityIndex: 100, speedLocked: 0, alignmentPairs: 0, avgPairDistance: 0, avgCarrierSimplification: 0, crestAngleDeg: null, crestAngleWave2Deg: null, crestAlignedFrames: 0, crestInRange: 0, lockProgressInitialAngle: null, lockProgressTarget: null, lockProgressCurrentTarget: null, lockProgressSpan: null, lockProgressCurrentDistance: null, lockProgressPercent: 0 });
   const alignmentCacheRef = useRef({ frame: 0, stats: { alignment: 0, pairs: 0, avgDistance: 0, pairLines: [], maxDistance: 0 } });
+  const lockProgressRef = useRef({ active: false, initialAngle: null, initialTarget: null, span: null });
 
   const [wave1BaseAmplitude, setWave1BaseAmplitude] = useState(DEFAULT_CONFIG.wave1.baseAmplitude);
   const [wave1AmpVariation, setWave1AmpVariation] = useState(DEFAULT_CONFIG.wave1.ampVariation);
@@ -481,26 +491,38 @@ function ProceduralWaveBlendDemo() {
   const [amplitudeUniformity, setAmplitudeUniformity] = useState(DEFAULT_CONFIG.global.amplitudeUniformity);
   const [wavelengthUniformity, setWavelengthUniformity] = useState(DEFAULT_CONFIG.global.wavelengthUniformity);
   const [sharedSpeedEnabled, setSharedSpeedEnabled] = useState(DEFAULT_CONFIG.global.sharedSpeedEnabled);
-  const [speedLockEnabled, setSpeedLockEnabled] = useState(false);
+  const [speedLockEnabled, setSpeedLockEnabled] = useState(true);
   const [showPhaseDensityDebug, setShowPhaseDensityDebug] = useState(DEFAULT_CONFIG.global.showPhaseDensityDebug);
   const [showAlignmentDebug, setShowAlignmentDebug] = useState(false);
   const [debugTick, setDebugTick] = useState(0);
-  const [blurStrength, setBlurStrength] = useState(0.29);
+  const [pointerHudState, setPointerHudState] = useState({ x: 0, y: 0, pseudoProximityIndex: 0, complexityIndex: 100, visible: false });
+  const [pointerOverlayEnabled, setPointerOverlayEnabled] = useState(false);
+  const [blurStrength, setBlurStrength] = useState(0.22);
   const [blurInnerRadius, setBlurInnerRadius] = useState(0);
   const [blurRadius, setBlurRadius] = useState(984);
   const [blurCenterX, setBlurCenterX] = useState(0.526);
   const [blurCenterY, setBlurCenterY] = useState(0.447);
-  const [waveAColorInput, setWaveAColorInput] = useState("#605e63");
-  const [waveBColorInput, setWaveBColorInput] = useState("#0c0912");
+  const [waveAColorInput, setWaveAColorInput] = useState("#ABA3B8");
+  const [waveBColorInput, setWaveBColorInput] = useState("#000000");
   const [focusSharpOffsetX, setFocusSharpOffsetX] = useState(-113);
   const [focusSharpOffsetY, setFocusSharpOffsetY] = useState(-53);
   const [focusSharpScale, setFocusSharpScale] = useState(1.135);
-  const blurParamsRef = useRef({ strength: 0.29, innerRadius: 0, radius: 984, centerX: 0.526, centerY: 0.447 });
+  const blurParamsRef = useRef({ strength: 0.22, innerRadius: 0, radius: 984, centerX: 0.526, centerY: 0.447 });
 
   const wave1 = useMemo(() => ({ baseAmplitude: wave1BaseAmplitude, ampVariation: wave1AmpVariation, baseWavelength: wave1BaseWavelength, wavelengthVariation: wave1WavelengthVariation, curveAmount: wave1CurveAmount, curveFrequency: wave1CurveFrequency, carrierPhase: wave1CarrierPhase, arcSpan: wave1ArcSpan, arcRotation: wave1ArcRotation, arcRadius: wave1ArcRadius, arcX: wave1ArcX, arcY: wave1ArcY, speed: wave1Speed }), [wave1BaseAmplitude, wave1AmpVariation, wave1BaseWavelength, wave1WavelengthVariation, wave1CurveAmount, wave1CurveFrequency, wave1CarrierPhase, wave1ArcSpan, wave1ArcRotation, wave1ArcRadius, wave1ArcX, wave1ArcY, wave1Speed]);
   const wave2 = useMemo(() => ({ baseAmplitude: wave2BaseAmplitude, ampVariation: wave2AmpVariation, baseWavelength: wave2BaseWavelength, wavelengthVariation: wave2WavelengthVariation, curveAmount: wave2CurveAmount, curveFrequency: wave2CurveFrequency, carrierPhase: wave2CarrierPhase, arcSpan: wave2ArcSpan, arcRotation: wave2ArcRotation, arcRadius: wave2ArcRadius, arcX: wave2ArcX, arcY: wave2ArcY, speed: wave2Speed }), [wave2BaseAmplitude, wave2AmpVariation, wave2BaseWavelength, wave2WavelengthVariation, wave2CurveAmount, wave2CurveFrequency, wave2CarrierPhase, wave2ArcSpan, wave2ArcRotation, wave2ArcRadius, wave2ArcX, wave2ArcY, wave2Speed]);
-  const waveAColor = useMemo(() => sanitizeHexColor(waveAColorInput, "#605e63"), [waveAColorInput]);
-  const waveBColor = useMemo(() => sanitizeHexColor(waveBColorInput, "#0c0912"), [waveBColorInput]);
+  const waveAColor = useMemo(() => sanitizeHexColor(waveAColorInput, "#ABA3B8"), [waveAColorInput]);
+  const waveBColor = useMemo(() => sanitizeHexColor(waveBColorInput, "#000000"), [waveBColorInput]);
+  const displayPseudoProximityIndex = Math.ceil(liveMetricsRef.current.pseudoProximityIndex);
+  const displayComplexityIndex = Math.ceil(liveMetricsRef.current.complexityIndex);
+  const pointerHudVisible = pointerHudState.visible;
+  const pointerHudLeft = pointerHudState.x + 18;
+  const pointerHudTop = pointerHudState.y + 18;
+  const displayPointerPseudoProximityIndex = Math.ceil(pointerHudState.pseudoProximityIndex);
+  const displayPointerComplexityIndex = Math.ceil(pointerHudState.complexityIndex);
+  const pointerHudSegments = 16;
+  const pointerCuriosityFilled = Math.max(0, Math.min(pointerHudSegments, Math.round((displayPointerPseudoProximityIndex / 100) * pointerHudSegments)));
+  const pointerComplexityFilled = Math.max(0, Math.min(pointerHudSegments, Math.round((displayPointerComplexityIndex / 100) * pointerHudSegments)));
   useEffect(() => { motionRef.current.wave1CurrentSpeed = wave1Speed; motionRef.current.wave2CurrentSpeed = wave2Speed; }, [wave1Speed, wave2Speed]);
   useEffect(() => {
     blurParamsRef.current = {
@@ -518,11 +540,69 @@ function ProceduralWaveBlendDemo() {
   }, []);
 
   useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === "/" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        const target = event.target;
+        const tagName = target && target.tagName ? target.tagName.toLowerCase() : "";
+        if (tagName === "input" || tagName === "textarea" || (target && target.isContentEditable)) return;
+        event.preventDefault();
+        setPointerOverlayEnabled((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    let rafId = 0;
+    let lastValueUpdate = 0;
+    const tick = (time) => {
+      setPointerHudState((prev) => {
+        const nextVisible = mouseRef.current.inside;
+        if (!nextVisible) {
+          return prev.visible ? { ...prev, visible: false } : prev;
+        }
+        const targetX = mouseRef.current.x;
+        const targetY = mouseRef.current.y;
+        const shouldUpdateValues = time - lastValueUpdate >= 60;
+        const targetPseudo = shouldUpdateValues ? Math.max(0, Math.min(100, liveMetricsRef.current.pseudoProximityIndex)) : prev.pseudoProximityIndex;
+        const targetComplexity = shouldUpdateValues ? Math.max(0, Math.min(100, liveMetricsRef.current.complexityIndex)) : prev.complexityIndex;
+        const positionMix = 0.78;
+        const valueMix = 0.16;
+        if (shouldUpdateValues) lastValueUpdate = time;
+        return {
+          x: prev.x + (targetX - prev.x) * positionMix,
+          y: prev.y + (targetY - prev.y) * positionMix,
+          pseudoProximityIndex: prev.pseudoProximityIndex + (targetPseudo - prev.pseudoProximityIndex) * valueMix,
+          complexityIndex: prev.complexityIndex + (targetComplexity - prev.complexityIndex) * valueMix,
+          visible: true,
+        };
+      });
+      rafId = window.requestAnimationFrame(tick);
+    };
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
+  useEffect(() => {
     const host = hostRef.current; if (!host) return undefined;
-    const onMove = (event) => { const rect = host.getBoundingClientRect(); mouseRef.current = { x: event.clientX - rect.left, y: event.clientY - rect.top, inside: true }; };
-    const onLeave = () => { mouseRef.current = { ...mouseRef.current, inside: false }; };
-    host.addEventListener("pointermove", onMove); host.addEventListener("pointerleave", onLeave);
-    return () => { host.removeEventListener("pointermove", onMove); host.removeEventListener("pointerleave", onLeave); };
+    const onMove = (event) => {
+      const rect = host.getBoundingClientRect();
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      mouseRef.current = {
+        x: localX,
+        y: localY,
+        inside: localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height,
+      };
+    };
+    const onLeaveWindow = () => { mouseRef.current = { ...mouseRef.current, inside: false }; };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerleave", onLeaveWindow);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerleave", onLeaveWindow);
+    };
   }, []);
 
   useEffect(() => {
@@ -772,6 +852,9 @@ function ProceduralWaveBlendDemo() {
           globalInfluence >= 0.55 &&
           nearestCrestIndex1 >= 0 &&
           nearestCrestIndex2 >= 0;
+        const pseudoProximityIndex = pseudoProximityIndexFromInfluence(globalInfluence);
+        const displayedPseudoProximityIndex = Math.ceil(pseudoProximityIndex);
+        const pseudoProximityReady = displayedPseudoProximityIndex >= 100;
         const crestAngleInRange =
           crestInfluenceActive &&
           (
@@ -782,6 +865,13 @@ function ProceduralWaveBlendDemo() {
               crestAngleWave2Deg >= CREST_LOCK_MIN_ANGLE_DEG &&
               crestAngleWave2Deg <= CREST_LOCK_MAX_ANGLE_DEG)
           );
+        if (!crestInfluenceActive || !pseudoProximityReady || crestAngleDeg == null) {
+          lockProgressRef.current = { active: false, initialAngle: null, initialTarget: null, span: null };
+        } else if (!lockProgressRef.current.active) {
+          const initialTarget = crestAngleDeg > CREST_LOCK_MAX_ANGLE_DEG ? CREST_LOCK_MAX_ANGLE_DEG : crestAngleDeg < CREST_LOCK_MIN_ANGLE_DEG ? 0 : 90;
+          const span = Math.max(1e-6, Math.abs(crestAngleDeg - initialTarget));
+          lockProgressRef.current = { active: true, initialAngle: crestAngleDeg, initialTarget, span };
+        }
         motionRef.current.crestAlignedFrames = crestAngleInRange ? motionRef.current.crestAlignedFrames + 1 : 0;
         if (!sharedSpeedEnabled || !speedLockEnabled || !crestInfluenceActive) motionRef.current.speedLocked = false;
         else if (motionRef.current.crestAlignedFrames >= CREST_LOCK_STABLE_FRAMES) motionRef.current.speedLocked = true;
@@ -793,7 +883,24 @@ function ProceduralWaveBlendDemo() {
         motionRef.current.wave2CurrentSpeed = lerp(motionRef.current.wave2CurrentSpeed, targetWave2Speed, speedResponse);
         motionRef.current.wave1Offset += motionRef.current.wave1CurrentSpeed * 0.42 * dt;
         motionRef.current.wave2Offset += motionRef.current.wave2CurrentSpeed * 0.42 * dt;
-        liveMetricsRef.current = { wave1Speed: motionRef.current.wave1CurrentSpeed, wave2Speed: motionRef.current.wave2CurrentSpeed, sharedSpeed, speedMix: gatedSpeedMix, spatialAlignment: phaseAlignment, indexAlignment, influence: globalInfluence, speedLocked: motionRef.current.speedLocked ? 1 : 0, alignmentPairs: spatialStats.pairs, avgPairDistance: spatialStats.avgDistance, avgCarrierSimplification, crestAngleDeg, crestAngleWave2Deg, crestAlignedFrames: motionRef.current.crestAlignedFrames, crestInRange: crestAngleInRange ? 1 : 0 };
+        const progressInitialAngle = lockProgressRef.current.initialAngle;
+        const progressTarget = lockProgressRef.current.initialTarget;
+        const progressSpan = lockProgressRef.current.span;
+        const progressCurrentTarget =
+          crestAngleDeg == null ? null :
+          crestAngleDeg > CREST_LOCK_MAX_ANGLE_DEG ? CREST_LOCK_MAX_ANGLE_DEG :
+          crestAngleDeg < CREST_LOCK_MIN_ANGLE_DEG ? 0 :
+          90;
+        const progressCurrentDistance =
+          crestAngleDeg == null || progressCurrentTarget == null ? null :
+          Math.abs(crestAngleDeg - progressCurrentTarget);
+        const lockProgressPercent =
+          motionRef.current.speedLocked ? 100 :
+          !crestInfluenceActive || !pseudoProximityReady || progressInitialAngle == null || progressSpan == null || progressCurrentDistance == null ? 0 :
+          clamp((1 - progressCurrentDistance / progressSpan) * 100, 0, 100);
+        const displayedLockProgressPercent = Math.ceil(lockProgressPercent);
+        const complexityIndex = 100 - (displayedLockProgressPercent / 2 + displayedPseudoProximityIndex / 2);
+        liveMetricsRef.current = { wave1Speed: motionRef.current.wave1CurrentSpeed, wave2Speed: motionRef.current.wave2CurrentSpeed, sharedSpeed, speedMix: gatedSpeedMix, spatialAlignment: phaseAlignment, indexAlignment, influence: globalInfluence, pseudoProximityIndex, complexityIndex, speedLocked: motionRef.current.speedLocked ? 1 : 0, alignmentPairs: spatialStats.pairs, avgPairDistance: spatialStats.avgDistance, avgCarrierSimplification, crestAngleDeg, crestAngleWave2Deg, crestAlignedFrames: motionRef.current.crestAlignedFrames, crestInRange: crestAngleInRange ? 1 : 0, lockProgressInitialAngle: progressInitialAngle, lockProgressTarget: progressTarget, lockProgressCurrentTarget: progressCurrentTarget, lockProgressSpan: progressSpan, lockProgressCurrentDistance: progressCurrentDistance, lockProgressPercent };
         const clampedDistance = Math.max(DYNAMIC_BLEND_NEAR_PX, Math.min(DYNAMIC_BLEND_FAR_PX, nearestWaveDistance));
         const proximityMix = 1 - (clampedDistance - DYNAMIC_BLEND_NEAR_PX) / Math.max(1, DYNAMIC_BLEND_FAR_PX - DYNAMIC_BLEND_NEAR_PX);
         const focusBlendSteps = Math.round(lerp(blendSteps, DYNAMIC_BLEND_MIN_STEPS, proximityMix));
@@ -831,66 +938,6 @@ function ProceduralWaveBlendDemo() {
             drawPolylinePixi(guideGraphics, [{ x: line.ax, y: line.ay }, { x: line.bx, y: line.by }], 0x78dcff, 1, 0.12 + closeness * 0.35);
           }
         }
-        if (focusRevealActive && nearestCrestIndex1 >= 0) {
-          focusSharpGraphics.beginFill(0x3b82f6, 0.95);
-          focusSharpGraphics.drawCircle(points1[nearestCrestIndex1].x, points1[nearestCrestIndex1].y, 5);
-          focusSharpGraphics.endFill();
-          const tangent = tangentFromScreenPoints(points1, nearestCrestIndex1);
-          const tangentLength = 80;
-          if (tangent) {
-            drawPolylinePixi(
-              focusSharpGraphics,
-              [
-                {
-                  x: points1[nearestCrestIndex1].x - tangent.x * tangentLength,
-                  y: points1[nearestCrestIndex1].y - tangent.y * tangentLength,
-                },
-                {
-                  x: points1[nearestCrestIndex1].x + tangent.x * tangentLength,
-                  y: points1[nearestCrestIndex1].y + tangent.y * tangentLength,
-                },
-              ],
-              0x22c55e,
-              1.5,
-              0.95
-            );
-          }
-        }
-        if (focusRevealActive && nearestCrestIndex2 >= 0) {
-          focusSharpGraphics.beginFill(0x3b82f6, 0.95);
-          focusSharpGraphics.drawCircle(points2[nearestCrestIndex2].x, points2[nearestCrestIndex2].y, 5);
-          focusSharpGraphics.endFill();
-          const tangentWave2 = tangentFromScreenPoints(points2, nearestCrestIndex2);
-          const tangentLength = 80;
-          if (tangentWave2) {
-            drawPolylinePixi(
-              focusSharpGraphics,
-              [
-                {
-                  x: points2[nearestCrestIndex2].x - tangentWave2.x * tangentLength,
-                  y: points2[nearestCrestIndex2].y - tangentWave2.y * tangentLength,
-                },
-                {
-                  x: points2[nearestCrestIndex2].x + tangentWave2.x * tangentLength,
-                  y: points2[nearestCrestIndex2].y + tangentWave2.y * tangentLength,
-                },
-              ],
-              0xf59e0b,
-              1.5,
-              0.95
-            );
-          }
-        }
-        if (focusRevealActive && nearestCrestIndex1 >= 0 && nearestCrestIndex2 >= 0) {
-          drawPolylinePixi(
-            focusSharpGraphics,
-            [points1[nearestCrestIndex1], points2[nearestCrestIndex2]],
-            0x3b82f6,
-            1.5,
-            0.9
-          );
-        }
-
         if (interpolationEnabled) {
           const blurTotalLines = blurBlendSteps + 2;
           const focusTotalLines = focusBlendSteps + 2;
@@ -963,7 +1010,7 @@ function ProceduralWaveBlendDemo() {
   }, [wave1, wave2, waveAColor, waveBColor, blendSteps, sampleCount, lineWidth, showEndpoints, interpolationEnabled, use2DInterpolate, showBaselines, showArcGuides, interactionEnabled, interactionRadius, interactionSoftness, amplitudeUniformity, wavelengthUniformity, sharedSpeedEnabled, speedLockEnabled, showPhaseDensityDebug, showAlignmentDebug, focusSharpOffsetX, focusSharpOffsetY, focusSharpScale]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-slate-950 relative">
+    <div className="h-screen w-screen overflow-hidden bg-slate-950 relative cursor-none">
       <div ref={hostRef} className="h-full w-full block" />
       <div className="absolute top-4 left-4 z-20 w-72 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950/80 p-3 text-slate-100 backdrop-blur">
         <div className="text-sm font-semibold mb-2">Zoom Blur</div>
@@ -1024,6 +1071,8 @@ function ProceduralWaveBlendDemo() {
         <div className="space-y-1 text-xs tabular-nums">
           <div>tick {debugTick}</div>
           <div>influence {liveMetricsRef.current.influence.toFixed(3)}</div>
+          <div>pseudoProximityIndex {displayPseudoProximityIndex}</div>
+          <div>complexityIndex {displayComplexityIndex}</div>
           <div>indexAlignment {liveMetricsRef.current.indexAlignment.toFixed(3)}</div>
           <div>spatialAlignment {liveMetricsRef.current.spatialAlignment.toFixed(3)}</div>
           <div>crestInRange {liveMetricsRef.current.crestInRange ? "yes" : "no"}</div>
@@ -1032,6 +1081,12 @@ function ProceduralWaveBlendDemo() {
           <div>avgPairDistance {liveMetricsRef.current.avgPairDistance.toFixed(3)}</div>
           <div>crestAngleDeg {liveMetricsRef.current.crestAngleDeg == null ? "n/a" : liveMetricsRef.current.crestAngleDeg.toFixed(2)}</div>
           <div>crestAngleWave2Deg {liveMetricsRef.current.crestAngleWave2Deg == null ? "n/a" : liveMetricsRef.current.crestAngleWave2Deg.toFixed(2)}</div>
+          <div>lockProgressInitialAngle {liveMetricsRef.current.lockProgressInitialAngle == null ? "n/a" : liveMetricsRef.current.lockProgressInitialAngle.toFixed(2)}</div>
+          <div>lockProgressTarget {liveMetricsRef.current.lockProgressTarget == null ? "n/a" : liveMetricsRef.current.lockProgressTarget.toFixed(2)}</div>
+          <div>lockProgressCurrentTarget {liveMetricsRef.current.lockProgressCurrentTarget == null ? "n/a" : liveMetricsRef.current.lockProgressCurrentTarget.toFixed(2)}</div>
+          <div>lockProgressSpan {liveMetricsRef.current.lockProgressSpan == null ? "n/a" : liveMetricsRef.current.lockProgressSpan.toFixed(2)}</div>
+          <div>lockProgressCurrentDistance {liveMetricsRef.current.lockProgressCurrentDistance == null ? "n/a" : liveMetricsRef.current.lockProgressCurrentDistance.toFixed(2)}</div>
+          <div>lockProgressPercent {liveMetricsRef.current.lockProgressPercent.toFixed(1)}%</div>
           <div>speedLocked {liveMetricsRef.current.speedLocked ? "yes" : "no"}</div>
           <div>speedMix {liveMetricsRef.current.speedMix.toFixed(3)}</div>
           <div>wave1Speed {liveMetricsRef.current.wave1Speed.toFixed(4)}</div>
@@ -1040,6 +1095,49 @@ function ProceduralWaveBlendDemo() {
           <div>avgCarrierSimplification {liveMetricsRef.current.avgCarrierSimplification.toFixed(3)}</div>
         </div>
       </div>
+      {pointerHudVisible ? (
+        <>
+        <div
+          className="pointer-events-none absolute z-20"
+          style={{ left: `${pointerHudState.x}px`, top: `${pointerHudState.y}px` }}
+        >
+          <img
+            src="Assets/Arrow-2.png"
+            alt=""
+            className="block h-6 w-6 object-contain drop-shadow-[0_0_12px_rgba(211,154,252,0.28)]"
+            draggable={false}
+          />
+        </div>
+        {pointerOverlayEnabled ? (
+        <div
+          className="pointer-events-none absolute z-20 -ml-6 mt-[0.875rem] text-[#d39afc]"
+          style={{ left: `${pointerHudState.x}px`, top: `${pointerHudState.y}px` }}
+        >
+          <div className="flex items-center gap-3 text-[22px] leading-none font-light tracking-[-0.03em]">
+            <span className="inline-block w-[120px] text-right">Curiosity</span>
+            <div className="flex items-center justify-start gap-[2px] text-[19px] leading-none min-w-[124px]">
+              {Array.from({ length: pointerHudSegments }, (_, i) => (
+                <span key={`curiosity-${i}`} className={i < pointerCuriosityFilled ? "text-[#d39afc]" : "text-[#6f6877]"}>|</span>
+              ))}
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-3 text-[22px] leading-none font-light tracking-[-0.03em]">
+            <span className="inline-block w-[120px] text-right">Complexity</span>
+            <div className="flex items-center justify-start gap-[2px] text-[19px] leading-none min-w-[124px]">
+              {Array.from({ length: pointerHudSegments }, (_, i) => (
+                <span key={`complexity-${i}`} className={i < pointerComplexityFilled ? "text-[#d39afc]" : "text-[#6f6877]"}>|</span>
+              ))}
+            </div>
+          </div>
+        </div>
+        ) : null}
+        </>
+      ) : null}
+      {!pointerOverlayEnabled ? (
+        <div className="pointer-events-none absolute bottom-6 right-6 z-20 text-xs text-white/30">
+          Press / to find how curiosity &amp; complexity are related
+        </div>
+      ) : null}
     </div>
   );
 }

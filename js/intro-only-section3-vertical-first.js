@@ -2182,15 +2182,26 @@ function revealApp(loaderController) {
 }
 
 async function init() {
-  let loaderController = null;
-  loaderController = createStartupLoaderController(
-    () => {
-      startLoaderReveal();
-    },
-    () => {
-      revealApp(loaderController);
-    }
-  );
+  let loaderController = window.__startupLoaderController || null;
+  if (loaderController?.setCallbacks) {
+    loaderController.setCallbacks(
+      () => {
+        startLoaderReveal();
+      },
+      () => {
+        revealApp(loaderController);
+      }
+    );
+  } else {
+    loaderController = createStartupLoaderController(
+      () => {
+        startLoaderReveal();
+      },
+      () => {
+        revealApp(loaderController);
+      }
+    );
+  }
   if (!loaderController) {
     startCoreApp();
     return;

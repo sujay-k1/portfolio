@@ -47,6 +47,7 @@ function fract(x) { return x - Math.floor(x); }
 function easeInOut(t) { return 0.5 - 0.5 * Math.cos(Math.PI * t); }
 function smoothstep01(t) { const x = Math.max(0, Math.min(1, t)); return x * x * (3 - 2 * x); }
 function normalize(v) { const len = Math.hypot(v.x, v.y) || 1; return { x: v.x / len, y: v.y / len }; }
+function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
 function noise1D(x) {
   const i = Math.floor(x);
@@ -292,6 +293,78 @@ function computeScreenSpaceAlignment(samplesA, samplesB, width, height, interact
   };
 }
 
+function signedNormalDisplacement(sample) {
+  const dx = sample.point.x - sample.basePoint.x;
+  const dy = sample.point.y - sample.basePoint.y;
+  return dx * sample.normal.x + dy * sample.normal.y;
+}
+
+function findNearestCrestIndex(samples, screenPoints, mouse) {
+  if (!mouse.inside || !samples || samples.length < 3) {
+    return -1;
+  }
+  let bestIndex = -1;
+  let bestDistSq = Infinity;
+  for (let i = 1; i < samples.length - 1; i += 1) {
+    const prev = signedNormalDisplacement(samples[i - 1]);
+    const curr = signedNormalDisplacement(samples[i]);
+    const next = signedNormalDisplacement(samples[i + 1]);
+    if (!(curr > prev && curr >= next && curr > 0)) {
+      continue;
+    }
+    const dx = screenPoints[i].x - mouse.x;
+    const dy = screenPoints[i].y - mouse.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq < bestDistSq) {
+      bestDistSq = distSq;
+      bestIndex = i;
+    }
+  }
+  return bestIndex;
+}
+
+function angleBetweenVectorsDeg(a, b) {
+  const magA = Math.hypot(a.x, a.y);
+  const magB = Math.hypot(b.x, b.y);
+  if (magA <= 1e-6 || magB <= 1e-6) {
+    return null;
+  }
+  const dot = (a.x * b.x + a.y * b.y) / (magA * magB);
+  const clampedDot = clamp(dot, -1, 1);
+  return Math.acos(clampedDot) * (180 / Math.PI);
+}
+
+function toLocalFocusMouse(mouse, offsetX, offsetY, scale) {
+  if (!mouse.inside) {
+    return mouse;
+  }
+  return {
+    ...mouse,
+    x: (mouse.x - offsetX) / Math.max(1e-6, scale),
+    y: (mouse.y - offsetY) / Math.max(1e-6, scale)
+  };
+}
+
+function tangentFromScreenPoints(points, index) {
+  if (!points || points.length < 2 || index < 0 || index >= points.length) {
+    return null;
+  }
+  const prev = points[Math.max(0, index - 1)];
+  const next = points[Math.min(points.length - 1, index + 1)];
+  const dx = next.x - prev.x;
+  const dy = next.y - prev.y;
+  const magnitude = Math.hypot(dx, dy);
+  if (magnitude <= 1e-6) {
+    return null;
+  }
+  return { x: dx / magnitude, y: dy / magnitude };
+}
+
+function pseudoProximityIndexFromInfluence(influence) {
+  const x = clamp(influence, 0, 1) * 100;
+  return 0.00000156428 * Math.pow(x, 3.9015);
+}
+
 function minDistanceToPolylinePoints(points, x, y) {
   if (!points || !points.length) {
     return Infinity;
@@ -341,8 +414,8 @@ const SECTION1_WAVE_CONFIG = {
     baseAmplitude: 0.26,
     ampVariation: 0.25,
     baseWavelength: 1.14,
-    wavelengthVariation: 0.51,
-    curveAmount: 0,
+    wavelengthVariation: 2.2,
+    curveAmount: 0.18,
     curveFrequency: 4.45,
     carrierPhase: 0,
     arcSpan: 0.18,
@@ -357,7 +430,7 @@ const SECTION1_WAVE_CONFIG = {
     ampVariation: 1.29,
     baseWavelength: 0.74,
     wavelengthVariation: 1.65,
-    curveAmount: 0,
+    curveAmount: 0.15,
     curveFrequency: 5.15,
     carrierPhase: 1.58,
     arcSpan: 0.19,
@@ -374,6 +447,8 @@ const SECTION1_WAVE_CONFIG = {
     showEndpoints: true,
     interpolationEnabled: true,
     use2DInterpolate: false,
+    showBaselines: true,
+    showArcGuides: true,
     interactionEnabled: true,
     interactionRadius: 880,
     interactionSoftness: 0.88,
@@ -388,7 +463,7 @@ const SECTION1_WAVE_CONFIG = {
   These correspond to the blur/focus controls from the standalone demo.
 */
 const SECTION1_WAVE_TUNING = {
-  blurStrength: 0.29,
+  blurStrength: 0.22,
   blurInnerRadius: 0,
   blurRadius: 984,
   blurCenterX: 0.526,
@@ -410,15 +485,23 @@ const SECTION1_WAVE_TUNING = {
   alignmentUpdateIntervalActive: 2,
   alignmentUpdateIntervalIdle: 3
 };
+const CREST_LOCK_MIN_ANGLE_DEG = 88;
+const CREST_LOCK_MAX_ANGLE_DEG = 92;
+const CREST_LOCK_STABLE_FRAMES = 6;
+const SECTION1_WAVE_COLOR_A = '#ABA3B8';
+const SECTION1_WAVE_COLOR_B = '#000000';
+const SECTION1_WAVE_MOBILE_BLEND_STEPS = 25;
+const SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS = 10;
 
-export async function initSectionOneProceduralWave({ host, pointerTarget }) {
+export async function initSectionOneProceduralWave({ host, pointerTarget, startPaused = false }) {
   if (!host || !pointerTarget || host.dataset.waveVizMounted === 'yes') {
-    return;
+    return null;
   }
   host.dataset.waveVizMounted = 'yes';
 
   const { PIXI, ZoomBlurFilter } = await ensurePixiCdnReady();
   const mouse = { x: 0, y: 0, inside: false };
+  const viewportPointer = { clientX: 0, clientY: 0, seen: false };
   const motion = {
     lastTime: null,
     wave1Offset: 0,
@@ -426,27 +509,95 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
     wave1CurrentSpeed: SECTION1_WAVE_CONFIG.wave1.speed,
     wave2CurrentSpeed: SECTION1_WAVE_CONFIG.wave2.speed,
     speedLocked: false,
-    episodePeakAlignment: 0,
-    nearPeakFrames: 0,
-    interactionEpisodeActive: false
+    crestAlignedFrames: 0
   };
   const alignmentCache = {
     frame: 0,
     stats: { alignment: 0, pairs: 0, avgDistance: 0, maxDistance: 0 }
   };
+  const lockProgress = { active: false, initialAngle: null, initialTarget: null, span: null };
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ?? false;
+  let isPaused = Boolean(startPaused) || reducedMotion;
+  let hasRenderedFrame = false;
+  let destroyed = false;
+  let readyResolve = null;
+  const ready = new Promise((resolve) => {
+    readyResolve = resolve;
+  });
+  const pointerHudSegments = 16;
+  const pointerHud = document.createElement('div');
+  pointerHud.className = 'intro-wave-pointer-hud';
+  pointerHud.innerHTML = `
+    <img class="intro-wave-pointer-arrow" src="Assets/Arrow-2.png" alt="">
+    <div class="intro-wave-pointer-bars is-hidden">
+      <div class="intro-wave-pointer-row">
+        <span class="intro-wave-pointer-label">Curiosity</span>
+        <div class="intro-wave-pointer-segments" data-wave-pointer-curiosity></div>
+      </div>
+      <div class="intro-wave-pointer-row">
+        <span class="intro-wave-pointer-label">Complexity</span>
+        <div class="intro-wave-pointer-segments" data-wave-pointer-complexity></div>
+      </div>
+    </div>
+  `;
+  const pointerPrompt = document.createElement('div');
+  pointerPrompt.className = 'intro-wave-pointer-prompt';
+  pointerPrompt.textContent = 'Press / to find how curiosity & complexity are related';
+  const curiositySegmentsWrap = pointerHud.querySelector('[data-wave-pointer-curiosity]');
+  const complexitySegmentsWrap = pointerHud.querySelector('[data-wave-pointer-complexity]');
+  const pointerBars = pointerHud.querySelector('.intro-wave-pointer-bars');
+  const curiositySegments = [];
+  const complexitySegments = [];
+  let pointerOverlayEnabled = false;
+  for (let i = 0; i < pointerHudSegments; i += 1) {
+    const curiositySegment = document.createElement('span');
+    curiositySegment.className = 'intro-wave-pointer-segment';
+    curiositySegment.textContent = '|';
+    curiositySegmentsWrap.appendChild(curiositySegment);
+    curiositySegments.push(curiositySegment);
+    const complexitySegment = document.createElement('span');
+    complexitySegment.className = 'intro-wave-pointer-segment';
+    complexitySegment.textContent = '|';
+    complexitySegmentsWrap.appendChild(complexitySegment);
+    complexitySegments.push(complexitySegment);
+  }
+  pointerTarget.appendChild(pointerHud);
+  pointerTarget.appendChild(pointerPrompt);
 
-  const onMove = (event) => {
+  const updatePointerFromEvent = (event) => {
+    if (event.pointerType === 'touch' && !event.isPrimary) {
+      return;
+    }
+    viewportPointer.clientX = event.clientX;
+    viewportPointer.clientY = event.clientY;
+    viewportPointer.seen = true;
     const rect = pointerTarget.getBoundingClientRect();
     mouse.x = event.clientX - rect.left;
     mouse.y = event.clientY - rect.top;
-    mouse.inside = true;
+    mouse.inside = mouse.x >= 0 && mouse.x <= rect.width && mouse.y >= 0 && mouse.y <= rect.height;
   };
   const onLeave = () => {
     mouse.inside = false;
   };
+  const onKeyDown = (event) => {
+    if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    const tagName = target && target.tagName ? target.tagName.toLowerCase() : '';
+    if (tagName === 'input' || tagName === 'textarea' || (target && target.isContentEditable)) {
+      return;
+    }
+    event.preventDefault();
+    pointerOverlayEnabled = !pointerOverlayEnabled;
+    pointerBars.classList.toggle('is-hidden', !pointerOverlayEnabled);
+    pointerPrompt.classList.toggle('is-hidden', pointerOverlayEnabled);
+  };
 
-  pointerTarget.addEventListener('pointermove', onMove);
-  pointerTarget.addEventListener('pointerleave', onLeave);
+  window.addEventListener('pointermove', updatePointerFromEvent);
+  window.addEventListener('pointerdown', updatePointerFromEvent);
+  window.addEventListener('pointerleave', onLeave);
+  window.addEventListener('keydown', onKeyDown);
 
   const app = new PIXI.Application({
     resizeTo: host,
@@ -553,8 +704,40 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
   resizeObserver.observe(host);
 
   const worldToScreen = (w, h, p) => ({ x: w * 0.5 + p.x * w * 0.18, y: h * 0.5 - p.y * h * 0.18 });
+  const isMobileBlendMode = () =>
+    window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 768;
+  const syncMouseFromViewportPointer = () => {
+    if (!viewportPointer.seen) {
+      return;
+    }
+    const rect = pointerTarget.getBoundingClientRect();
+    const localX = viewportPointer.clientX - rect.left;
+    const localY = viewportPointer.clientY - rect.top;
+    mouse.x = localX;
+    mouse.y = localY;
+    mouse.inside = localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height;
+  };
+
+  const resetMotion = () => {
+    motion.lastTime = null;
+    motion.wave1Offset = 0;
+    motion.wave2Offset = 0;
+    motion.wave1CurrentSpeed = SECTION1_WAVE_CONFIG.wave1.speed;
+    motion.wave2CurrentSpeed = SECTION1_WAVE_CONFIG.wave2.speed;
+    motion.speedLocked = false;
+    motion.crestAlignedFrames = 0;
+    alignmentCache.frame = 0;
+    lockProgress.active = false;
+    lockProgress.initialAngle = null;
+    lockProgress.initialTarget = null;
+    lockProgress.span = null;
+    syncMouseFromViewportPointer();
+  };
 
   const tick = () => {
+    if (destroyed) {
+      return;
+    }
     const width = app.screen.width;
     const height = app.screen.height;
 
@@ -624,48 +807,77 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
     }
     const spatialStats = alignmentCache.stats;
     const phaseAlignment = spatialStats.alignment;
-    const peakEpsilon = 0.02;
-    const unlockDrop = 0.06;
-    const stabilityFramesRequired = 8;
-    const minInfluence = 0.88;
-    const minPairs = Math.max(80, Math.floor(SECTION1_WAVE_CONFIG.global.sampleCount * 0.45));
-    const maxAvgPairDistance = 130;
-    const episodeIsActive = globalInfluence >= 0.55 && SECTION1_WAVE_CONFIG.global.interactionEnabled && mouse.inside;
-
-    if (!episodeIsActive) {
-      motion.interactionEpisodeActive = false;
-      motion.episodePeakAlignment = 0;
-      motion.nearPeakFrames = 0;
-    } else {
-      if (!motion.interactionEpisodeActive) {
-        motion.interactionEpisodeActive = true;
-        motion.episodePeakAlignment = phaseAlignment;
-        motion.nearPeakFrames = 0;
-      } else {
-        motion.episodePeakAlignment = Math.max(motion.episodePeakAlignment, phaseAlignment);
-      }
-      const nearPeak =
-        phaseAlignment >= motion.episodePeakAlignment - peakEpsilon &&
-        globalInfluence >= minInfluence &&
-        spatialStats.pairs >= minPairs &&
-        spatialStats.avgDistance <= maxAvgPairDistance;
-      motion.nearPeakFrames = nearPeak ? motion.nearPeakFrames + 1 : 0;
+    const points1 = [];
+    const points2 = [];
+    for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
+      points1.push(worldToScreen(width, height, adj1[i].point));
+      points2.push(worldToScreen(width, height, adj2[i].point));
     }
 
-    const shouldLock =
-      SECTION1_WAVE_CONFIG.global.sharedSpeedEnabled &&
-      episodeIsActive &&
-      motion.nearPeakFrames >= stabilityFramesRequired;
-    const shouldUnlock =
-      !SECTION1_WAVE_CONFIG.global.sharedSpeedEnabled ||
-      !episodeIsActive ||
-      phaseAlignment < motion.episodePeakAlignment - unlockDrop ||
-      spatialStats.pairs < Math.max(30, Math.floor(minPairs * 0.4));
-
-    if (shouldLock) {
-      motion.speedLocked = true;
-    } else if (shouldUnlock) {
+    const nearestWaveDistance = mouse.inside
+      ? Math.min(
+          minDistanceToPolylinePoints(points1, mouse.x, mouse.y),
+          minDistanceToPolylinePoints(points2, mouse.x, mouse.y)
+        )
+      : Infinity;
+    const focusLocalMouse = toLocalFocusMouse(
+      mouse,
+      SECTION1_WAVE_TUNING.focusSharpOffsetX,
+      SECTION1_WAVE_TUNING.focusSharpOffsetY,
+      SECTION1_WAVE_TUNING.focusSharpScale
+    );
+    const nearestCrestIndex1 = findNearestCrestIndex(adj1, points1, focusLocalMouse);
+    const nearestCrestIndex2 = findNearestCrestIndex(adj2, points2, focusLocalMouse);
+    let crestAngleDeg = null;
+    let crestAngleWave2Deg = null;
+    if (nearestCrestIndex1 >= 0 && nearestCrestIndex2 >= 0) {
+      const connector = {
+        x: points2[nearestCrestIndex2].x - points1[nearestCrestIndex1].x,
+        y: points2[nearestCrestIndex2].y - points1[nearestCrestIndex1].y
+      };
+      const tangent = tangentFromScreenPoints(points1, nearestCrestIndex1);
+      crestAngleDeg = angleBetweenVectorsDeg(tangent, connector);
+      const tangentWave2 = tangentFromScreenPoints(points2, nearestCrestIndex2);
+      crestAngleWave2Deg = angleBetweenVectorsDeg(tangentWave2, { x: -connector.x, y: -connector.y });
+    }
+    const crestInfluenceActive =
+      SECTION1_WAVE_CONFIG.global.interactionEnabled &&
+      mouse.inside &&
+      globalInfluence >= 0.55 &&
+      nearestCrestIndex1 >= 0 &&
+      nearestCrestIndex2 >= 0;
+    const pseudoProximityIndex = pseudoProximityIndexFromInfluence(globalInfluence);
+    const pseudoProximityReady = Math.ceil(pseudoProximityIndex) >= 100;
+    const crestAngleInRange =
+      crestInfluenceActive &&
+      ((crestAngleDeg != null &&
+        crestAngleDeg >= CREST_LOCK_MIN_ANGLE_DEG &&
+        crestAngleDeg <= CREST_LOCK_MAX_ANGLE_DEG) ||
+        (crestAngleWave2Deg != null &&
+          crestAngleWave2Deg >= CREST_LOCK_MIN_ANGLE_DEG &&
+          crestAngleWave2Deg <= CREST_LOCK_MAX_ANGLE_DEG));
+    if (!crestInfluenceActive || !pseudoProximityReady || crestAngleDeg == null) {
+      lockProgress.active = false;
+      lockProgress.initialAngle = null;
+      lockProgress.initialTarget = null;
+      lockProgress.span = null;
+    } else if (!lockProgress.active) {
+      const initialTarget =
+        crestAngleDeg > CREST_LOCK_MAX_ANGLE_DEG
+          ? CREST_LOCK_MAX_ANGLE_DEG
+          : crestAngleDeg < CREST_LOCK_MIN_ANGLE_DEG
+            ? 0
+            : 90;
+      lockProgress.active = true;
+      lockProgress.initialAngle = crestAngleDeg;
+      lockProgress.initialTarget = initialTarget;
+      lockProgress.span = Math.max(1e-6, Math.abs(crestAngleDeg - initialTarget));
+    }
+    motion.crestAlignedFrames = crestAngleInRange ? motion.crestAlignedFrames + 1 : 0;
+    if (!SECTION1_WAVE_CONFIG.global.sharedSpeedEnabled || !crestInfluenceActive) {
       motion.speedLocked = false;
+    } else if (motion.crestAlignedFrames >= CREST_LOCK_STABLE_FRAMES) {
+      motion.speedLocked = true;
     }
 
     const gatedSpeedMix = motion.speedLocked
@@ -681,22 +893,53 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
     motion.wave1Offset += motion.wave1CurrentSpeed * 0.42 * dt;
     motion.wave2Offset += motion.wave2CurrentSpeed * 0.42 * dt;
 
-    const points1 = [];
-    const points2 = [];
-    for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
-      points1.push(worldToScreen(width, height, adj1[i].point));
-      points2.push(worldToScreen(width, height, adj2[i].point));
-    }
-
     blurWaveGraphics.clear();
     focusSharpGraphics.clear();
 
-    const nearestWaveDistance = mouse.inside
-      ? Math.min(
-          minDistanceToPolylinePoints(points1, mouse.x, mouse.y),
-          minDistanceToPolylinePoints(points2, mouse.x, mouse.y)
-        )
-      : Infinity;
+    const totalBlendSteps = isMobileBlendMode()
+      ? SECTION1_WAVE_MOBILE_BLEND_STEPS
+      : SECTION1_WAVE_CONFIG.global.blendSteps;
+    const dynamicMinSteps = isMobileBlendMode()
+      ? SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS
+      : SECTION1_WAVE_TUNING.dynamicBlendMinSteps;
+    const progressCurrentTarget =
+      crestAngleDeg == null
+        ? null
+        : crestAngleDeg > CREST_LOCK_MAX_ANGLE_DEG
+          ? CREST_LOCK_MAX_ANGLE_DEG
+          : crestAngleDeg < CREST_LOCK_MIN_ANGLE_DEG
+            ? 0
+            : 90;
+    const progressCurrentDistance =
+      crestAngleDeg == null || progressCurrentTarget == null
+        ? null
+        : Math.abs(crestAngleDeg - progressCurrentTarget);
+    const lockProgressPercent =
+      motion.speedLocked
+        ? 100
+        : !crestInfluenceActive || !pseudoProximityReady || lockProgress.initialAngle == null || lockProgress.span == null || progressCurrentDistance == null
+          ? 0
+          : clamp((1 - progressCurrentDistance / lockProgress.span) * 100, 0, 100);
+    const displayedPseudoProximityIndex = Math.ceil(pseudoProximityIndex);
+    const displayedLockProgressPercent = Math.ceil(lockProgressPercent);
+    const complexityIndex = 100 - (displayedLockProgressPercent / 2 + displayedPseudoProximityIndex / 2);
+    const pointerHudVisible = mouse.inside;
+    pointerHud.classList.toggle('is-visible', pointerHudVisible);
+    pointerHud.style.transform = `translate3d(${mouse.x}px, ${mouse.y}px, 0)`;
+    const curiosityFilled = Math.max(
+      0,
+      Math.min(pointerHudSegments, Math.round((displayedPseudoProximityIndex / 100) * pointerHudSegments))
+    );
+    const complexityFilled = Math.max(
+      0,
+      Math.min(pointerHudSegments, Math.round((Math.ceil(complexityIndex) / 100) * pointerHudSegments))
+    );
+    curiositySegments.forEach((segment, index) => {
+      segment.classList.toggle('is-filled', index < curiosityFilled);
+    });
+    complexitySegments.forEach((segment, index) => {
+      segment.classList.toggle('is-filled', index < complexityFilled);
+    });
     const clampedDistance = Math.max(
       SECTION1_WAVE_TUNING.dynamicBlendNearPx,
       Math.min(SECTION1_WAVE_TUNING.dynamicBlendFarPx, nearestWaveDistance)
@@ -704,9 +947,9 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
     const proximityMix = 1 - (clampedDistance - SECTION1_WAVE_TUNING.dynamicBlendNearPx) /
       Math.max(1, SECTION1_WAVE_TUNING.dynamicBlendFarPx - SECTION1_WAVE_TUNING.dynamicBlendNearPx);
     const focusBlendSteps = Math.round(
-      lerp(SECTION1_WAVE_CONFIG.global.blendSteps, SECTION1_WAVE_TUNING.dynamicBlendMinSteps, proximityMix)
+      lerp(totalBlendSteps, dynamicMinSteps, proximityMix)
     );
-    const blurTotalLines = SECTION1_WAVE_CONFIG.global.blendSteps + 2;
+    const blurTotalLines = totalBlendSteps + 2;
     const focusTotalLines = focusBlendSteps + 2;
     const reducedPoints1 = buildReducedPoints(points1, SECTION1_WAVE_TUNING.blurPointStride);
     const reducedPoints2 = buildReducedPoints(points2, SECTION1_WAVE_TUNING.blurPointStride);
@@ -738,7 +981,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
         }
         const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
         const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-        const color = blendColorInt('#605e63', '#0c0912', raw);
+        const color = blendColorInt(SECTION1_WAVE_COLOR_A, SECTION1_WAVE_COLOR_B, raw);
         if (lineIndex % SECTION1_WAVE_TUNING.blurLineStride === 0) {
           const blurPts = [];
           for (let i = 0; i < reducedPoints1.length; i += 1) {
@@ -771,7 +1014,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
           }
           const endpointAlpha = raw === 0 || raw === 1 ? 1 : 0.88;
           const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
-          const color = blendColorInt('#605e63', '#0c0912', raw);
+          const color = blendColorInt(SECTION1_WAVE_COLOR_A, SECTION1_WAVE_COLOR_B, raw);
           const sharpPts = [];
           for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
             sharpPts.push({
@@ -794,24 +1037,110 @@ export async function initSectionOneProceduralWave({ host, pointerTarget }) {
       }
     } else if (SECTION1_WAVE_CONFIG.global.showEndpoints) {
       if (focusRevealActive) {
-        drawPolylinePixi(focusSharpGraphics, points1, 0x605e63, SECTION1_WAVE_CONFIG.global.lineWidth + 0.3, 1);
-        drawPolylinePixi(focusSharpGraphics, points2, 0x0c0912, SECTION1_WAVE_CONFIG.global.lineWidth + 0.3, 1);
+        drawPolylinePixi(
+          focusSharpGraphics,
+          points1,
+          parseInt(SECTION1_WAVE_COLOR_A.slice(1), 16),
+          SECTION1_WAVE_CONFIG.global.lineWidth + 0.3,
+          1
+        );
+        drawPolylinePixi(
+          focusSharpGraphics,
+          points2,
+          parseInt(SECTION1_WAVE_COLOR_B.slice(1), 16),
+          SECTION1_WAVE_CONFIG.global.lineWidth + 0.3,
+          1
+        );
       }
-      drawPolylinePixi(blurWaveGraphics, points1, 0x605e63, SECTION1_WAVE_CONFIG.global.lineWidth + 0.9, 0.55);
-      drawPolylinePixi(blurWaveGraphics, points2, 0x0c0912, SECTION1_WAVE_CONFIG.global.lineWidth + 0.9, 0.55);
+      drawPolylinePixi(
+        blurWaveGraphics,
+        points1,
+        parseInt(SECTION1_WAVE_COLOR_A.slice(1), 16),
+        SECTION1_WAVE_CONFIG.global.lineWidth + 0.9,
+        0.55
+      );
+      drawPolylinePixi(
+        blurWaveGraphics,
+        points2,
+        parseInt(SECTION1_WAVE_COLOR_B.slice(1), 16),
+        SECTION1_WAVE_CONFIG.global.lineWidth + 0.9,
+        0.55
+      );
+    }
+
+    if (!hasRenderedFrame) {
+      hasRenderedFrame = true;
+      readyResolve?.();
+      if (isPaused) {
+        app.ticker.stop();
+        motion.lastTime = null;
+      }
     }
   };
 
   app.ticker.add(tick);
-
-  host._section1WaveDestroy = () => {
-    pointerTarget.removeEventListener('pointermove', onMove);
-    pointerTarget.removeEventListener('pointerleave', onLeave);
+  const pause = () => {
+    if (destroyed || isPaused) {
+      return;
+    }
+    isPaused = true;
+    pointerHud.classList.remove('is-visible');
+    app.ticker.stop();
+    motion.lastTime = null;
+  };
+  const resume = () => {
+    if (destroyed || reducedMotion) {
+      return;
+    }
+    if (!hasRenderedFrame) {
+      return;
+    }
+    syncMouseFromViewportPointer();
+    isPaused = false;
+    motion.lastTime = null;
+    app.ticker.start();
+  };
+  const restart = () => {
+    if (destroyed) {
+      return;
+    }
+    resetMotion();
+    isPaused = reducedMotion;
+    pointerHud.classList.remove('is-visible');
+    tick();
+    if (!reducedMotion) {
+      isPaused = false;
+      motion.lastTime = null;
+      app.ticker.start();
+    }
+  };
+  const destroy = () => {
+    if (destroyed) {
+      return;
+    }
+    destroyed = true;
+    window.removeEventListener('pointermove', updatePointerFromEvent);
+    window.removeEventListener('pointerdown', updatePointerFromEvent);
+    window.removeEventListener('pointerleave', onLeave);
+    window.removeEventListener('keydown', onKeyDown);
+    pointerHud.remove();
+    pointerPrompt.remove();
     resizeObserver.disconnect();
     motion.lastTime = null;
     app.ticker.remove(tick);
     app.destroy(true, { children: true, texture: true, baseTexture: true });
     host.innerHTML = '';
     delete host.dataset.waveVizMounted;
+  };
+
+  host._section1WaveDestroy = destroy;
+
+  return {
+    ready,
+    pause,
+    resume,
+    restart,
+    destroy,
+    isReducedMotion: reducedMotion
   };
 }

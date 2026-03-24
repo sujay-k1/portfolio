@@ -70,6 +70,7 @@ body.case-study-page {
 	background-attachment: fixed;
 	overflow-y: auto;
 	--case-study-sticky-top: 124px;
+	scroll-behavior: smooth;
 }
 
 body.case-study-page .header {
@@ -789,7 +790,7 @@ body.case-study-page.case-study-index-enabled .case-study-index-item {
 	font-size: 20px;
 	font-style: normal;
 	font-weight: 400;
-	line-height: 32px;
+	line-height: 28px;
 	text-decoration: none;
 	text-transform: uppercase;
 	transition: color 180ms ease, text-decoration-color 180ms ease;
@@ -822,9 +823,9 @@ body.case-study-page.case-study-index-enabled .case-study-index {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-	gap: 4px;
+	gap: 2px;
 	padding-right: 30px;
-	padding-top: 4px;
+	padding-top: 12px;
 	padding-bottom: 4px;
 	background: transparent;
 	pointer-events: auto;
@@ -852,7 +853,7 @@ body.case-study-page.case-study-index-enabled .case-study-index {
     font-family: DM Sans;
     font-size: 30px;
     font-style: normal;
-    font-weight: 700;
+    font-weight: 500;
     line-height: 42px; /* 140% */
 	align-content: flex-start;
 	align-self: stretch;
@@ -867,7 +868,38 @@ body.case-study-page .section-title {
 	margin-left: -48px;
 	margin-right: -48px;
 	background: transparent;
-	padding: 12px 48px 0 48px;
+	padding: 12px 48px 12px 48px;
+	transform: translateY(var(--section-title-prepush, 0px));
+	will-change: transform;
+	color: rgba(255, 255, 255, 0.98);
+	text-shadow:
+		0 1px 2px rgba(0, 0, 0, 0.42),
+		0 0 18px rgba(21, 16, 26, 0.28);
+}
+
+body.case-study-page .section-title-anchor {
+	display: block;
+	width: 100%;
+	height: 0;
+	scroll-margin-top: calc(var(--case-study-sticky-top, 76px) - 24px);
+	pointer-events: none;
+	opacity: 0;
+}
+
+body.case-study-page .section-title-kicker {
+	display: block;
+	margin: -4px 0 8px 0;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 14px;
+	font-style: normal;
+	font-weight: 200;
+	line-height: 1.2;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	opacity: 0;
+	transform: translateY(4px);
+	pointer-events: none;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
 }
 
 body.case-study-page .section-title::before {
