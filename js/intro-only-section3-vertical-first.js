@@ -190,6 +190,7 @@ const finalHorizonCardsData = [
     logo: 'Assets/saison-omni-logo-white.png',
     logoAlt: 'Saison Omni logo',
     logoSub: 'Dissolved by Saison International',
+    href: '/work/saison-omni',
     statement: '<span class="hl">Scaled product, fueled operations</span> by building reusable governance modules and design patterns',
     keywords: ['Design Patterns', 'Configurable modules', 'Lending', 'System Design', 'Design Ops', 'Data Driven Design'],
     meta: 'Enterprise // Entertainment',
@@ -208,6 +209,7 @@ const finalHorizonCardsData = [
     logo: 'Assets/biz2x-logo-white.png',
     logoAlt: 'Biz2X logo',
     logoSub: 'Biz2X',
+    href: '/work/Biz2X',
     statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
     keywords: ['Design Patterns', 'Configurable Journey', 'Lending', 'System Design', 'CRM', 'Data Driven Design'],
     meta: 'SaaS // Social Sector',
@@ -226,6 +228,7 @@ const finalHorizonCardsData = [
     logo: 'Assets/jiotesseract-logo-white.png',
     logoAlt: 'JioTesseract logo',
     logoSub: 'JioTesseract',
+    href: '/work/Jio',
     statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
     keywords: ['Design Foundation', 'System Design', 'XR Platform', 'Design Patterns', 'Spatial Design', 'Interaction Design'],
     meta: 'Platform // XR (AR/VR/MR)',
@@ -242,6 +245,8 @@ const finalHorizonCardsData = [
     logo: 'Assets/jiotesseract-logo-white.png',
     logoAlt: 'JioTesseract logo',
     logoSub: 'JioTesseract',
+    href: 'https://tesseract.in/learning-and-development-ai-analytics/',
+    newTab: true,
     statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
     keywords: ['LMS', 'System Design', 'Dashboard', 'Immersive Learning', 'No-code Tool', 'Enterprise Training'],
     meta: 'Enterprise // Immersive L&D',
@@ -260,6 +265,8 @@ const finalHorizonCardsData = [
     logo: 'Assets/prime-video-logo-white.png',
     logoAlt: 'Prime Video logo',
     logoSub: '@BRND STUDIO',
+    href: 'https://www.primevideo.com/detail/0OKPRIFW4S22RJVLB7N5JC8LRH',
+    newTab: true,
     statement: '<span class="hl">Strengthened accessibility</span> by shipping AI-enabled audio description workflows.',
     keywords: ['Accessibility', 'Editing Tool', 'Entertainment', 'Asset Management', 'Project Management Tool'],
     meta: 'Enterprise // Entertainment',
@@ -278,6 +285,7 @@ const finalHorizonCardsData = [
     logo: 'Assets/byju\'s-logo-white.png',
     logoAlt: 'BYJU’S logo',
     logoSub: '@BRND STUDIO',
+    href: '/work/MentorConnect',
     statement: '<span class="hl">Improved subscription renewal</span> by scaling “real” mentorship with MentorConnect',
     keywords: ['Chatbot', 'CMS', 'Primary Research', 'Education', 'A/B Testing', 'Smartfeed', 'Personalization', 'Data Driven Design'],
     meta: 'Consumer // Education',
@@ -296,6 +304,7 @@ const finalHorizonCardsData = [
     logo: 'Assets/Aangan-white-logo.png',
     logoAlt: 'Aangan logo',
     logoSub: '@BRND STUDIO',
+    href: '/work/SurakshaCentral',
     statement: '<span class="hl">Scaled risk identification</span> by standardizing audits for NGOs and government adoption.',
     keywords: ['Data Viz', 'Enterprise Suite', 'Social Service', 'Brand Strategy', 'Usability Testing', 'CMS', 'Design System'],
     meta: 'SaaS // Social Sector',
@@ -2182,7 +2191,8 @@ function revealApp(loaderController) {
 }
 
 async function init() {
-  let loaderController = window.__startupLoaderController || null;
+  let loaderController =
+    window.__activeStartupLoaderController || window.__startupLoaderController || null;
   if (loaderController?.setCallbacks) {
     loaderController.setCallbacks(
       () => {
@@ -2201,6 +2211,10 @@ async function init() {
         revealApp(loaderController);
       }
     );
+    if (loaderController) {
+      window.__activeStartupLoaderController = loaderController;
+      window.__startupLoaderController = loaderController;
+    }
   }
   if (!loaderController) {
     startCoreApp();
@@ -2227,7 +2241,6 @@ async function init() {
 
   await loaderController.donePromise;
   revealApp(loaderController);
-  loaderController.dispose();
   await dependencyPromise;
 }
 
@@ -3309,13 +3322,6 @@ function buildFinalHorizonRows(keywords, cardIndex) {
 }
 
 function getFinalHorizonHoverChipContent(cardIndex) {
-  if (cardIndex === 1) {
-    return {
-      leadingIcon: 'hourglass_top',
-      trailingIcon: '',
-      text: 'coming soon...'
-    };
-  }
   if (cardIndex === 4) {
     return {
       leadingIcon: 'public',
@@ -3328,6 +3334,14 @@ function getFinalHorizonHoverChipContent(cardIndex) {
       leadingIcon: 'public',
       trailingIcon: 'arrow_outward',
       text: 'Open example content: No Country For Old Men'
+    };
+  }
+  const card = finalHorizonCardsData[cardIndex];
+  if (card?.href) {
+    return {
+      leadingIcon: '',
+      trailingIcon: 'arrow_right_alt',
+      text: 'Open case-study'
     };
   }
   return {
@@ -3494,8 +3508,9 @@ function renderFinalHorizonSection() {
       <article
         class="folio-hcard-wrap ${index === 1 ? 'is-active' : ''}"
         data-card-index="${index}"
-        data-hover-chip-icon="${index === 1 ? 'hourglass_top' : 'arrow_right_alt'}"
-        data-hover-chip-text="${index === 1 ? 'coming soon...' : 'Open case-study'}"
+        ${card.href ? `data-href="${card.href}" ${card.newTab ? 'data-new-tab="true"' : ''} role="link" tabindex="0"` : ''}
+        data-hover-chip-icon="arrow_right_alt"
+        data-hover-chip-text="Open case-study"
         style="
           --folio-image-position:${card.imagePosition || '50% 50%'};
           --folio-image-fit:${card.imageFit || 'cover'};
@@ -3550,6 +3565,22 @@ function renderFinalHorizonSection() {
     if (card.classList.contains('is-opportunity')) {
       return;
     }
+    const href = card.dataset.href;
+    const newTab = card.dataset.newTab === 'true';
+    const openCardHref = () => {
+      if (!href) {
+        return;
+      }
+      if (newTab) {
+        window.open(href, '_blank', 'noopener');
+        return;
+      }
+      if (window.LoaderPageHandoff && window.LoaderPageHandoff.isManagedTarget(href)) {
+        window.LoaderPageHandoff.navigate(href);
+        return;
+      }
+      window.location.href = href;
+    };
     card.addEventListener('pointerenter', (event) => {
       if (document.body.dataset.section !== String(FINAL_HORIZON_SECTION_INDEX + 1)) {
         return;
@@ -3566,6 +3597,15 @@ function renderFinalHorizonSection() {
     card.addEventListener('pointerleave', () => {
       hideFinalHorizonHoverChip();
     });
+    if (href) {
+      card.addEventListener('click', openCardHref);
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openCardHref();
+        }
+      });
+    }
   });
 }
 

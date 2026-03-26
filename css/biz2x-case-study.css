@@ -43,6 +43,44 @@
 	line-height: 1.2;
 }
 
+.saison-omni-banner-split {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	overflow: hidden;
+	--folio-split-progress: 50%;
+}
+
+.saison-omni-banner-split-stack {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.saison-omni-banner-split-base,
+.saison-omni-banner-split-overlay {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center top;
+}
+
+.saison-omni-banner-split-overlay {
+	clip-path: inset(0 calc(100% - var(--folio-split-progress, 50%)) 0 0);
+}
+
+@media (max-width: 767px) {
+	.saison-omni-banner-split-base,
+	.saison-omni-banner-split-overlay {
+		object-position: center top;
+	}
+}
+
 .biz2x-overview-panel {
 	margin: 32px 16px 0 16px;
 	padding: 28px 24px;
@@ -78,6 +116,11 @@
 
 .startup-loader.is-receding::before {
 	opacity: 0;
+}
+
+.startup-loader.is-receding,
+.startup-loader.is-hidden {
+	pointer-events: none;
 }
 
 .startup-loader.is-hidden {
@@ -278,13 +321,9 @@
 	isolation: isolate;
 	min-height: var(--biz2x-nav-total-height);
 	padding: 0 calc(var(--space-page-inline) + 20px) 0;
-	background: linear-gradient(
-		180deg,
-		rgba(21, 16, 26, 0.12) 0%,
-		rgba(42, 36, 51, 0.12) 100%
-	);
-	backdrop-filter: blur(16px);
-	-webkit-backdrop-filter: blur(16px);
+	background: #1b1522;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
 	border-bottom: 1px solid rgba(246, 223, 239, 0.22);
 }
 
@@ -477,23 +516,7 @@
 	background-position: 0 1.24em;
 	background-repeat: no-repeat;
 	background-size: var(--scroll-fill-underline-progress, 0%) 2px;
-}
-
-.scroll-fill-char {
-	display: inline-grid;
-}
-
-.scroll-fill-char-layer {
-	grid-area: 1 / 1;
-}
-
-.scroll-fill-char-base {
-	color: inherit;
-}
-
-.scroll-fill-char-accent {
-	opacity: 0;
-	color: var(--scroll-fill-accent, #9e83c7);
+	transition: color 120ms linear;
 }
 
 .biz2x-framework-grid {
@@ -958,11 +981,11 @@
 		padding: 16px;
 	}
 
-	.biz2x-video-description-text {
-		font-size: 16px;
-	}
+.biz2x-video-description-text {
+	font-size: 16px;
+}
 
-	.biz2x-pan-scrub {
-		margin: 20px 0 28px 0;
-	}
+.biz2x-pan-scrub {
+	margin: 20px 0 28px 0;
+}
 }

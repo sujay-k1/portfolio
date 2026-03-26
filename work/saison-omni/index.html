@@ -23,6 +23,7 @@
 <link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px)">
 <link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 767px)">
 <link href="css/biz2x-case-study.css" rel="stylesheet" type="text/css">
+<link href="css/codrops-image-reveal.css" rel="stylesheet" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
@@ -76,14 +77,19 @@
 			<span class="brand-loader-slot" id="brand-loader-slot" aria-hidden="true"></span>
 		</a>
 		<nav class="menu" aria-label="Main menu">
-			<a class="menu-link is-active" href="/work">&larr; Work</a>
-			<a class="menu-link" href="/">About me</a>
-			<a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">Resume &#8599;</a>
+			<a class="menu-link" href="/">about</a>
+			<a class="menu-link is-active" href="/#work">&larr; work</a>
+			<a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a>
 		</nav>
 	</header>
 
 	<div class="project-banner">
-		<video src="Biz2X-assets/BannerVid.mp4" width="100%" height="auto" muted loop autoplay preload="auto"></video>
+		<div class="saison-omni-banner-split" aria-label="Interactive split comparison banner for the Saison Omni case study.">
+			<div class="saison-omni-banner-split-stack">
+				<img class="saison-omni-banner-split-base" src="Assets/card-01-01.png" alt="Base image from the original split-card interaction.">
+				<img class="saison-omni-banner-split-overlay" src="Assets/card-01.png" alt="Overlay image from the original split-card interaction.">
+			</div>
+		</div>
 	</div>
 
 	<div class="biz2x-banner-statement">
@@ -94,9 +100,9 @@
 		<div class="biz2x-overview-grid">
 			<div class="biz2x-overview-column">
 				<div class="biz2x-overview-block">
-					<p class="biz2x-overview-label">About Biz2X</p>
+					<p class="biz2x-overview-label">About</p>
 					<p class="biz2x-overview-copy">
-						Saison Omni served was the technology arm of Saison International, developing enterprise-grade products for the lending sector. Its <span class="highlight">core focus was on co-lending</span>, with steady diversification into <span class="highlight">retail lending and the venture capital</span> market.
+						Saison Omni served as the technology arm of Saison International, developing enterprise-grade products for the lending sector. Its <span class="highlight">core focus was on co-lending</span>, with steady diversification into <span class="highlight">retail lending and the venture capital</span> market.
 					</p>
 				</div>
 				<div class="biz2x-overview-block">
@@ -127,364 +133,247 @@
 		</div>
 	</div>
 	
-<div class="project-content">
+<main class="project-main" role="main">
+	<article class="project-content" aria-label="Saison Omni case study">
 	<div class="section">
 		<div class="section-heading-block">
-			<p class="headline">Context</p>
+			<h2 class="headline">Context</h2>
 		</div>
 		<div class="content-section-block">
-			<p class="section-title">
-				Enterprise lending with real variation.
-			</p>
+			<h3 class="section-title">
+				Multi-product portfolio with a common theme: Lending
+			</h3>
 			<p class="section-body">
-				A loan application journey collects and verifies the following information
+				Saison Omni began their journey by building solutions for a niche space of co-lending. This was projected to grow with NBFCs stepping up into lending partnerships with other financial institutions. At the heart, the solution offered a seamless way for lenders to partner with financial institutions. Over-time as the requirements evolved, we required:
 			</p>
 			<ul>
-				<li>The intent and <span class="scroll-fill">specifics of borrowing</span></li>
-				<li>The <span class="scroll-fill">identity</span> of the borrower</li>
-				<li><span class="scroll-fill">Credit worthiness check</span> (collaterals, co-applicants/guarantors, financials)</li>
-				<li><span class="scroll-fill">Repayment</span> promise and details</li>
+				<li><span class="scroll-fill">Self-governance</span> instead of hard-coded back-end changes</li>
+				<li>Efficienct and consistent <span class="scroll-fill">workflows</span></li>
+				<li><span class="scroll-fill">Wider</span> loan and partnership type support</li>
 			</ul>
-			<img class="modal-image" src="Biz2X-assets/LoanApplicationVisual.png" alt="A high-level flow of three types of customer journeys.">
 			<p class="section-body">
-				These <span class="scroll-fill">vary based on earning profiles</span> (salaried, self employed, business, etc.), <span class="scroll-fill">loan type</span> (secured, unsecured, etc.), lender’s <span class="scroll-fill">schemes</span> and their credit policies.
+				Additionally, Saison Omni also started <span class="scroll-fill">testing waters in the retail lending</span> space with the advantage of having some foundational building blocks. At the same time, started building a <span class="scroll-fill">venture capital portfolio monitoring internal tool</span> for Saison International.
 			</p>
+			<img class="modal-image" src="saison-omni-assets/Saison-omni-product-portfolio.png" alt="A high-level flow of three types of customer journeys.">
 			<p class="section-body">
-				Among the clients Biz2X had, the solutions were custom-made out of previous implementations. The next customer’s need was <span class="scroll-fill">“frankensteined” from forked modules</span>.
+				This diversification required a <span class="scroll-fill">platform layer to extend features</span> and cover the necessary use cases for new products and features.
 			</p>
 		</div>
 	</div>
 
 	<div class="section">
 		<div class="section-heading-block">
-			<p class="headline">Challenge</p>
+			<h2 class="headline">Redesign</h2>
 		</div>
 		<div class="content-section-block">
-			<p class="section-title">
-				Custom journeys were slowing scale and had a weak self-serve completion.
-			</p>
-			<p class="heading3">
-				The scaling problem
-			</p>
+			<h3 class="section-title">
+				Our operational workflows needed a fresh take
+			</h3>
 			<p class="section-body">
-				In practice, Biz2X reused parts of the product but still heavily modified the application journey for each lender. The count of implementation was combinatorial: <span class="scroll-fill">loan types × program types × client-specific requirements</span>.
-			</p>
-			<p class="section-body">
-				That created four issues:
+				Our existing design couldn't stand the test of time and <span class="scroll-fill">had flaws</span>: 
 			</p>
 			<ul>
-				<li><span class="scroll-fill">Design effort</span> went into client-specific rework instead of net-new product problems.</li>
-				<li><span class="scroll-fill">Engineering</span> kept modifying similar functionality and carrying that maintenance overhead across related streams.</li>
-				<li><span class="scroll-fill">Sales</span> lacked strong guardrails around what was configurable versus custom.</li>
-				<li><span class="scroll-fill">New requirements</span> did not consistently strengthen the shared product.</li>
+				<li>Workflows were <span class="scroll-fill">inefficient</span>: Had redundant steps, costed time.</li>
+				<li>Features had <span class="scroll-fill">inconsistent experience</span> due to lack of design patterns.</li>
+				<li>Users were <span class="scroll-fill">unable to form a mental model</span> and their process remained slow.</li>
 			</ul>
 			<p class="section-body">
-				<span class="scroll-fill">Onboarding a lender to UAT typically took 2–3 months</span> (for a single loan product type), and a large part of that time went into journey alignment, UI revisions, and repeated implementation changes.
+				<emphasis><u>Redesign examples:</u></emphasis>
 			</p>
-			<p class="heading3">
-				Usability gaps
-			</p>
-			<img class="modal-image" src="Biz2X-assets/previously.png" alt="An image illustrating an old design that followed a basic forward and back navigation.">
-			<p class="section-body">
-				The existing journey also had <span class="scroll-fill"> usability gaps: Weak linear navigation (Next and back)</span>Poor status visibility, and low reassurance, made self-serve completion s tale of drop-offs, especially in longer applications. <span class="scroll-fill">Clients relied on field agents and in-office teams to complete journeys, adding operational cost</span>. In practice, the customer-facing experience often worked more as a lead-generation layer than a true self-serve application flow.
-			</p>
-		</div>
-	</div>
-
-	<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">Discovery</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				Three journey types appeared predominantly, but all followed one common structure
-			</p>
-			<p class="section-body">
-				To understand whether these journeys were fundamentally different or just differently expressed, I <span class="scroll-fill">mapped six of the most varied live journeys side by side</span>.
-			</p>
-			<p class="section-body">
-				I compared flow order, KYC logic, product-specific requirements, verification methods, and post-eligibility complexity. PMs and credit specialists <span class="scroll-fill">pressure-tested the pattern with edge cases</span>. The engineering lead pushed on feasibility and surfaced weak spots. Sales grounded the solution in something clients could actually buy into.
-			</p>
-			<img class="modal-image" src="Biz2X-assets/StudyingCustomerJourney.png" alt="A high-level flow of three types of customer journeys.">
-			<p class="section-body">
-				A clear pattern emerged: the journeys were different in detail, but not in shape. <span class="scroll-fill">I&nbsp;identified these three themes:</span>.
-			</p>
-			<ul>
-				<li><span class="scroll-fill">Pre-eligibility</span>: Intent and identity of the borrower</li>
-				<li><span class="scroll-fill">Eligibility</span>: Credit limit, rate, and duration</li>
-				<li><span class="scroll-fill">Post-eligibility</span>: Credit-worthiness document, verification, repayment details</li>
-			</ul>
-			<p class="section-body">
-				Next, a robust framework was required that would allow configuration, satisfying all scenarios.
-			</p>
-		</div>
-	</div>
-
-	<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">Configuration framework</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				All possibilities of variations segregated within themes.
-			</p>
-			<p class="section-body">
-				I defined the following for each theme to enforce guardrail that ensured a robust journey:
-			</p>
-			<ul>
-				<li>What it is for (purpose)</li>
-				<li>What can change (configured)</li>
-				<li>What drives those choices</li>
-			</ul>
-			<div class="biz2x-framework-grid">
-				<div class="biz2x-framework-column phase-pre">
-					<div class="biz2x-framework-card phase-pre is-summary">
-						<div class="biz2x-framework-icon" aria-hidden="true">🪪</div>
-						<div class="biz2x-framework-card-content">
-							<h3 class="biz2x-framework-title">Pre-eligibility</h3>
-							<p class="biz2x-framework-copy">
-								<strong>Minimum critical inputs</strong> needed for policy match to decide eligibility.
-							</p>
-							<p class="biz2x-framework-copy">
-								Accurate customer acquisition: Should <strong>feel quick and low-effort</strong> to keep the customer moving.
-							</p>
-						</div>
-					</div>
-					<div class="biz2x-framework-card phase-pre is-config">
-						<div class="biz2x-framework-flip">
-							<div class="biz2x-framework-face biz2x-framework-face--front">
-								<div class="biz2x-framework-card-content">
-									<p class="biz2x-framework-subtitle">What can change?</p>
-									<ul class="biz2x-framework-list">
-										<li><strong>Steps</strong><span class="biz2x-framework-note">Loan amount, POI, POA, Profession</span></li>
-										<li><strong>Order of steps</strong></li>
-										<li><strong>Mandatory vs. skippable</strong></li>
-										<li><strong>Input/ verification method</strong><span class="biz2x-framework-note">Upload, verify via API, only enter</span></li>
-									</ul>
-								</div>
-							</div>
-							<div class="biz2x-framework-face biz2x-framework-face--back">
-								<p class="biz2x-framework-example-mark" aria-hidden="true">“</p>
-								<p class="biz2x-framework-example-copy"><strong>Example:</strong> A lender might choose simple Aadhaar upload, or full Aadhaar verification, depending on API cost and how much it wants to invest in early-stage leads.</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="biz2x-framework-column phase-eligibility">
-					<div class="biz2x-framework-card phase-eligibility is-summary">
-						<div class="biz2x-framework-icon" aria-hidden="true">🕵️</div>
-						<div class="biz2x-framework-card-content">
-							<h3 class="biz2x-framework-title">Eligibility</h3>
-							<p class="biz2x-framework-copy">
-								Determine <strong>whether the applicant qualifies</strong> for the loan.
-							</p>
-							<p class="biz2x-framework-copy">
-								This is where the system <strong>converts the inputs collected</strong> earlier into an eligibility outcome.
-							</p>
-						</div>
-					</div>
-					<div class="biz2x-framework-card phase-eligibility is-config">
-						<div class="biz2x-framework-flip">
-							<div class="biz2x-framework-face biz2x-framework-face--front">
-								<div class="biz2x-framework-card-content">
-									<p class="biz2x-framework-subtitle">What can change?</p>
-									<ul class="biz2x-framework-list">
-										<li><strong>Granularity of the result</strong><span class="biz2x-framework-note">Range of loan amount, ROI, Tenure</span></li>
-										<li><strong>Retry behaviour</strong></li>
-										<li><strong>Cool-down or re-evaluation rules</strong></li>
-									</ul>
-								</div>
-							</div>
-							<div class="biz2x-framework-face biz2x-framework-face--back">
-								<p class="biz2x-framework-example-mark" aria-hidden="true">“</p>
-								<p class="biz2x-framework-example-copy"><strong>Example:</strong> One lender may return a broad eligible/ineligible outcome, while another may return a range for loan amount, tenure, or ROI.</p>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="biz2x-framework-column phase-post">
-					<div class="biz2x-framework-card phase-post is-summary">
-						<div class="biz2x-framework-icon" aria-hidden="true">🗂️</div>
-						<div class="biz2x-framework-card-content">
-							<h3 class="biz2x-framework-title">Post-eligibility</h3>
-							<p class="biz2x-framework-copy">
-								Collect and verify the information needed for <strong>underwriting and deeper scrutiny</strong> of credit worthiness.
-							</p>
-						</div>
-					</div>
-					<div class="biz2x-framework-card phase-post is-config">
-						<div class="biz2x-framework-flip">
-							<div class="biz2x-framework-face biz2x-framework-face--front">
-								<div class="biz2x-framework-card-content">
-									<p class="biz2x-framework-subtitle">What can change?</p>
-									<ul class="biz2x-framework-list">
-										<li><strong>Steps</strong><span class="biz2x-framework-note">UDYAM, FSSAI, GST, ITR, Bank statement...</span></li>
-										<li><strong>Order of steps</strong></li>
-										<li><strong>Mandatory vs. skippable</strong></li>
-										<li><strong>Input/ verification method</strong><span class="biz2x-framework-note">Upload, verify via API, co-applicant verification, collateral verification</span></li>
-									</ul>
-								</div>
-							</div>
-							<div class="biz2x-framework-face biz2x-framework-face--back">
-								<p class="biz2x-framework-example-mark" aria-hidden="true">“</p>
-								<p class="biz2x-framework-example-copy"><strong>Example:</strong> The flow may vary based on whether the lender needs co-applicant verification, collateral checks, or deeper document coupling before approval.</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<p class="section-body">
-				We now had a framework that could lay out a high-level journey to fulfill a diverse range of client's requirement. But, the real outcome is a <span class="scroll-fill">UI that is closely tied to this configurable framework.</span>
-			</p>
-		</div>
-	</div>
-
-		<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">Navigation</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				Pre-eligibility should be quick and snappy, post&#8209;eligibility should have structure and control
-			</p>
-			<p class="section-body">
-				<emphasis><u>Linear navigation</u></emphasis>: Allow the user to complete the step and move forward. Go back when required. Best for 5-6 single-action steps.
-			</p>
-			<p class="section-body">
-				<emphasis><u>Hub-and-spoke navigation</u></emphasis>: The user navigates from a central index page to their destination and comes back. Best for multi-action steps (more than 5).
-			</p>
-			<p class="heading3">
-				We had a strong guiding principle from the framework. 
-			</p>
-			<p class="section-body">
-				On pre-eligibility steps, users were still deciding whether to continue, so the design had to reduce hesitation and build momentum. <span class="scroll-fill">Pre-eligibility had to be short and snappy.</span>
-			</p>
+			<h4 class="heading3">
+				Saving 1hr/week for ops teams by redesigning report generation workflow. 
+			</h4>
 			<div class="biz2x-video-toggle-shell">
-				<div class="biz2x-video-toggle-group" role="tablist" aria-label="Pre-eligibility variants">
-					<button class="biz2x-video-toggle is-active" type="button" role="tab" aria-selected="true" data-video-src="Biz2X-assets/Stepper1_copy_1.mp4" data-video-description="Prominent step names, strong visual cues, subtle playfulness.">Standard</button>
-					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="Biz2X-assets/Stepper2_copy_1.mp4" data-video-description="More space for content, suitable for journey which have content-eavy steps.">Compact</button>
-					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="Biz2X-assets/Stepper3_copy_1.mp4" data-video-description="For assisted journeys, field agents require additional controls like sync.">Additional function</button>
+				<div class="biz2x-video-toggle-group" role="tablist" aria-label="Report generation workflow variants">
+					<button class="biz2x-video-toggle is-active" type="button" role="tab" aria-selected="true" data-media-type="video" data-media-src="saison-omni-assets/Screen Recording 2026-03-25 at 8.51.39 PM.mov" data-media-alt="Redesigned report generation workflow for operations teams." data-video-description="Redesigned report generation flow with a faster, clearer workflow.">Redesigned UI</button>
+					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-media-type="image" data-media-src="saison-omni-assets/Old_reports.png" data-media-alt="Legacy report generation interface used by operations teams." data-video-description="Legacy report generation UI with a slower, more cumbersome workflow.">Old UI</button>
 				</div>
-				<video class="modal-image biz2x-toggle-video" src="Biz2X-assets/Stepper1_copy_1.mp4" muted loop autoplay preload="auto" playsinline alt="A guided linear flow for the pre-eligibility experience."></video>
+				<img class="modal-image biz2x-toggle-image" src="saison-omni-assets/Old_reports.png" alt="Legacy report generation interface used by operations teams." hidden>
+				<video class="modal-image biz2x-toggle-video" src="saison-omni-assets/Screen Recording 2026-03-25 at 8.51.39 PM.mov" muted loop autoplay preload="auto" playsinline aria-label="Redesigned report generation workflow for operations teams.">Redesigned report generation workflow for operations teams.</video>
 				<div class="biz2x-video-description" aria-live="polite">
-					<p class="biz2x-video-description-text">Prominent step names, strong visual cues, subtle playfulness.</p>
+					<p class="biz2x-video-description-text">Redesigned report generation flow with a faster, clearer workflow.</p>
+				</div>
+			</div>
+			
+			<div class="codrops-image-reveal-root codrops-image-reveal">
+				<div class="note-container">
+					<p class="emoji">🎯 </p>
+					<p class="note">
+						<a class="content__text-link" href="#report-slideshow" aria-haspopup="dialog" aria-controls="report-slideshow" data-fx="14" data-img="saison-omni-assets/Reports/1.png,saison-omni-assets/Reports/2.png,saison-omni-assets/Reports/3.png,saison-omni-assets/Reports/4.png,saison-omni-assets/Reports/5.png,saison-omni-assets/Reports/6.png,saison-omni-assets/Reports/7.png,saison-omni-assets/Reports/8.png,saison-omni-assets/Reports/9.png,saison-omni-assets/Reports/10.png,saison-omni-assets/Reports/11.png,saison-omni-assets/Reports/12.png,saison-omni-assets/Reports/13.png,saison-omni-assets/Reports/14.png,saison-omni-assets/Reports/15.png,saison-omni-assets/Reports/16.png,saison-omni-assets/Reports/17.png,saison-omni-assets/Reports/18.png,saison-omni-assets/Reports/19.png,saison-omni-assets/Reports/20.png,saison-omni-assets/Reports/21.png,saison-omni-assets/Reports/22.png,saison-omni-assets/Reports/23.png">
+							Read the entire story about this here.
+						</a>
+					</p>
+				</div>
+			</div>
+			<h4 class="heading3">
+				Reduced support tickets by 30% related to account reconciliation within 2 weeks of shipping redesigned workflow 
+			</h4>
+			<div class="biz2x-video-toggle-shell">
+				<div class="biz2x-video-toggle-group" role="tablist" aria-label="Accounting workflow variants">
+					<button class="biz2x-video-toggle is-active" type="button" role="tab" aria-selected="true" data-video-src="saison-omni-assets/old-accounting.mov" data-video-alt="Redesigned accounting workflow." data-video-description="Redesigned accounting workflow with integrated financial period adjustment">New Design</button>
+					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="saison-omni-assets/New-Accounting.mov" data-video-alt="Previous accounting workflow." data-video-description="Financial period, sub-financial period was unlinked, and disconnected from the core workflow, that was always missed by users to encounter errors">Old Design</button>
+				</div>
+				<video class="modal-image biz2x-toggle-video" src="saison-omni-assets/old-accounting.mov" muted loop autoplay preload="auto" playsinline aria-label="Redesigned accounting workflow.">Redesigned accounting workflow with integrated financial period adjustment</video>
+				<div class="biz2x-video-description" aria-live="polite">
+					<p class="biz2x-video-description-text">Redesigned accounting workflow with integrated financial period adjustment</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<h2 class="headline">Filling gaps</h2>
+		</div>
+		<div class="content-section-block">
+			<h3 class="section-title">
+				Missing overview of current state and tasks to complete
+			</h3>
+			<p class="section-body">
+				<span class="scroll-fill">Prompt, efficient, and accurate task completion</span> are crucial tenets for enterprise users. Surprisingly, we <span class="scroll-fill">did not have an overview</span> to anchor our users daily actions with a tasks list and reflections with a dashboard.
+			</p>
+			<h4 class="heading3">
+				Reduced TAT on actions by 10% with dashboard and tasks list.
+			</h4>
+			<video class="modal-image" src="saison-omni-assets/Dashboard_proto.mp4" muted loop autoplay preload="auto" aria-label="A task-oriented post-eligibility experience with stronger status visibility.">A task-oriented post-eligibility experience with stronger status visibility.</video>
+		</div>
+	</div>
+
+	<div class="section">
+		<div class="section-heading-block">
+			<h2 class="headline">Feature modularity</h2>
+		</div>
+		<div class="content-section-block">
+			<h3 class="section-title">
+				Flexibility of features for wide use-cases across product lines
+			</h3>
+			<h4 class="heading3">
+				Feature level modularity:
+			</h4>
+			<p class="section-body">
+				By keeping potential/future use-cases of any feature for other product lines into perspective, we not only <span class="scroll-fill">saved cost of development and faster shipping</span>, but <span class="scroll-fill">easier maintenance</span> of features going on. Here's an example:
+			</p>
+			<p class="section-body">
+				Configuration of <span class="scroll-fill">policy rules in BRE</span> requires setting up of complex conditions, formulas, functions, etc. Another use case of setting up formulas, functions, and conditions also appears in <span class="scroll-fill">portolfio monitoring</span>, and setting up covenants. 
+			</p>
+			<img class="modal-image biz2x-toggle-image" src="saison-omni-assets/Operation.png" alt="DocuTrust is a premium opt-in feature that lets lenders have an initial layer of verification of documents shared by the originator.">
+			<h4 class="heading3">
+				Design Patterns:
+			</h4>
+			<p class="section-body">
+				A little about listing page
+			</p>
+			<div
+				id="listing-slideshow"
+				class="report-slideshow report-slideshow--inline is-open"
+				aria-hidden="false"
+				data-listing-images="saison-omni-assets/Listing-page/Company list.png,saison-omni-assets/Listing-page/Fields.png,saison-omni-assets/Listing-page/Inside campaign.png,saison-omni-assets/Listing-page/Questions.png,saison-omni-assets/Listing-page/Validations.png"
+			>
+				<div class="report-slideshow-dialog" role="region" aria-label="Listing page slideshow">
+					<div class="report-slideshow-stage">
+						<div class="report-slideshow-header">
+							<div class="report-slideshow-progress-wrap" aria-hidden="true">
+								<svg class="report-slideshow-progress" viewBox="0 0 44 44">
+									<circle class="report-slideshow-progress-track" cx="22" cy="22" r="18"></circle>
+									<circle class="report-slideshow-progress-ring" cx="22" cy="22" r="18"></circle>
+								</svg>
+								<button class="report-slideshow-toggle" id="listing-slideshow-toggle" type="button" aria-label="Pause slideshow" aria-pressed="false">
+									<span class="report-slideshow-toggle-icon is-pause" aria-hidden="true"></span>
+								</button>
+							</div>
+						</div>
+						<button class="report-slideshow-arrow is-prev" type="button" aria-label="Previous image" data-listing-slideshow-prev>
+							<span aria-hidden="true">&#8592;</span>
+						</button>
+						<div class="report-slideshow-viewport">
+							<p class="report-slideshow-counter" id="listing-slideshow-counter">1 / 5</p>
+							<div class="report-slideshow-frame">
+								<img class="report-slideshow-image" id="listing-slideshow-image" alt="Listing page slide">
+							</div>
+						</div>
+						<button class="report-slideshow-arrow is-next" type="button" aria-label="Next image" data-listing-slideshow-next>
+							<span aria-hidden="true">&#8594;</span>
+						</button>
+					</div>
+					<div class="report-slideshow-thumbs" id="listing-slideshow-thumbs" aria-label="Listing page thumbnails"></div>
 				</div>
 			</div>
 			<p class="section-body">
-				This directly addressed the part of the journey where <span class="scroll-fill">assisted completion and drop-offs</span> were most visible.
+				
 			</p>
-			<hr>
+		</div>
+	</div>
+	<div class="section">
+		<div class="section-heading-block">
+			<h2 class="headline">New revenue avenues</h2>
+		</div>
+		<div class="content-section-block">
+			<h3 class="section-title">
+				AI-assisted document verification as a new monetizable workflow
+			</h3>
+			<h4 class="heading3">
+				Reduced verification turn-around time by 15% in a pilot
+			</h4>
+			<div class="biz2x-video-toggle-shell">
+				<div class="biz2x-video-toggle-group" role="tablist" aria-label="Document verification variants">
+					<button class="biz2x-video-toggle is-active" type="button" role="tab" aria-selected="true" data-media-type="image" data-media-src="saison-omni-assets/OCR.jpg" data-media-alt="DocuTrust is a premium opt-in feature that lets lenders have an initial layer of verification of documents shared by the originator." data-video-description="DocuTrust is a premium opt-in feature that lets lenders have an initial layer of verification of documents shared by the originator.">AI-powered DocuTrust</button>
+					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-media-type="image" data-media-src="saison-omni-assets/Mindmapping_ Brainstorming.png" data-media-alt="Detailed workflow that outlines different scenarios" data-video-description="Detailed workflow that outlines different scenarios">How does it work?</button>
+				</div>
+				<img class="modal-image biz2x-toggle-image" src="saison-omni-assets/OCR.jpg" alt="DocuTrust is a premium opt-in feature that lets lenders have an initial layer of verification of documents shared by the originator.">
+				<div class="biz2x-video-description" aria-live="polite">
+					<p class="biz2x-video-description-text">DocuTrust is a premium opt-in feature that lets lenders have an initial layer of verification of documents shared by the originator.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="section">
+		<div class="section-heading-block">
+			<h2 class="headline">Design Operations</h2>
+		</div>
+		<div class="content-section-block">
+			<h3 class="section-title">
+				Boosting the quality and efficiency of the design team
+			</h3>
+			<h4 class="heading3">
+				Consistency in Design outcome, raised quality of design delivery
+			</h4>
 			<p class="section-body">
-				The later part behaved differently. Once users reached post-eligibility, the application stopped behaving like a simple form and <span class="scroll-fill">started behaving like a task system</span>, with multiple collaterals, multiple co-applicants, parallel verification flows, bank linking, and repeated back-and-forth across sessions and actors. Post-eligibility had to <span class="scroll-fill">offer complete control, visibility, and flexibility.</span>
+				I <span class="scroll-fill">defined and aligned the team with SOPs for Product Design, UX Writing</span>. Built an agentic Figma plugin that reviewed Figma designs against the design guidelines and nudged junior designers to self-critique their work.
 			</p>
-			<video class="modal-image" src="Biz2X-assets/iPhoneAir_copy_2.mp4" muted loop autoplay preload="auto" alt="A task-oriented post-eligibility experience with stronger status visibility."></video>
+			<video class="modal-image" src="saison-omni-assets/FigmaPlugin1.mp4" muted loop autoplay preload="auto" aria-label="A task-oriented post-eligibility experience with stronger status visibility.">A task-oriented post-eligibility experience with stronger status visibility.</video>
 			<p class="section-body">
-				I shifted to a more task-oriented model with <span class="scroll-fill">stronger status visibility</span>, so users could manage multiple entities, dependent tasks, and re-entry without losing orientation.
+				To ensure consistency of association of features and actions with icons, in addition to help in the <span class="scroll-fill">discovery of icons semantically</span>, built another Figma plugin. 
 			</p>
+			<img class="modal-image" src="saison-omni-assets/Icons_Library_Plugin.png" alt="A high-level flow of three types of customer journeys.">
 			<!--
-			<img class="modal-image" src="Biz2X-assets/previously.png" alt="An image illustrating an old design that followed a basic forward and back navigation.">
-			<p class="heading3">&#10148; Rejected alternative: Linear throughout</p>
+			<h4 class="heading3">
+				Thoroughness in Design process
+			</h4>
 			<p class="section-body">
-				This worked for the early steps, but broke down later. Users lacked status visibility, the flow still felt endless, and a stepper stopped helping once the journey became long and interdependent.
-			</p>
-			<p class="heading3">&#10148; Rejected alternative: Hub-and-spoke throughout</p>
-			<p class="section-body">
-				This handled complexity better, but made the opening steps heavier than they needed to be. The answer was not one navigation model. It was <span class="scroll-fill">two complementary models inside one framework</span>.
+				
 			</p>
 			-->
 		</div>
 	</div>
-
 	<div class="section">
 		<div class="section-heading-block">
-			<p class="headline">Platform Capability</p>
+			<h2 class="headline">IMPACT</h2>
 		</div>
 		<div class="content-section-block">
-			<p class="section-title">
-				Turn the journey model into a platform capability.
-			</p>
-			<p class="section-body">
-				Beyond the configuration of picking and ordering the steps for pre-eligibility and post-eligibility, verification and data storing methods were also configurable.
-			</p>
-			<p class="heading3">Here's an example of how PAN verification variations existed</p>
-			<div class="biz2x-pan-scrub">
-				<div class="biz2x-pan-scrub-sticky">
-					<div class="biz2x-pan-scrub-window">
-						<img class="modal-image biz2x-pan-scrub-image" src="Biz2X-assets/PAN scenarios.png" alt="A horizontally scrubbed view of PAN verification variations across scenarios.">
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-<!--
-	<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">System</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				Turn the journey model into a platform capability.
-			</p>
-			<p class="section-body">
-				I designed the solution as a reusable system: KYC patterns, navigation patterns, stepper behavior, and multi-entity handling. That made journeys <span class="scroll-fill">faster to assemble, easier to maintain, and more consistent</span> across clients.
-			</p>
-			<img class="modal-image" src="Biz2X-assets/system.png" alt="A system view of the configurable journey framework.">
-			<p class="section-body">
-				The engineering team owned the configuration layer. I owned the design framework it powered. The value was not just config files. The value was a <span class="scroll-fill">stable journey logic that could be configured</span> instead of repeatedly reinvented.
-			</p>
-			<p class="section-body">
-				This was also the key product tradeoff. The team initially leaned toward lower-level configurability, such as making KYC modules more flexible. I pushed for <span class="scroll-fill">configurable journey structure and navigation</span>, because that is where clients and end users would feel the value most clearly.
-			</p>
-			<p class="section-body">
-				To move fast, I scoped the first version to <span class="scroll-fill">India and the first set of loan families</span>: personal or unsecured, secured, and solar, instead of absorbing other geographies in the same pass.
-			</p>
-		</div>
-	</div>
--->
-	<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">Impact</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				Faster onboarding, higher completion, lower design dependency.
-			</p>
+			<h3 class="section-title">
+				Multi-faceted product success led by design
+			</h3>
 			<ul>
-				<li><span class="scroll-fill">Reduced lender onboarding to UAT by 60%</span>, from a typical 2–3 month cycle.</li>
-				<li><span class="scroll-fill">Improved application completion by 3×</span> in the first implementation, benchmarked against other live implementations over a 3-week period.</li>
-				<li><span class="scroll-fill">Reduced repeated design dependency</span> for new implementations.</li>
-				<li><span class="scroll-fill">Improved consistency and maintainability</span> across journeys.</li>
+				<li><span class="scroll-fill">Improved operational efficiency</span>, saving 1hr/week for ops teams. </li>
+				<li>Designed self-serve account reconciliation configuration, <span class="scroll-fill">reducing support escalations by 30%</span>.</li>
+				<li>Launched AI-assisted document verification as a new premium feature, <span class="scroll-fill">reducing verification turnaround time by 15%</span>.</li>
+				<li>Built an AI-based Figma plugin to review design, raising design consistency and <span class="scroll-fill">reducing dependency on senior bandwidth</span>.</li>
 			</ul>
-			<p class="section-body">
-				For a platform used by major financial institutions and built to support end-to-end lending operations, these improvements matter beyond a single flow. <span class="scroll-fill">Faster onboarding means new programs can move into implementation with less bespoke effort</span>; stronger completion means more of the borrower journey can stay self-serve instead of falling back to assisted operations.
-			</p>
-			<p class="section-body">
-				Measurement note: onboarding time refers to bringing a lender onto the platform through UAT. Completion improvement was benchmarked against other live implementations during the first rollout window.
-			</p>
 		</div>
 	</div>
+</article>
+</main>
 
-	<div class="section">
-		<div class="section-heading-block">
-			<p class="headline">Reflection</p>
-		</div>
-		<div class="content-section-block">
-			<p class="section-title">
-				Platform design starts with the right boundary.
-			</p>
-			<p class="section-body">
-				This project taught me that the biggest UX win in enterprise products is often not a better screen, but <span class="scroll-fill">a better boundary</span>: what should stay fixed, what should vary, and what should remain light customization.
-			</p>
-			<p class="section-body">
-				That is what turned <span class="scroll-fill">repeated custom work into a scalable platform capability</span>.
-			</p>
-		</div>
-	</div>
-
-</div>
-
-	
 <!--Image viewer modal-->
 
 <div id="myModal" class="modal">
@@ -492,6 +381,39 @@
     <img class="modal-content" id="img01" alt="Expanded view of the selected image">
     <!-- Close Button -->
     <span class="close">&times;</span>
+</div>
+
+<div id="report-slideshow" class="report-slideshow" aria-hidden="true">
+	<div class="report-slideshow-backdrop" data-slideshow-close></div>
+	<div class="report-slideshow-dialog" role="dialog" aria-modal="true" aria-label="Report slideshow">
+		<div class="report-slideshow-stage">
+			<div class="report-slideshow-header">
+				<div class="report-slideshow-progress-wrap" aria-hidden="true">
+					<svg class="report-slideshow-progress" viewBox="0 0 44 44">
+						<circle class="report-slideshow-progress-track" cx="22" cy="22" r="18"></circle>
+						<circle class="report-slideshow-progress-ring" cx="22" cy="22" r="18"></circle>
+					</svg>
+					<button class="report-slideshow-toggle" id="report-slideshow-toggle" type="button" aria-label="Pause slideshow" aria-pressed="false">
+						<span class="report-slideshow-toggle-icon is-pause" aria-hidden="true"></span>
+					</button>
+				</div>
+			</div>
+			<button class="report-slideshow-close" type="button" aria-label="Close slideshow" data-slideshow-close>&times;</button>
+			<button class="report-slideshow-arrow is-prev" type="button" aria-label="Previous image" data-slideshow-prev>
+				<span aria-hidden="true">&#8592;</span>
+			</button>
+			<div class="report-slideshow-viewport">
+				<p class="report-slideshow-counter" id="report-slideshow-counter">1 / 23</p>
+				<div class="report-slideshow-frame">
+					<img class="report-slideshow-image" id="report-slideshow-image" alt="Report slide">
+				</div>
+			</div>
+			<button class="report-slideshow-arrow is-next" type="button" aria-label="Next image" data-slideshow-next>
+				<span aria-hidden="true">&#8594;</span>
+			</button>
+		</div>
+		<div class="report-slideshow-thumbs" id="report-slideshow-thumbs" aria-label="Report thumbnails"></div>
+	</div>
 </div>
 
 	<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
@@ -551,12 +473,22 @@ span.onclick = function() {
 //		}
     </script>
 
+	<script src="js/TweenMax.min.js"></script>
+	<script src="js/imagesloaded.pkgd.min.js"></script>
+	<script src="js/charming.min.js"></script>
 	<script src="js/scroll-fill.js"></script>
 	<script src="js/biz2x-framework-cards.js"></script>
 	<script src="js/biz2x-video-toggle.js"></script>
 	<script src="js/biz2x-pan-scrub.js"></script>
+	<script src="js/loader-page-handoff.js"></script>
+	<script src="js/startup-loader-core.js"></script>
 	<script src="js/biz2x-header-loader.js"></script>
 	<script src="js/case-study-index.js"></script>
+	<script src="js/codrops-image-reveal-demo.js"></script>
+	<script src="js/report-slideshow.js"></script>
+	<script src="js/listing-slideshow.js"></script>
+	<script src="js/saison-omni-banner-split.js"></script>
+	<script src="js/next-case-study-card.js"></script>
 	
 </body>
 </html>

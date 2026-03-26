@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="utf-8">
@@ -22,6 +22,7 @@
 
 <link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px)">
 <link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 767px)">
+<link href="css/biz2x-case-study.css" rel="stylesheet" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
@@ -30,37 +31,113 @@
 
 </head>
 
-<body class="case-study-page">
-	
-	<div class="header">
-		<div class="container">
-			<div class="logo">
-				<img class ="logo-piece1a-static" src="Assets/sk-dark.png" alt="Logo element for Sujay Kumar">
-				<img class ="logo-piece2-static" src="Assets/Arrow.png" alt="Logo element for Sujay Kumar">
+<body class="case-study-page biz2x-page app-loading">
+
+	<div class="startup-loader" id="startup-loader" aria-hidden="true">
+		<div class="startup-loader-stage">
+			<span class="startup-loader-measure" id="startup-loader-measure"></span>
+			<div class="startup-loader-box-shadow" id="startup-loader-box-shadow"></div>
+			<div class="startup-loader-box-wrap" id="startup-loader-box-wrap">
+				<div class="startup-loader-box" id="startup-loader-box">
+					<span class="startup-loader-handle startup-loader-handle-tl"></span>
+					<span class="startup-loader-handle startup-loader-handle-tr"></span>
+					<span class="startup-loader-handle startup-loader-handle-bl"></span>
+					<span class="startup-loader-handle startup-loader-handle-br"></span>
+					<div class="startup-loader-content" id="startup-loader-content">
+						<div class="startup-loader-mask" id="startup-loader-mask">
+							<div class="startup-loader-mask-group" id="startup-loader-mask-group">
+								<span class="startup-loader-mask-left" id="startup-loader-mask-left"></span>
+								<span class="startup-loader-mask-right" id="startup-loader-mask-right"></span>
+							</div>
+						</div>
+						<div class="startup-loader-typing" id="startup-loader-typing">
+							<span class="startup-loader-typing-text" id="startup-loader-typing-text"></span>
+							<span class="startup-loader-caret" id="startup-loader-caret"></span>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="buttons">
-				<div class="navigation-menu-button"><a href="/work">&larr; Work</a></div>
-				<div class="navigation-menu-button"><a href="/">About me</a></div>
-				<div class="navigation-menu-button"><a href="Assets/Resume-SK.pdf" target="_blank">Resume &#8599;</a></div>
+			<div class="startup-loader-cursor" id="startup-loader-cursor">
+				<svg class="startup-loader-cursor-arrow" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M3 3.2L17.8 9.3L11.4 11.5L9.2 17.8L3 3.2Z" fill="#0A0A0A" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+				</svg>
+				<svg class="startup-loader-cursor-resize" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M2.2 9H15.8" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+					<path d="M5.4 5.8L2.2 9L5.4 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+					<path d="M12.6 5.8L15.8 9L12.6 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
 			</div>
 		</div>
 	</div>
+
+	<header class="top-nav" aria-label="Primary navigation">
+		<a class="brand" href="/" aria-label="Home">
+			<span class="brand-loader-slot" id="brand-loader-slot" aria-hidden="true"></span>
+		</a>
+		<nav class="menu" aria-label="Main menu">
+			<a class="menu-link" href="/">about</a>
+			<a class="menu-link is-active" href="/#work">&larr; work</a>
+			<a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a>
+		</nav>
+	</header>
 	
 	<div class="project-banner">
-		<video src="MentorConnect-assets/MentorConnect-Banner.mp4" width="100%" height="auto" muted loop autoplay preload="auto"></video>
+		<video src="MentorConnect-assets/MentorConnect-Banner.mp4" width="100%" height="auto" muted loop autoplay preload="auto" aria-label="Banner video for the MentorConnect case study.">Banner video for the MentorConnect case study.</video>
+	</div>
+
+	<div class="biz2x-banner-statement">
+		Improved student performance and subscription renewal for India's largest EduTech.
+	</div>
+
+	<div class="biz2x-overview-panel">
+		<div class="biz2x-overview-grid">
+			<div class="biz2x-overview-column">
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">About</p>
+					<p class="biz2x-overview-copy">
+						BYJU'S built MentorConnect to help students and parents stay connected with mentors, with the larger goal of improving <span class="highlight">learning consistency, confidence, and academic outcomes</span>.
+					</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Project Overview</p>
+					<p class="biz2x-overview-copy">
+						This project reframed MentorConnect from a passive chat utility into a <span class="highlight">proactive mentorship layer</span> with contextual recommendations, habit-forming nudges, and stronger parent collaboration to support <span class="highlight">student success at scale</span>.
+					</p>
+				</div>
+			</div>
+			<div class="biz2x-overview-column">
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Role</p>
+					<p class="biz2x-overview-copy">Product Designer</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Team</p>
+					<p class="biz2x-overview-copy">Mentors, students, parents, product stakeholders, and engineers</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Impact</p>
+					<ul class="biz2x-overview-list">
+						<li>Validated the concept through a <span class="highlight">1,000-user pilot</span> before scaling further</li>
+						<li>Expanded the rollout to <span class="highlight">30,000 students</span> with similar reception</li>
+						<li>Improved engagement and <span class="highlight">student performance signals</span> through proactive mentoring</li>
+					</ul>
+				</div>
+			</div>
+		</div>
 	</div>
 	
-	<div class="project-content">
+	<main class="project-main" role="main">
+	<article class="project-content" aria-label="BYJU'S MentorConnect: A product design case study">
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Introduction
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-			<p class="section-title">
+			<h3 class="section-title">
 				Providing personalized, actionable mentorship to help students set and achieve their learning goals.
-			</p>
+			</h3>
 			<p class="section-body">
 				BYJU’S, one of India’s top Ed-Tech startups, serves a vast student base with online classes and recorded learning materials. To ensure customer satisfaction, they employ customer success specialists, known as mentors, who are responsible for supporting students' learning goals and managing parents' expectations.
 			</p>
@@ -75,14 +152,14 @@
 		
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				The problem
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-			<p class="section-title">
+			<h3 class="section-title">
 				MentorConnect had limited outcome in driving students success.
-			</p>
+			</h3>
 			<p class="section-body">
 				MentorConnect offered students and parents to connect with mentors on chat, but there was no active engagement. Students would reach out to the mentor once in a while for typical issue resolution in scenarios when unable to join a class or when unable to login, etc.
 			</p>
@@ -97,14 +174,14 @@
 	
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Business objective
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Identifying student success as MentorConnect’s success criteria
-                </p>
+                </h3>
                 <p class="section-body">
                     The following the success criteria with stakeholders were identified through workshops:
                 </p>
@@ -122,34 +199,34 @@
 
 		<div class="section">
         	<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Research
-			</p>
+			</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Effective mentorship requires trust. <u>Trust is established through Consistency, Expertise, and Positive Relationships.</u>
-                </p>
+                </h3>
                 <p class="section-body">
 					<a href="https://grad.uw.edu/current-students/student-success/mentoring/" target="_blank">Mentoring is to help and support people to manage their learning to maximize their potential, develop their skills, and improve their performance.</a>
                 </p>
 				<p class="section-body">
 					Through generative primary research with students from various age-groups, academic performances, their parents and mentors, several interesting stories and insights were uncovered.
                 </p>
-				<p class="heading3">Some students struggled to prioritize their favorite subjects, while others found it challenging to balance academics with other activities. It became evident that managing schedules and keeping up with coursework was a common issue. At the same time, parents sought better ways to track their child’s progress and provide timely support.</p>
+				<h4 class="heading3">Some students struggled to prioritize their favorite subjects, while others found it challenging to balance academics with other activities. It became evident that managing schedules and keeping up with coursework was a common issue. At the same time, parents sought better ways to track their child’s progress and provide timely support.</h4>
             </div>
 		</div>
 		
 		<div class="section">
         	<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				The findings
-			</p>
+			</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Effective mentorship should have a holistic approach, combining parental collaboration, targeted performance insights, social influence, gamification, and localized communication to drive student engagement and academic success.
-                </p>
+                </h3>
 				<p class="section-body">There are three crucial aspects in the Student’s Journey:</p>
 				<ul>
 					<li><strong>Time Management</strong></li>
@@ -179,14 +256,14 @@
 		</div>
 		<div class="section">
         	<div class="section-heading-block">
-				<p class="headline">
+				<h2 class="headline">
 					The solution
-				</p>
+				</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Personalized, contextual, and regularly timed nudges are instrumental in forming habits.
-                </p>
+                </h3>
 				<p class="section-body">
 				From the core themes of improving attendance, all the use cases were identified, like attendance, assignment submission, regular or on-time completion of course milestones, etc.
 				</p>
@@ -199,9 +276,9 @@
 						For each scenario of missed class, levels of engagement, performance, etc., there is a personalized recommendation for the student to take the next step.
 					</p>
 				</div>
-                <p class="heading3">
+                <h4 class="heading3">
                     How does this work?
-                </p>
+                </h4>
 				<img class="modal-image" src="MentorConnect-assets/Flow.png" alt="Algorithm chart for a self-sustaining feed generation.">
 				<p class="section-body">We worked on the following aspects to make a self-sustaining home feed possible:</p>
 				<ul><span>
@@ -219,7 +296,7 @@
                 </ul>
 				<p class="section-body">Example table for a card’s lifecycle:</p>
 				<img class="modal-image" src="MentorConnect-assets/Framework.png" alt="A list of use case scenarios utilizing the framework of generating the home feed elements.">
-				<p class="heading3">Delivery medium</p>
+				<h4 class="heading3">Delivery medium</h4>
 				<div style="width: 100%; overflow: hidden">
 					<div class="loop_wrapA">
 						<img src="MentorConnect-assets/row1.png" alt="A collection of homefeed cards"/>
@@ -240,14 +317,14 @@
 		
 		<div class="section">
         	<div class="section-heading-block">
-				<p class="headline">
+				<h2 class="headline">
 					Outcome
-				</p>
+				</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     MentorConnect features are now part of the premium app increasing the engagement on the platform and boosting student’s performance.
-                </p>
+                </h3>
 				<p class="section-body">
 				A pilot was run first on 1000 users and their performance and engagement were tracked over a period of 3 weeks. Eventually, the update was pushed to a larger set of 30,000 students, which had similar reception.
 				</p>
@@ -324,7 +401,11 @@ span.onclick = function() {
 //		}
     </script>
 
+	<script src="js/loader-page-handoff.js"></script>
+	<script src="js/startup-loader-core.js"></script>
+	<script src="js/biz2x-header-loader.js"></script>
 	<script src="js/case-study-index.js"></script>
+	<script src="js/next-case-study-card.js"></script>
 	
 </body>
 </html>

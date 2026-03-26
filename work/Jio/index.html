@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta charset="utf-8">
@@ -31,24 +31,58 @@
 
 </head>
 
-<body class="case-study-page">
-	
-	<div class="header">
-		<div class="container">
-			<div class="logo">
-				<img class ="logo-piece1a-static" src="Assets/sk-dark.png" alt="Logo element for Sujay Kumar">
-				<img class ="logo-piece2-static" src="Assets/Arrow.png" alt="Logo element for Sujay Kumar">
+<body class="case-study-page biz2x-page app-loading">
+
+	<div class="startup-loader" id="startup-loader" aria-hidden="true">
+		<div class="startup-loader-stage">
+			<span class="startup-loader-measure" id="startup-loader-measure"></span>
+			<div class="startup-loader-box-shadow" id="startup-loader-box-shadow"></div>
+			<div class="startup-loader-box-wrap" id="startup-loader-box-wrap">
+				<div class="startup-loader-box" id="startup-loader-box">
+					<span class="startup-loader-handle startup-loader-handle-tl"></span>
+					<span class="startup-loader-handle startup-loader-handle-tr"></span>
+					<span class="startup-loader-handle startup-loader-handle-bl"></span>
+					<span class="startup-loader-handle startup-loader-handle-br"></span>
+					<div class="startup-loader-content" id="startup-loader-content">
+						<div class="startup-loader-mask" id="startup-loader-mask">
+							<div class="startup-loader-mask-group" id="startup-loader-mask-group">
+								<span class="startup-loader-mask-left" id="startup-loader-mask-left"></span>
+								<span class="startup-loader-mask-right" id="startup-loader-mask-right"></span>
+							</div>
+						</div>
+						<div class="startup-loader-typing" id="startup-loader-typing">
+							<span class="startup-loader-typing-text" id="startup-loader-typing-text"></span>
+							<span class="startup-loader-caret" id="startup-loader-caret"></span>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="buttons">
-				<div class="navigation-menu-button"><a href="/work">&larr; Work</a></div>
-				<div class="navigation-menu-button"><a href="/">About me</a></div>
-				<div class="navigation-menu-button"><a href="Assets/Resume-SK.pdf" target="_blank">Resume &#8599;</a></div>
+			<div class="startup-loader-cursor" id="startup-loader-cursor">
+				<svg class="startup-loader-cursor-arrow" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M3 3.2L17.8 9.3L11.4 11.5L9.2 17.8L3 3.2Z" fill="#0A0A0A" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+				</svg>
+				<svg class="startup-loader-cursor-resize" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M2.2 9H15.8" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+					<path d="M5.4 5.8L2.2 9L5.4 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+					<path d="M12.6 5.8L15.8 9L12.6 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
 			</div>
 		</div>
 	</div>
+
+	<header class="top-nav" aria-label="Primary navigation">
+		<a class="brand" href="/" aria-label="Home">
+			<span class="brand-loader-slot" id="brand-loader-slot" aria-hidden="true"></span>
+		</a>
+		<nav class="menu" aria-label="Main menu">
+			<a class="menu-link" href="/">about</a>
+			<a class="menu-link is-active" href="/#work">&larr; work</a>
+			<a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a>
+		</nav>
+	</header>
 	
 	<div class="project-banner">
-		<video src="Jio-assets/Jio-banner.mp4" width="100%" height="auto" muted loop autoplay preload="auto"></video>
+		<video src="Jio-assets/Jio-banner.mp4" width="100%" height="auto" muted loop autoplay preload="auto" aria-label="Banner video for the JioTesseract XR platform case study.">Banner video for the JioTesseract XR platform case study.</video>
 	</div>
 	
 	<div class="biz2x-banner-statement">
@@ -59,7 +93,7 @@
 		<div class="biz2x-overview-grid">
 			<div class="biz2x-overview-column">
 				<div class="biz2x-overview-block">
-					<p class="biz2x-overview-label">About JioTesseract</p>
+					<p class="biz2x-overview-label">About</p>
 					<p class="biz2x-overview-copy">
 						JioTesseract is Jio's mixed reality platform focused on
 						<span class="highlight">democratizing XR in India</span> through devices, developer tools, an operating system, and first-party immersive applications.
@@ -92,17 +126,18 @@
 		</div>
 	</div>
 
-	<div class="project-content">
+	<main class="project-main" role="main">
+	<article class="project-content" aria-label="JioTesseract XR platform for Spatial Computing">
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Introduction
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-			<p class="section-title">
+			<h3 class="section-title">
 				Expanding Jio’s design foundations to spatial mixed reality experiences to democratize XR in India.
-			</p>
+			</h3>
 			<p class="section-body">
 				JioTesseract is on a mission to democratize XR in India, <span class="scroll-fill">empowering everyone</span> to create and engage with immersive experiences. They are building a diverse range of devices, from entry-level mobile phone-based cardboard solutions to high-end standalone mixed reality devices. The commitment extends beyond hardware; they are also developing developer tools, an operating system, and a suite of first-party applications, including JioCinema, JioSaavn, JioGames, and JioPhotos.
 			</p>
@@ -114,14 +149,14 @@
 		
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				The need for foundations
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-			<p class="section-title">
+			<h3 class="section-title">
 				Design foundation is required to build a cohesive ecosystem of experiences.
-			</p>
+			</h3>
 			<p class="section-body">
 				The foundation ensured that both in-house and third-party developers create experiences that feel inherently connected, similar to how Android apps follow Material Design and iOS apps adhere to Human Interface Guidelines. The objective was to foster a design language that provides a <strong>unified aesthetic and functional identity</strong>, allowing all applications within this universe to resonate with users.
 			</p>
@@ -139,14 +174,14 @@
 	
 		<div class="section">
 			<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Foundation elements
-			</p>
+			</h2>
 		</div>
 			<div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Our medium consists of three high-level elements: The environment, the UI, and the interactions.
-                </p>
+                </h3>
                 <p class="section-body" style="font-weight: 700">
                     Foundations architecture
                 </p>
@@ -157,17 +192,17 @@
 
 		<div class="section">
         	<div class="section-heading-block">
-			<p class="headline">
+			<h2 class="headline">
 				Space
-			</p>
+			</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     The infinite area around the user beyond windows and UI is the space. This space can be an immersive virtual environment or the real environment visible through Visual See Through (VST) with digital cameras.
-                </p>
-                <p class="heading3">
+                </h3>
+                <h4 class="heading3">
                     Spatial specifications
-                </p>
+                </h4>
                 <p class="section-body">
                     <ul><span>
                         <li style="margin-bottom:16px;"><strong>Dimensions</strong>: We define the size of UI elements and how pixels translate into physical units.</li>
@@ -180,7 +215,7 @@
                         </span>
                     </ul>
                 </p>
-                <p class="heading3">Environment</p>
+                <h4 class="heading3">Environment</h4>
                 <p class="section-body"><strong>Definition</strong></p>
                 <ul><span>
                     <li><strong>Global Jio Branded Environments</strong>: available to all applications, reflects the operating system's brand.<br><strong>Local Environments</strong>: Provided by app developers, allowing for unique interactions catering to specific needs within their app.</li>
@@ -197,17 +232,17 @@
 		</div>
 		<div class="section">
         	<div class="section-heading-block">
-				<p class="headline">
+				<h2 class="headline">
 					Interactive interface
-				</p>
+				</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     The best use of the spatial medium and the caveats of the interaction technology led us to re-think crucial elements that make interfaces.
-                </p>
-                <p class="heading3">
+                </h3>
+                <h4 class="heading3">
                     Grid system
-                </p>
+                </h4>
 				<p class="section-body">
 				The grid system ensures alignment between different windows. By eliminating sub-pixel issues, designers experience a smooth workflow. We achieve this by:.
 				</p>
@@ -218,17 +253,17 @@
                     </ul>
                 </p>
 				<img class="modal-image" src="Jio-assets/Grid-system.png" alt="Collection of all the window types and the grid layout">
-                <p class="heading3">Typography scales</p>
+                <h4 class="heading3">Typography scales</h4>
                 <p class="section-body">Apart from driving consistency in hierarchy across content, typography scales on our medium had one major problem to solve: <strong>Perceived font weight</strong> due to optics and <strong>accurate interactions</strong>.</p>
 				<p class="section-body">We tested different font sizes and weights at different distances and scales for legibility and perception of font-weights. On the other hand, the accuracy of eye-tracking had a huge impact on the size of interactive objects.</p>
-				<p class="heading3">Surface material</p>
+				<h4 class="heading3">Surface material</h4>
                 <p class="section-body">While frosted glass is a typical choice of surface material in XR, we <strong>could not adopt it due to hardware limitations</strong>. After experimenting with semi-transparent materials—which posed legibility challenges—we <strong>opted for an opaque matte black board</strong> that creates a gradient-like glow from light sources. We utilize HDRI renders of the environment that contains only the information of the light, pan it 180 degrees, flip it horizontally and then create a mask of the shape of the window.</p>
 				<p class="section-body">We also defined rules for usage of the material in order to <strong>create hierarchy</strong> between different areas in the interface.</p>
-				<p class="heading3">Interaction states</p>
+				<h4 class="heading3">Interaction states</h4>
                 <p class="section-body">The chosen <strong>surface material significantly influences interaction states</strong> regarding color and contrast. We develop rules applicable to various UI elements, simplifying complexity by defining interaction states—idle, hover, pressed, dragged, and disabled—for a single UI element. This consistency fosters coherence across all interactive components.</p>
 				<p class="section-body">To make best use of the space and make interactions feel spatial, hover for every interactive <strong>items elevate in the z-axis</strong>. This happens only for interactions at a distance - interacts in proximity fail when the objects that the user intends to interact with moves towards the users’ finger.</p>
 				<img class="modal-image" src="Jio-assets/Interaction-states.png"  alt="An image illustrating the mechanism of the interaction states to be followed for any interactive element.">
-                <p class="heading3">Design system</p>
+                <h4 class="heading3">Design system</h4>
 				<p class="section-body">Components documented inside Figma library that can be used for rapid prototyping without compromising on the design principles.</p>
 				<img class="modal-image" src="Jio-assets/component-library.png" alt="A few example of interactive elements from Jio's XR platform Design system">
             </div>
@@ -236,17 +271,17 @@
 		
 		<div class="section">
         	<div class="section-heading-block">
-				<p class="headline">
+				<h2 class="headline">
 					Interactions
-				</p>
+				</h2>
 			</div>
             <div class="content-section-block">
-                <p class="section-title">
+                <h3 class="section-title">
                     Interaction with each UI element must behave in the similar expected way irrespective of the way the interaction technology works.
-                </p>
-                <p class="heading3">
+                </h3>
+                <h4 class="heading3">
                     Interaction patterns for UI
-                </p>
+                </h4>
 				<p class="section-body">
 				Our aim is to harness natural interaction methods by supporting eye tracking, hand tracking, and controllers across three device types:
 				</p>
@@ -267,7 +302,7 @@
                 <img class="modal-image" src="Jio-assets/Interactions-architecture.png"  alt="An architecture showcasing the scalable system of multi-modal interactions">
 				<img class="modal-image" src="Jio-assets/Interaction-mode-switching-.png" alt="Algorithm that controls the active interaction method.">
 				<img class="modal-image" src="Jio-assets/Interaction-mode-switching.png" alt="Algorithm that controls the interaction method's proximal vs distal implementation">
-				<p class="heading3">Gestures</p>
+				<h4 class="heading3">Gestures</h4>
                 <p class="section-body">Gestures can be performed using hands or controllers. They are derived from different interaction making them deliberate using the following two parameters.</p>
 				<p class="section-body">
                     <ul><span>
@@ -348,7 +383,11 @@ span.onclick = function() {
     </script>
 
 	<script src="js/scroll-fill.js"></script>
+	<script src="js/loader-page-handoff.js"></script>
+	<script src="js/startup-loader-core.js"></script>
+	<script src="js/biz2x-header-loader.js"></script>
 	<script src="js/case-study-index.js"></script>
+	<script src="js/next-case-study-card.js"></script>
 	
 </body>
 </html>
