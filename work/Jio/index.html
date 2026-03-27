@@ -20,9 +20,10 @@
 	
 <title>JioTesseract XR platform for Spatial Computing</title>
 
-<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px)">
-<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 767px)">
+<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px) and (orientation: portrait)">
+<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 768px), screen and (max-width: 767px) and (orientation: landscape)">
 <link href="css/biz2x-case-study.css" rel="stylesheet" type="text/css">
+<link href="css/case-study-responsive.css" rel="stylesheet" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
@@ -109,7 +110,7 @@
 			<div class="biz2x-overview-column">
 				<div class="biz2x-overview-block">
 					<p class="biz2x-overview-label">Role</p>
-					<p class="biz2x-overview-copy">Design Lead, Spatial Platform</p>
+					<p class="biz2x-overview-copy">Senior UX Designer (Team Lead)</p>
 				</div>
 				<div class="biz2x-overview-block">
 					<p class="biz2x-overview-label">Team</p>
@@ -246,13 +247,19 @@
 				<p class="section-body">
 				The grid system ensures alignment between different windows. By eliminating sub-pixel issues, designers experience a smooth workflow. We achieve this by:.
 				</p>
-                <p class="section-body">
+				<p class="section-body">
                     <ul><span>
                         <li style="margin-bottom:16px;">Maintaining constant column widths while deriving window sizes. This approach enhances content alignment, supported by standardized padding and spacing across grids of 12, 10, 8, 6, and 4 columns.</li>
                         </span>
                     </ul>
                 </p>
-				<img class="modal-image" src="Jio-assets/Grid-system.png" alt="Collection of all the window types and the grid layout">
+				<div class="biz2x-pan-scrub">
+					<div class="biz2x-pan-scrub-sticky">
+						<div class="biz2x-pan-scrub-window">
+							<img class="modal-image biz2x-pan-scrub-image" src="Jio-assets/Grid-system.png" alt="Collection of all the window types and the grid layout">
+						</div>
+					</div>
+				</div>
                 <h4 class="heading3">Typography scales</h4>
                 <p class="section-body">Apart from driving consistency in hierarchy across content, typography scales on our medium had one major problem to solve: <strong>Perceived font weight</strong> due to optics and <strong>accurate interactions</strong>.</p>
 				<p class="section-body">We tested different font sizes and weights at different distances and scales for legibility and perception of font-weights. On the other hand, the accuracy of eye-tracking had a huge impact on the size of interactive objects.</p>
@@ -262,7 +269,13 @@
 				<h4 class="heading3">Interaction states</h4>
                 <p class="section-body">The chosen <strong>surface material significantly influences interaction states</strong> regarding color and contrast. We develop rules applicable to various UI elements, simplifying complexity by defining interaction states—idle, hover, pressed, dragged, and disabled—for a single UI element. This consistency fosters coherence across all interactive components.</p>
 				<p class="section-body">To make best use of the space and make interactions feel spatial, hover for every interactive <strong>items elevate in the z-axis</strong>. This happens only for interactions at a distance - interacts in proximity fail when the objects that the user intends to interact with moves towards the users’ finger.</p>
-				<img class="modal-image" src="Jio-assets/Interaction-states.png"  alt="An image illustrating the mechanism of the interaction states to be followed for any interactive element.">
+				<div class="biz2x-pan-scrub">
+					<div class="biz2x-pan-scrub-sticky">
+						<div class="biz2x-pan-scrub-window">
+							<img class="modal-image biz2x-pan-scrub-image" src="Jio-assets/Interaction-states.png" alt="An image illustrating the mechanism of the interaction states to be followed for any interactive element.">
+						</div>
+					</div>
+				</div>
                 <h4 class="heading3">Design system</h4>
 				<p class="section-body">Components documented inside Figma library that can be used for rapid prototyping without compromising on the design principles.</p>
 				<img class="modal-image" src="Jio-assets/component-library.png" alt="A few example of interactive elements from Jio's XR platform Design system">
@@ -386,6 +399,7 @@ span.onclick = function() {
 	<script src="js/loader-page-handoff.js"></script>
 	<script src="js/startup-loader-core.js"></script>
 	<script src="js/biz2x-header-loader.js"></script>
+	<script src="js/biz2x-pan-scrub.js"></script>
 	<script src="js/case-study-index.js"></script>
 	<script src="js/next-case-study-card.js"></script>
 	

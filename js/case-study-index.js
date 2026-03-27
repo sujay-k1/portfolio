@@ -5,7 +5,7 @@
     return;
   }
 
-  var desktopQuery = window.matchMedia("(min-width: 768px)");
+  var desktopQuery = window.matchMedia("(min-width: 1201px), (orientation: landscape)");
   var STICKY_TOP = 124;
   var TITLE_PREPUSH_START_DISTANCE = 240;
   var state = {
@@ -109,6 +109,220 @@
     return Math.min(max, Math.max(min, value));
   }
 
+  function initMediaViewer() {
+    var modal = document.getElementById("myModal");
+    var closeButton = modal ? modal.querySelector(".close") : null;
+    var modalImage = modal ? (modal.querySelector("#img01") || modal.querySelector("img.modal-content")) : null;
+    var modalVideo = null;
+
+    if (!modal || !closeButton || !modalImage) {
+      return;
+    }
+
+    modal.setAttribute("aria-hidden", "true");
+    closeButton.setAttribute("role", "button");
+    closeButton.setAttribute("tabindex", "0");
+    closeButton.setAttribute("aria-label", "Close media viewer");
+
+    function ensureModalVideo() {
+      if (modalVideo) {
+        return modalVideo;
+      }
+
+      modalVideo = modal.querySelector("#video01");
+
+      if (!modalVideo) {
+        modalVideo = document.createElement("video");
+        modalVideo.id = "video01";
+        modalVideo.className = "modal-content modal-content-video";
+        modalVideo.controls = true;
+        modalVideo.preload = "metadata";
+        modalVideo.setAttribute("playsinline", "");
+        modal.insertBefore(modalVideo, closeButton);
+      }
+
+      return modalVideo;
+    }
+
+    function hideModalImage() {
+      modalImage.hidden = true;
+      modalImage.style.display = "none";
+      modalImage.removeAttribute("src");
+      modalImage.alt = "";
+    }
+
+    function stopModalVideo() {
+      var video = modalVideo || modal.querySelector("#video01");
+
+      if (!video) {
+        return;
+      }
+
+      video.pause();
+      video.hidden = true;
+      video.style.display = "none";
+      video.removeAttribute("src");
+      video.removeAttribute("aria-label");
+      video.load();
+    }
+
+    function openModalShell() {
+      modal.style.display = "flex";
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeMediaViewer() {
+      hideModalImage();
+      stopModalVideo();
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function openImageViewer(node) {
+      var source = node.currentSrc || node.getAttribute("src");
+      var alt = node.getAttribute("alt") || node.getAttribute("aria-label") || "";
+
+      if (!source) {
+        return;
+      }
+
+      stopModalVideo();
+      modalImage.src = source;
+      modalImage.alt = alt;
+      modalImage.hidden = false;
+      modalImage.style.display = "block";
+      openModalShell();
+    }
+
+    function openVideoViewer(node) {
+      var video = ensureModalVideo();
+      var source = node.currentSrc || node.getAttribute("src");
+      var label = node.getAttribute("aria-label") || node.textContent || "";
+
+      if (!source) {
+        return;
+      }
+
+      hideModalImage();
+      video.src = source;
+      video.loop = !!node.loop;
+      video.muted = !!node.muted;
+      video.hidden = false;
+      video.style.display = "block";
+
+      if (label) {
+        video.setAttribute("aria-label", label.trim());
+      }
+
+      openModalShell();
+
+      var playAttempt = video.play();
+      if (playAttempt && typeof playAttempt.catch === "function") {
+        playAttempt.catch(function () {});
+      }
+    }
+
+    function openMediaViewer(node) {
+      if (!node) {
+        return;
+      }
+
+      if (node.tagName && node.tagName.toLowerCase() === "video") {
+        openVideoViewer(node);
+        return;
+      }
+
+      openImageViewer(node);
+    }
+
+    Array.from(document.querySelectorAll(".modal-image")).forEach(function (node) {
+      node.onclick = function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        openMediaViewer(node);
+      };
+    });
+
+    closeButton.onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMediaViewer();
+    };
+
+    closeButton.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeMediaViewer();
+      }
+    });
+
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) {
+        closeMediaViewer();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && modal.style.display === "flex") {
+        closeMediaViewer();
+      }
+    });
+  }
+
+  function prepareSections() {
+    var projectContent = document.querySelector(".project-content");
+    var sections = Array.from(document.querySelectorAll(".project-content .section"));
+
+    if (!projectContent || !sections.length) {
+      return null;
+    }
+
+    return {
+      projectContent: projectContent,
+      sections: sections.map(function (section, index) {
+        var headline = section.querySelector(".headline");
+        var titleNode = section.querySelector(".section-title");
+        var label = headline ? headline.textContent.trim() : "Section " + (index + 1);
+        var id = section.id || slugify(label, index);
+        var titleId = id + "-anchor";
+        var kickerNode = null;
+        var anchorNode = null;
+
+        if (titleNode) {
+          anchorNode = section.querySelector(".section-title-anchor");
+
+          if (!anchorNode) {
+            anchorNode = document.createElement("span");
+            anchorNode.className = "section-title-anchor";
+            titleNode.parentNode.insertBefore(anchorNode, titleNode);
+          }
+
+          anchorNode.id = titleId;
+          kickerNode = titleNode.querySelector(".section-title-kicker");
+
+          if (!kickerNode) {
+            kickerNode = document.createElement("span");
+            kickerNode.className = "section-title-kicker";
+            kickerNode.textContent = label;
+            titleNode.insertBefore(kickerNode, titleNode.firstChild);
+          }
+        }
+
+        section.id = id;
+
+        return {
+          id: id,
+          titleId: titleId,
+          label: label,
+          node: section,
+          titleNode: titleNode,
+          anchorNode: anchorNode,
+          kickerNode: kickerNode
+        };
+      })
+    };
+  }
+
   function updateTitlePrepush() {
     if (!state.enabled || !state.sections.length) {
       return;
@@ -172,56 +386,14 @@
       return;
     }
 
-    var projectContent = document.querySelector(".project-content");
-    var sections = Array.from(document.querySelectorAll(".project-content .section"));
+    var prepared = prepareSections();
 
-    if (!projectContent || !sections.length) {
+    if (!prepared) {
       return;
     }
 
-    state.sections = sections.map(function (section, index) {
-      var headline = section.querySelector(".headline");
-      var titleNode = section.querySelector(".section-title");
-      var label = headline ? headline.textContent.trim() : "Section " + (index + 1);
-      var id = section.id || slugify(label, index);
-      var titleId = id + "-anchor";
-      var kickerNode = null;
-      var anchorNode = null;
-
-      if (titleNode) {
-        anchorNode = section.querySelector(".section-title-anchor");
-
-        if (!anchorNode) {
-          anchorNode = document.createElement("span");
-          anchorNode.className = "section-title-anchor";
-          titleNode.parentNode.insertBefore(anchorNode, titleNode);
-        }
-
-        anchorNode.id = titleId;
-        kickerNode = titleNode.querySelector(".section-title-kicker");
-
-        if (!kickerNode) {
-          kickerNode = document.createElement("span");
-          kickerNode.className = "section-title-kicker";
-          kickerNode.textContent = label;
-          titleNode.insertBefore(kickerNode, titleNode.firstChild);
-        }
-      }
-
-      section.id = id;
-
-      return {
-        id: id,
-        titleId: titleId,
-        label: label,
-        node: section,
-        titleNode: titleNode,
-        anchorNode: anchorNode,
-        kickerNode: kickerNode
-      };
-    });
-
-    state.projectContent = projectContent;
+    state.sections = prepared.sections;
+    state.projectContent = prepared.projectContent;
     state.indexShell = document.createElement("div");
     state.indexShell.className = "case-study-index-shell";
     state.indexShell.innerHTML = buildNavMarkup(state.sections);
@@ -344,5 +516,7 @@
     desktopQuery.addListener(syncMode);
   }
 
+  initMediaViewer();
+  prepareSections();
   syncMode();
 })();

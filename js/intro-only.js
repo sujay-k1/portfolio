@@ -9,6 +9,7 @@ const introStage = document.getElementById('intro-stage');
 const introWaveViz = document.getElementById('intro-wave-viz');
 const introLine1Main = document.getElementById('intro-line-1-main');
 const introLine1Tail = document.getElementById('intro-line-1-tail');
+const introLine2 = document.querySelector('.intro-line-2');
 const snapRoot = document.getElementById('snap-root');
 const snapTrack = document.getElementById('snap-track');
 const snapSections = Array.from(document.querySelectorAll('.snap-section'));
@@ -137,6 +138,9 @@ const BITCOUNT_CONFIG = {
   falloff: 1.65,
   minWriteYopqDelta: 0.12
 };
+const SECTION1_BITCOUNT_AUTOPILOT_MEDIA =
+  '(max-width: 767px) and (orientation: portrait) and (hover: none) and (pointer: coarse)';
+const SECTION1_BITCOUNT_AUTOPILOT_DURATION_MS = 2400;
 const SECTION2_MODEL_DEFAULT_SPIN = 0.55;
 const SECTION2_MODEL_SCROLL_SPIN_FACTOR = 1;
 const SECTION2_MODEL_RENDER_PIXEL_RATIO_CAP = 1.5;
@@ -334,6 +338,9 @@ let sectionOneWaveController = null;
 let sectionOneWaveVisibilityReady = false;
 let sectionOneWaveIsVisible = true;
 let sectionOneWaveNeedsRestart = true;
+let bitcountLensController = null;
+let sectionOneBitcountAutopilotRaf = 0;
+let sectionOneBitcountAutopilotStartTime = 0;
 let appBooted = false;
 let appRevealed = false;
 let loaderRevealStarted = false;
@@ -981,6 +988,7 @@ function syncBodySectionState(index) {
   updateTopNavState(index);
   syncLocationForSection(index);
   refreshSection2ModelVisibility();
+  syncSectionOneBitcountAutopilot();
   if (index === FINAL_HORIZON_SECTION_INDEX && !SNAP_STATE.isAnimating) {
     activateFinalHorizonSection(SNAP_STATE.index);
   }
@@ -1315,7 +1323,10 @@ function handleAnimatedSectionScroll(state, deltaY) {
 
 function initBitcountLens() {
   if (!bitcountChars.length) {
-    return;
+    return {
+      setSyntheticPointer() {},
+      clearSyntheticPointer() {}
+    };
   }
 
   let pointerEnabled = true;
@@ -1323,6 +1334,7 @@ function initBitcountLens() {
   let latestPointerX = 0;
   let latestPointerY = 0;
   let pointerPending = false;
+  let syntheticPointerActive = false;
 
   const yopqAt = (t) =>
     BITCOUNT_CONFIG.yopqMin + (BITCOUNT_CONFIG.yopqMax - BITCOUNT_CONFIG.yopqMin) * t;
@@ -1383,7 +1395,7 @@ function initBitcountLens() {
   window.addEventListener(
     'pointermove',
     (event) => {
-      if (!pointerEnabled) {
+      if (!pointerEnabled || syntheticPointerActive) {
         return;
       }
       scheduleLensUpdate(event.clientX, event.clientY);
@@ -1394,7 +1406,7 @@ function initBitcountLens() {
   window.addEventListener(
     'pointerdown',
     (event) => {
-      if (!pointerEnabled) {
+      if (!pointerEnabled || syntheticPointerActive) {
         return;
       }
       scheduleLensUpdate(event.clientX, event.clientY);
@@ -1405,6 +1417,9 @@ function initBitcountLens() {
   window.addEventListener(
     'pointerleave',
     () => {
+      if (syntheticPointerActive) {
+        return;
+      }
       pointerPending = false;
       applyAllAtT(0);
     },
@@ -1414,6 +1429,7 @@ function initBitcountLens() {
   window.addEventListener(
     'blur',
     () => {
+      syntheticPointerActive = false;
       pointerPending = false;
       applyAllAtT(0);
     },
@@ -1424,17 +1440,32 @@ function initBitcountLens() {
     'resize',
     () => {
       recalcCenters();
-      if (pointerEnabled) {
+      if (syntheticPointerActive) {
+        scheduleLensUpdate(latestPointerX, latestPointerY);
+      } else if (pointerEnabled) {
         applyAllAtT(0);
       }
       renderOutlineSvgKeywords();
       updatePersistentBottomNav(SNAP_STATE.index);
+      syncSectionOneBitcountAutopilot();
     },
     { passive: true }
   );
 
   recalcCenters();
   applyAllAtT(0);
+
+  return {
+    setSyntheticPointer(pointerX, pointerY) {
+      syntheticPointerActive = true;
+      scheduleLensUpdate(pointerX, pointerY);
+    },
+    clearSyntheticPointer() {
+      syntheticPointerActive = false;
+      pointerPending = false;
+      applyAllAtT(0);
+    }
+  };
 }
 
 function initBitcountChars() {
@@ -1558,6 +1589,7 @@ function ensureSectionOneWaveController({ startPaused = true } = {}) {
 
 function syncSectionOneWavePlayback() {
   if (!sectionOneWaveController || !sectionOneWaveVisibilityReady) {
+    syncSectionOneBitcountAutopilot();
     return;
   }
   const canRun =
@@ -1567,14 +1599,17 @@ function syncSectionOneWavePlayback() {
   if (!canRun) {
     sectionOneWaveController.pause();
     sectionOneWaveNeedsRestart = true;
+    syncSectionOneBitcountAutopilot();
     return;
   }
   if (sectionOneWaveNeedsRestart) {
     sectionOneWaveController.restart();
     sectionOneWaveNeedsRestart = false;
+    syncSectionOneBitcountAutopilot();
     return;
   }
   sectionOneWaveController.resume();
+  syncSectionOneBitcountAutopilot();
 }
 
 function updateSectionOneWaveVisibilityFromTrackPosition(currentY) {
@@ -1590,6 +1625,114 @@ function initSectionOneWaveLifecycle() {
   document.addEventListener('visibilitychange', syncSectionOneWavePlayback);
   const initialY = Number(gsap.getProperty(snapTrack, 'y')) || 0;
   updateSectionOneWaveVisibilityFromTrackPosition(initialY);
+}
+
+function shouldRunSectionOneBitcountAutopilot() {
+  return Boolean(
+    introStage &&
+      bitcountLensController &&
+      loaderRevealStarted &&
+      document.visibilityState === 'visible' &&
+      document.body.dataset.section === '1' &&
+      window.matchMedia?.(SECTION1_BITCOUNT_AUTOPILOT_MEDIA)?.matches
+  );
+}
+
+function getSectionOneBitcountAutopilotGeometry() {
+  if (!introStage) {
+    return null;
+  }
+
+  const stageRect = introStage.getBoundingClientRect();
+  if (stageRect.width <= 0 || stageRect.height <= 0) {
+    return null;
+  }
+
+  const focusRect = introLine2?.getBoundingClientRect();
+  const hasFocusRect = Boolean(focusRect && focusRect.width > 0 && focusRect.height > 0);
+  const baseRect = hasFocusRect ? focusRect : stageRect;
+  const horizontalOffset = stageRect.width * 0.1;
+  const centerX = clamp(
+    baseRect.left + baseRect.width * 0.5 + horizontalOffset,
+    stageRect.left + stageRect.width * 0.18,
+    stageRect.right - stageRect.width * 0.18
+  );
+  const centerY = clamp(
+    baseRect.top + baseRect.height * 0.52,
+    stageRect.top + stageRect.height * 0.18,
+    stageRect.bottom - stageRect.height * 0.18
+  );
+  const radiusX = clamp(baseRect.width * 0.7, 70, stageRect.width * 0.55);
+  const radiusY = clamp(baseRect.height * 1.08, 72, stageRect.height * 0.36);
+
+  return {
+    stageRect,
+    centerX,
+    centerY,
+    radiusX,
+    radiusY
+  };
+}
+
+function getSectionOneBitcountAutopilotPointer(elapsedMs, geometry = getSectionOneBitcountAutopilotGeometry()) {
+  if (!geometry) {
+    return null;
+  }
+
+  const { centerX, centerY, radiusX, radiusY } = geometry;
+  const phase =
+    ((elapsedMs % SECTION1_BITCOUNT_AUTOPILOT_DURATION_MS) /
+      SECTION1_BITCOUNT_AUTOPILOT_DURATION_MS) *
+    Math.PI *
+    2;
+
+  return {
+    x: centerX + radiusX * Math.sin(phase),
+    y: centerY + radiusY * Math.sin(phase) * Math.cos(phase)
+  };
+}
+
+function stopSectionOneBitcountAutopilot() {
+  if (sectionOneBitcountAutopilotRaf) {
+    cancelAnimationFrame(sectionOneBitcountAutopilotRaf);
+    sectionOneBitcountAutopilotRaf = 0;
+  }
+  sectionOneBitcountAutopilotStartTime = 0;
+  bitcountLensController?.clearSyntheticPointer();
+}
+
+function tickSectionOneBitcountAutopilot(timestamp) {
+  if (!shouldRunSectionOneBitcountAutopilot()) {
+    stopSectionOneBitcountAutopilot();
+    return;
+  }
+
+  if (!sectionOneBitcountAutopilotStartTime) {
+    sectionOneBitcountAutopilotStartTime = timestamp;
+  }
+
+  const geometry = getSectionOneBitcountAutopilotGeometry();
+  const pointer = getSectionOneBitcountAutopilotPointer(
+    timestamp - sectionOneBitcountAutopilotStartTime,
+    geometry
+  );
+  if (pointer) {
+    bitcountLensController?.setSyntheticPointer(pointer.x, pointer.y);
+  }
+
+  sectionOneBitcountAutopilotRaf = requestAnimationFrame(tickSectionOneBitcountAutopilot);
+}
+
+function syncSectionOneBitcountAutopilot() {
+  if (!shouldRunSectionOneBitcountAutopilot()) {
+    stopSectionOneBitcountAutopilot();
+    return;
+  }
+  if (sectionOneBitcountAutopilotRaf) {
+    return;
+  }
+  sectionOneBitcountAutopilotStartTime = 0;
+  sectionOneBitcountAutopilotRaf = requestAnimationFrame(tickSectionOneBitcountAutopilot);
 }
 
 function createStartupLoaderController(onHappyMoveStart, onHappyRevealStart) {
@@ -2180,7 +2323,8 @@ function startCoreApp() {
     ease: 'power2.out',
     stagger: 0.07
   });
-  initBitcountLens();
+  bitcountLensController = initBitcountLens();
+  syncSectionOneBitcountAutopilot();
   initSection2FillTargets();
   initSection2Model();
   initSnapScroll();
@@ -2192,6 +2336,8 @@ function startCoreApp() {
     });
   }
   window.addEventListener('resize', updateIntroLine1TailOffset);
+  window.addEventListener('resize', syncSectionOneBitcountAutopilot, { passive: true });
+  document.addEventListener('visibilitychange', syncSectionOneBitcountAutopilot);
 }
 
 function startLoaderReveal() {
@@ -2204,6 +2350,7 @@ function startLoaderReveal() {
     startupLoader.classList.add('is-receding');
   }
   startCoreApp();
+  syncSectionOneBitcountAutopilot();
 }
 
 function revealApp(loaderController) {
@@ -2221,6 +2368,7 @@ function revealApp(loaderController) {
     startupLoader.classList.add('is-hidden');
   }
   startCoreApp();
+  syncSectionOneBitcountAutopilot();
 }
 
 async function init() {

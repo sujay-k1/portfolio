@@ -20,8 +20,9 @@
 	
 <title>Speculative Design for WhatsApp, a case study</title>
 
-<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px)">
-<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 767px)">
+<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px) and (orientation: portrait)">
+<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 768px), screen and (max-width: 767px) and (orientation: landscape)">
+<link href="css/case-study-responsive.css" rel="stylesheet" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
@@ -47,16 +48,10 @@
 	</div>
 	
 	<div class="project-banner" style="background: url('WhatsApp-assets/Whatsapp-banner.jpg'); background-size:cover; background-position:center;">
-		<div style="width: 100%;
-                    height: 100%;
-                    position: relative;
-                    background: radial-gradient(73.88% 64.39% at 35.58% 49.92%, rgba(0, 0, 0, 0.00) 0%, rgba(0, 0, 0, 0.70) 100%); opacity:100%;">
-			<div style="position: absolute; width: 60%; top:-10%; height: 80%; right: 10%; z-index: 420; max-width: 300px;"><img width="100%" src="WhatsApp-assets/WhatsApp-banner-text.png" alt="A banner to highlight how the feature to remind about messages will benefit the users."></div>
-			<div style="position: absolute; width: 50%; bottom:0%; height: 20%; max-width:450px; left:10%; z-index: 420;"><img width="100%" src="WhatsApp-assets/WhatsApp-logo.png"  alt="WhatsApp logo"></div>
-			<div style="width: 100%;
-                        height: 100%;
-                        position: relative;
-                        background: radial-gradient(73.88% 64.39% at 35.58% 49.92%, #E0A885 0%, rgba(0, 0, 0, 0.00) 100%); opacity: 20%;">
+		<div class="whatsapp-banner-overlay">
+			<div class="whatsapp-banner-text"><img src="WhatsApp-assets/WhatsApp-banner-text.png" alt="A banner to highlight how the feature to remind about messages will benefit the users."></div>
+			<div class="whatsapp-banner-logo"><img src="WhatsApp-assets/WhatsApp-logo.png" alt="WhatsApp logo"></div>
+			<div class="whatsapp-banner-glow">
 			</div>
 		</div>
 	</div>

@@ -16,9 +16,9 @@
   var WHEEL_DELTA_CAP = 56;
   var WHEEL_INERTIA_WINDOW_MS = 80;
   var WHEEL_INERTIA_MIN_DELTA = 10;
+  var sectionProgress = new WeakMap();
   var state = {
     activeSection: null,
-    progress: 0,
     lockedScrollY: 0,
     touchY: null,
     releaseUntil: 0,
@@ -28,6 +28,14 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function consumeEvent(event) {
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+    event.stopPropagation();
   }
 
   function lockPage() {
@@ -68,6 +76,26 @@
     };
   }
 
+  function getSectionProgress(section) {
+    if (!section) {
+      return 0;
+    }
+
+    if (!sectionProgress.has(section)) {
+      sectionProgress.set(section, 0);
+    }
+
+    return sectionProgress.get(section);
+  }
+
+  function setSectionProgress(section, progress) {
+    if (!section) {
+      return;
+    }
+
+    sectionProgress.set(section, clamp(progress, 0, 1));
+  }
+
   function applyProgress(section) {
     var measurement = measureSection(section);
 
@@ -75,7 +103,7 @@
       return;
     }
 
-    var offset = -measurement.overflow * state.progress;
+    var offset = -measurement.overflow * getSectionProgress(section);
     measurement.image.style.setProperty("--biz2x-pan-scrub-offset", offset.toFixed(2) + "px");
   }
 
@@ -110,8 +138,9 @@
 
     var movingForward = deltaY > 0;
     var movingBackward = deltaY < 0;
+    var progress = getSectionProgress(candidate);
 
-    if ((movingForward && state.progress >= 1) || (movingBackward && state.progress <= 0)) {
+    if ((movingForward && progress >= 1) || (movingBackward && progress <= 0)) {
       return null;
     }
 
@@ -144,9 +173,11 @@
       return false;
     }
 
+    var progress = getSectionProgress(state.activeSection);
+
     if (
       activationPointReached(state.activeSection) &&
-      ((deltaY > 0 && state.progress >= 1) || (deltaY < 0 && state.progress <= 0))
+      ((deltaY > 0 && progress >= 1) || (deltaY < 0 && progress <= 0))
     ) {
       state.activeSection = null;
       state.releaseUntil = Date.now() + RELEASE_COOLDOWN_MS;
@@ -170,7 +201,7 @@
       return true;
     }
 
-    state.progress = clamp(state.progress + (deltaY / SCROLL_UNITS), 0, 1);
+    setSectionProgress(section, getSectionProgress(section) + (deltaY / SCROLL_UNITS));
     applyProgress(section);
     return true;
   }
@@ -179,26 +210,22 @@
     var deltaY = normalizeWheelDelta(event.deltaY);
 
     if (!state.activeSection && Date.now() < state.releaseUntil) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
       return;
     }
 
     if (state.activeSection && isLikelyMomentumTail(deltaY)) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
       return;
     }
 
     if (consumeDelta(deltaY)) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
       return;
     }
 
     if (state.activeSection) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
     }
   }
 
@@ -221,20 +248,17 @@
     state.touchY = nextY;
 
     if (!state.activeSection && Date.now() < state.releaseUntil) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
       return;
     }
 
     if (consumeDelta(deltaY)) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
       return;
     }
 
     if (state.activeSection) {
-      event.preventDefault();
-      event.stopPropagation();
+      consumeEvent(event);
     }
   }
 

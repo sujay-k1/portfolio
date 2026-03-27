@@ -53,6 +53,57 @@ function wrap01(value) {
   return value - Math.floor(value);
 }
 
+function usesCompactWaveLayout() {
+  return window.matchMedia("(max-width: 1200px) and (orientation: portrait)").matches;
+}
+
+function usesPortraitPhoneIntroLayout() {
+  return window.matchMedia("(max-width: 767px) and (orientation: portrait)").matches;
+}
+
+function syncIntroPortraitOffsets() {
+  const introLine1Main = document.getElementById("intro-line-1-main");
+  const introLine1Tail = document.getElementById("intro-line-1-tail");
+
+  if (!introLine1Main || !introLine1Tail) {
+    return;
+  }
+
+  if (!usesPortraitPhoneIntroLayout()) {
+    introLine1Tail.style.removeProperty("--intro-line1-tail-offset-dynamic");
+    return;
+  }
+
+  const introWords = Array.from(introLine1Main.querySelectorAll(".intro-word"));
+  const leadWord = introWords[0];
+  const accentWord = introWords[1];
+
+  if (!leadWord || !accentWord) {
+    introLine1Tail.style.removeProperty("--intro-line1-tail-offset-dynamic");
+    return;
+  }
+
+  const introLine1MainStyles = window.getComputedStyle(introLine1Main);
+  const columnGap = Number.parseFloat(introLine1MainStyles.columnGap);
+  const gap = Number.isFinite(columnGap) ? columnGap : 0;
+  const combinedWidth = Math.ceil(
+    leadWord.getBoundingClientRect().width +
+    accentWord.getBoundingClientRect().width +
+    gap
+  );
+
+  introLine1Tail.style.setProperty("--intro-line1-tail-offset-dynamic", combinedWidth + "px");
+}
+
+function initIntroPortraitOffsets() {
+  syncIntroPortraitOffsets();
+  window.addEventListener("resize", syncIntroPortraitOffsets, { passive: true });
+
+  if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === "function") {
+    document.fonts.ready.then(syncIntroPortraitOffsets).catch(function () {});
+  }
+}
+
 function resampleFloat2(source, outSamples) {
   const inSamples = (source.length / 2) | 0;
   if (inSamples < 2 || outSamples < 2) {
@@ -157,7 +208,7 @@ class WaveLandingWebGL {
     this.attribPosition = -1;
     this.attribColor = -1;
 
-    this.isMobile = window.matchMedia("(max-width: 980px), (pointer: coarse)").matches;
+    this.isMobile = usesCompactWaveLayout();
 
     this.rangeX = geometry.rangeX;
     this.n = Math.max(160, Math.min(CONFIG.samples, geometry.sampleCount));
@@ -310,7 +361,7 @@ class WaveLandingWebGL {
   }
 
   onResize() {
-    this.isMobile = window.matchMedia("(max-width: 980px), (pointer: coarse)").matches;
+    this.isMobile = usesCompactWaveLayout();
     this.resize();
   }
 
@@ -912,4 +963,5 @@ async function boot() {
   }
 }
 
+initIntroPortraitOffsets();
 boot();

@@ -492,6 +492,13 @@ const SECTION1_WAVE_COLOR_A = '#ABA3B8';
 const SECTION1_WAVE_COLOR_B = '#000000';
 const SECTION1_WAVE_MOBILE_BLEND_STEPS = 25;
 const SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS = 10;
+const SECTION1_WAVE_FIXED_COMPOSITION = {
+  media: '(max-width: 767px) and (orientation: portrait)',
+  width: 1440,
+  height: 900,
+  anchorX: 0,
+  anchorY: 0
+};
 
 export async function initSectionOneProceduralWave({ host, pointerTarget, startPaused = false }) {
   if (!host || !pointerTarget || host.dataset.waveVizMounted === 'yes') {
@@ -501,7 +508,17 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
 
   const { PIXI, ZoomBlurFilter } = await ensurePixiCdnReady();
   const mouse = { x: 0, y: 0, inside: false };
+  const pointerDisplay = { x: 0, y: 0 };
   const viewportPointer = { clientX: 0, clientY: 0, seen: false };
+  const stageLayout = {
+    fixed: false,
+    hostWidth: 1,
+    hostHeight: 1,
+    renderWidth: 1,
+    renderHeight: 1,
+    canvasLeft: 0,
+    canvasTop: 0
+  };
   const motion = {
     lastTime: null,
     wave1Offset: 0,
@@ -564,6 +581,19 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   pointerTarget.appendChild(pointerHud);
   pointerTarget.appendChild(pointerPrompt);
 
+  const applyPointerFromClient = (clientX, clientY) => {
+    const rect = pointerTarget.getBoundingClientRect();
+    pointerDisplay.x = clientX - rect.left;
+    pointerDisplay.y = clientY - rect.top;
+    mouse.x = pointerDisplay.x - stageLayout.canvasLeft;
+    mouse.y = pointerDisplay.y - stageLayout.canvasTop;
+    mouse.inside =
+      pointerDisplay.x >= 0 &&
+      pointerDisplay.x <= rect.width &&
+      pointerDisplay.y >= 0 &&
+      pointerDisplay.y <= rect.height;
+  };
+
   const updatePointerFromEvent = (event) => {
     if (event.pointerType === 'touch' && !event.isPrimary) {
       return;
@@ -571,10 +601,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     viewportPointer.clientX = event.clientX;
     viewportPointer.clientY = event.clientY;
     viewportPointer.seen = true;
-    const rect = pointerTarget.getBoundingClientRect();
-    mouse.x = event.clientX - rect.left;
-    mouse.y = event.clientY - rect.top;
-    mouse.inside = mouse.x >= 0 && mouse.x <= rect.width && mouse.y >= 0 && mouse.y <= rect.height;
+    applyPointerFromClient(event.clientX, event.clientY);
   };
   const onLeave = () => {
     mouse.inside = false;
@@ -600,7 +627,8 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   window.addEventListener('keydown', onKeyDown);
 
   const app = new PIXI.Application({
-    resizeTo: host,
+    width: 1,
+    height: 1,
     backgroundAlpha: 0,
     antialias: true,
     autoDensity: true,
@@ -608,8 +636,11 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   });
   app.ticker.maxFPS = SECTION1_WAVE_TUNING.targetFps;
   host.appendChild(app.view);
-  app.view.style.width = '100%';
-  app.view.style.height = '100%';
+  app.view.style.position = 'absolute';
+  app.view.style.left = '0';
+  app.view.style.top = '0';
+  app.view.style.width = '1px';
+  app.view.style.height = '1px';
   app.view.style.display = 'block';
 
   const backgroundLayer = new PIXI.Container();
@@ -672,6 +703,46 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   const blurFilterArea = new PIXI.Rectangle(0, 0, 1, 1);
   blurWaveLayer.filterArea = blurFilterArea;
 
+  const shouldUseFixedComposition = () =>
+    window.matchMedia?.(SECTION1_WAVE_FIXED_COMPOSITION.media)?.matches ?? false;
+
+  const syncRendererLayout = () => {
+    const hostWidth = Math.max(
+      2,
+      Math.round(host.clientWidth || host.getBoundingClientRect().width || 1)
+    );
+    const hostHeight = Math.max(
+      2,
+      Math.round(host.clientHeight || host.getBoundingClientRect().height || 1)
+    );
+    const fixed = shouldUseFixedComposition();
+    const renderWidth = fixed ? SECTION1_WAVE_FIXED_COMPOSITION.width : hostWidth;
+    const renderHeight = fixed ? SECTION1_WAVE_FIXED_COMPOSITION.height : hostHeight;
+    const canvasLeft = fixed
+      ? Math.round((hostWidth - renderWidth) * SECTION1_WAVE_FIXED_COMPOSITION.anchorX)
+      : 0;
+    const canvasTop = fixed
+      ? Math.round((hostHeight - renderHeight) * SECTION1_WAVE_FIXED_COMPOSITION.anchorY)
+      : 0;
+
+    if (app.renderer.width !== renderWidth || app.renderer.height !== renderHeight) {
+      app.renderer.resize(renderWidth, renderHeight);
+    }
+
+    app.view.style.left = `${canvasLeft}px`;
+    app.view.style.top = `${canvasTop}px`;
+    app.view.style.width = `${renderWidth}px`;
+    app.view.style.height = `${renderHeight}px`;
+
+    stageLayout.fixed = fixed;
+    stageLayout.hostWidth = hostWidth;
+    stageLayout.hostHeight = hostHeight;
+    stageLayout.renderWidth = renderWidth;
+    stageLayout.renderHeight = renderHeight;
+    stageLayout.canvasLeft = canvasLeft;
+    stageLayout.canvasTop = canvasTop;
+  };
+
   const makeBgTexture = () => {
     const w = Math.max(2, Math.floor(app.screen.width));
     const h = Math.max(2, Math.floor(app.screen.height));
@@ -694,12 +765,13 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     bgCutoutSprite.width = app.screen.width;
     bgCutoutSprite.height = app.screen.height;
   };
+  syncRendererLayout();
   makeBgTexture();
 
   const resizeObserver = new ResizeObserver(() => {
-    bgSprite.width = app.screen.width;
-    bgSprite.height = app.screen.height;
+    syncRendererLayout();
     makeBgTexture();
+    syncMouseFromViewportPointer();
   });
   resizeObserver.observe(host);
 
@@ -710,12 +782,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     if (!viewportPointer.seen) {
       return;
     }
-    const rect = pointerTarget.getBoundingClientRect();
-    const localX = viewportPointer.clientX - rect.left;
-    const localY = viewportPointer.clientY - rect.top;
-    mouse.x = localX;
-    mouse.y = localY;
-    mouse.inside = localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height;
+    applyPointerFromClient(viewportPointer.clientX, viewportPointer.clientY);
   };
 
   const resetMotion = () => {
@@ -925,7 +992,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const complexityIndex = 100 - (displayedLockProgressPercent / 2 + displayedPseudoProximityIndex / 2);
     const pointerHudVisible = mouse.inside;
     pointerHud.classList.toggle('is-visible', pointerHudVisible);
-    pointerHud.style.transform = `translate3d(${mouse.x}px, ${mouse.y}px, 0)`;
+    pointerHud.style.transform = `translate3d(${pointerDisplay.x}px, ${pointerDisplay.y}px, 0)`;
     const curiosityFilled = Math.max(
       0,
       Math.min(pointerHudSegments, Math.round((displayedPseudoProximityIndex / 100) * pointerHudSegments))
