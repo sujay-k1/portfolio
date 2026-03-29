@@ -141,6 +141,18 @@ body.case-study-page.biz2x-page .biz2x-overview-panel {
 	padding-right: clamp(24px, 4vw, 60px);
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+	body.case-study-page:not(.biz2x-page) .header {
+		padding-left: calc(var(--case-responsive-inline) + 20px);
+		padding-right: calc(var(--case-responsive-inline) + 20px);
+	}
+
+	body.case-study-page.biz2x-page .top-nav {
+		padding-left: calc(var(--space-page-inline) + 20px);
+		padding-right: calc(var(--space-page-inline) + 20px);
+	}
+}
+
 .whatsapp-banner-overlay {
 	width: 100%;
 	height: 100%;
@@ -338,6 +350,13 @@ body.case-study-page.biz2x-page .biz2x-overview-panel {
 	body.case-study-page.biz2x-page .biz2x-overview-panel {
 		padding: 28px 24px;
 		border-radius: 24px;
+	}
+}
+
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+	body.case-study-page.biz2x-page .top-nav {
+		padding-left: calc(var(--space-page-inline) + 20px);
+		padding-right: calc(var(--space-page-inline) + 20px);
 	}
 }
 

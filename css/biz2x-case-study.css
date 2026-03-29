@@ -3,8 +3,8 @@
 	--bg-1: #1f1826;
 	--bg-2: #2a2433;
 	--scroll-fill-accent: #9e83c7;
-	--txt-nav: #a89cb3;
-	--txt-nav-active: #b6b89c;
+	--txt-nav: rgba(255, 255, 255, 0.4);
+	--txt-nav-active: #dcdfa9;
 	--font-size-title: clamp(72px, 5.9vw, 118px);
 	--font-size-body: calc(var(--font-size-title) * 24 / 90);
 	--font-size-nav: calc(var(--font-size-body) * 2 / 3);

@@ -191,9 +191,9 @@ const finalHorizonCardsData = [
     logoAlt: 'Saison Omni logo',
     logoSub: 'Dissolved by Saison International',
     href: '/work/saison-omni',
-    statement: '<span class="hl">Scaled product, fueled operations</span> by building reusable governance modules and design patterns',
+    statement: '<span class="hl">Scaled product and fueled operations</span> by building reusable governance modules and design patterns',
     keywords: ['Design Patterns', 'Configurable modules', 'Lending', 'System Design', 'Design Ops', 'Data Driven Design'],
-    meta: 'Enterprise // Entertainment',
+    meta: 'ENTERPRISE// FINTECH// LENDING',
     image: 'Assets/card-01.png',
     imageFit: 'contain',
     imagePosition: '50% 0%',
@@ -210,9 +210,9 @@ const finalHorizonCardsData = [
     logoAlt: 'Biz2X logo',
     logoSub: 'Biz2X',
     href: '/work/Biz2X',
-    statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
+    statement: '<span class="hl">Cut lender onboarding time to UAT</span> by 60% with configurable application journey framework',
     keywords: ['Design Patterns', 'Configurable Journey', 'Lending', 'System Design', 'CRM', 'Data Driven Design'],
-    meta: 'SaaS // Social Sector',
+    meta: 'ENTERPRISE// FINTECH// LENDING',
     image: 'Assets/card-02.png',
     imageFit: 'contain',
     imagePosition: '50% 0%',
@@ -247,7 +247,7 @@ const finalHorizonCardsData = [
     logoSub: 'JioTesseract',
     href: 'https://tesseract.in/learning-and-development-ai-analytics/',
     newTab: true,
-    statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
+    statement: '<span class="hl">Boosted Enterprise training</span> with immersive landing platform for 20+ enterprises',
     keywords: ['LMS', 'System Design', 'Dashboard', 'Immersive Learning', 'No-code Tool', 'Enterprise Training'],
     meta: 'Enterprise // Immersive L&D',
     image: 'Assets/card-04.png',
@@ -269,7 +269,7 @@ const finalHorizonCardsData = [
     newTab: true,
     statement: '<span class="hl">Strengthened accessibility</span> by shipping AI-enabled audio description workflows.',
     keywords: ['Accessibility', 'Editing Tool', 'Entertainment', 'Asset Management', 'Project Management Tool'],
-    meta: 'Enterprise // Entertainment',
+    meta: 'ENTERPRISE// ENTERTAINMENT',
     image: 'Assets/card-05.png',
     imageFit: 'contain',
     imagePosition: '50% 0%',
@@ -3492,10 +3492,24 @@ function renderFinalHorizonSection() {
                 <p>I’d love to share the thinking and stories behind my work. If you’re exploring collaborators for your project, I’d be happy to chat.</p>
                 <p>I’m also building a side passion project that I’d be delighted to geek out about.</p>
               </div>
-              <div class="folio-opportunity-icons" aria-hidden="true">
-                <span class="folio-opportunity-icon"><img src="Assets/contact-icons-04.png" alt=""></span>
-                <span class="folio-opportunity-icon"><img src="Assets/contact-icons-03.png" alt=""></span>
-                <span class="folio-opportunity-icon"><img src="Assets/contact-icons-02.png" alt=""></span>
+              <div class="folio-opportunity-icons">
+                <a
+                  class="folio-opportunity-icon folio-opportunity-icon-link"
+                  href="https://linkedin.com/in/sujay-k"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open LinkedIn profile in a new tab"
+                ><img src="Assets/contact-icons-04.png" alt=""></a>
+                <a
+                  class="folio-opportunity-icon folio-opportunity-icon-link"
+                  href="mailto:imsujaykumar@gmail.com"
+                  aria-label="Email imsujaykumar@gmail.com"
+                ><img src="Assets/contact-icons-03.png" alt=""></a>
+                <a
+                  class="folio-opportunity-icon folio-opportunity-icon-link"
+                  href="tel:+918828290489"
+                  aria-label="Call +91 88282 90489"
+                ><img src="Assets/contact-icons-02.png" alt=""></a>
                 <span class="folio-opportunity-icon"><img src="Assets/contact-icons-01.png" alt=""></span>
               </div>
             </div>

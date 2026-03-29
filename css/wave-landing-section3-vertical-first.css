@@ -1772,6 +1772,7 @@ body[data-section="3"] {
 .folio-hcard-wrap.is-opportunity.is-active .folio-opportunity-content {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
 .folio-opportunity-mark {
@@ -1839,6 +1840,29 @@ body[data-section="3"] {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.folio-opportunity-icon-link {
+  color: inherit;
+  text-decoration: none;
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 999px;
+  transition:
+    transform 0.25s ease,
+    filter 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.folio-opportunity-icon-link:hover,
+.folio-opportunity-icon-link:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.folio-opportunity-icon-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.72);
 }
 
 .folio-opportunity-pill {

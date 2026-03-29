@@ -238,8 +238,19 @@ function waveInteractiveFromRaw(raw, params, shared, mouse, interaction) {
   };
 }
 
-function computeScreenSpaceAlignment(samplesA, samplesB, width, height, interactionRadius) {
-  const project = (p) => ({ x: width * 0.5 + p.x * width * 0.18, y: height * 0.5 - p.y * height * 0.18 });
+function computeScreenSpaceAlignment(
+  samplesA,
+  samplesB,
+  width,
+  height,
+  interactionRadius,
+  originX = 0.5,
+  originY = 0.5
+) {
+  const project = (p) => ({
+    x: width * originX + p.x * width * 0.18,
+    y: height * originY - p.y * height * 0.18
+  });
   let weightedOscDiff = 0;
   let weightSum = 0;
   let pairs = 0;
@@ -492,13 +503,24 @@ const SECTION1_WAVE_COLOR_A = '#ABA3B8';
 const SECTION1_WAVE_COLOR_B = '#000000';
 const SECTION1_WAVE_MOBILE_BLEND_STEPS = 25;
 const SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS = 10;
-const SECTION1_WAVE_FIXED_COMPOSITION = {
-  media: '(max-width: 767px) and (orientation: portrait)',
-  width: 1440,
-  height: 900,
-  anchorX: 0,
-  anchorY: 0
-};
+const SECTION1_WAVE_LAYOUT_PRESETS = [
+  {
+    media: '(max-width: 767px) and (orientation: portrait)',
+    aspectRatio: 16 / 10,
+    compositionOffsetX: -0.2,
+    compositionOffsetY: 0,
+    cropAlignX: 0.5,
+    cropAlignY: 1
+  },
+  {
+    media: null,
+    aspectRatio: 16 / 9,
+    compositionOffsetX: 0,
+    compositionOffsetY: 0,
+    cropAlignX: 0.5,
+    cropAlignY: 1
+  }
+];
 
 export async function initSectionOneProceduralWave({ host, pointerTarget, startPaused = false }) {
   if (!host || !pointerTarget || host.dataset.waveVizMounted === 'yes') {
@@ -510,14 +532,16 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   const mouse = { x: 0, y: 0, inside: false };
   const pointerDisplay = { x: 0, y: 0 };
   const viewportPointer = { clientX: 0, clientY: 0, seen: false };
+  const syntheticPointer = { clientX: 0, clientY: 0, enabled: false };
   const stageLayout = {
-    fixed: false,
     hostWidth: 1,
     hostHeight: 1,
     renderWidth: 1,
     renderHeight: 1,
     canvasLeft: 0,
-    canvasTop: 0
+    canvasTop: 0,
+    compositionOffsetX: 0,
+    compositionOffsetY: 0
   };
   const motion = {
     lastTime: null,
@@ -598,12 +622,18 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     if (event.pointerType === 'touch' && !event.isPrimary) {
       return;
     }
+    if (syntheticPointer.enabled) {
+      return;
+    }
     viewportPointer.clientX = event.clientX;
     viewportPointer.clientY = event.clientY;
     viewportPointer.seen = true;
     applyPointerFromClient(event.clientX, event.clientY);
   };
   const onLeave = () => {
+    if (syntheticPointer.enabled) {
+      return;
+    }
     mouse.inside = false;
   };
   const onKeyDown = (event) => {
@@ -703,8 +733,10 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   const blurFilterArea = new PIXI.Rectangle(0, 0, 1, 1);
   blurWaveLayer.filterArea = blurFilterArea;
 
-  const shouldUseFixedComposition = () =>
-    window.matchMedia?.(SECTION1_WAVE_FIXED_COMPOSITION.media)?.matches ?? false;
+  const getActiveLayoutPreset = () =>
+    SECTION1_WAVE_LAYOUT_PRESETS.find((preset) =>
+      !preset.media || (window.matchMedia?.(preset.media)?.matches ?? false)
+    ) || SECTION1_WAVE_LAYOUT_PRESETS[SECTION1_WAVE_LAYOUT_PRESETS.length - 1];
 
   const syncRendererLayout = () => {
     const hostWidth = Math.max(
@@ -715,15 +747,24 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
       2,
       Math.round(host.clientHeight || host.getBoundingClientRect().height || 1)
     );
-    const fixed = shouldUseFixedComposition();
-    const renderWidth = fixed ? SECTION1_WAVE_FIXED_COMPOSITION.width : hostWidth;
-    const renderHeight = fixed ? SECTION1_WAVE_FIXED_COMPOSITION.height : hostHeight;
-    const canvasLeft = fixed
-      ? Math.round((hostWidth - renderWidth) * SECTION1_WAVE_FIXED_COMPOSITION.anchorX)
-      : 0;
-    const canvasTop = fixed
-      ? Math.round((hostHeight - renderHeight) * SECTION1_WAVE_FIXED_COMPOSITION.anchorY)
-      : 0;
+    const preset = getActiveLayoutPreset();
+    const aspectRatio = preset.aspectRatio;
+    let renderWidth = hostWidth;
+    let renderHeight = hostHeight;
+    let canvasLeft = 0;
+    let canvasTop = 0;
+
+    const hostAspectRatio = hostWidth / Math.max(1, hostHeight);
+
+    if (hostAspectRatio < aspectRatio) {
+      renderHeight = hostHeight;
+      renderWidth = Math.round(renderHeight * aspectRatio);
+      canvasLeft = Math.round((hostWidth - renderWidth) * preset.cropAlignX);
+    } else {
+      renderWidth = hostWidth;
+      renderHeight = Math.round(renderWidth / aspectRatio);
+      canvasTop = Math.round((hostHeight - renderHeight) * preset.cropAlignY);
+    }
 
     if (app.renderer.width !== renderWidth || app.renderer.height !== renderHeight) {
       app.renderer.resize(renderWidth, renderHeight);
@@ -734,13 +775,14 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     app.view.style.width = `${renderWidth}px`;
     app.view.style.height = `${renderHeight}px`;
 
-    stageLayout.fixed = fixed;
     stageLayout.hostWidth = hostWidth;
     stageLayout.hostHeight = hostHeight;
     stageLayout.renderWidth = renderWidth;
     stageLayout.renderHeight = renderHeight;
     stageLayout.canvasLeft = canvasLeft;
     stageLayout.canvasTop = canvasTop;
+    stageLayout.compositionOffsetX = preset.compositionOffsetX;
+    stageLayout.compositionOffsetY = preset.compositionOffsetY;
   };
 
   const makeBgTexture = () => {
@@ -775,10 +817,17 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   });
   resizeObserver.observe(host);
 
-  const worldToScreen = (w, h, p) => ({ x: w * 0.5 + p.x * w * 0.18, y: h * 0.5 - p.y * h * 0.18 });
+  const worldToScreen = (w, h, p) => ({
+    x: w * (0.5 + stageLayout.compositionOffsetX) + p.x * w * 0.18,
+    y: h * (0.5 + stageLayout.compositionOffsetY) - p.y * h * 0.18
+  });
   const isMobileBlendMode = () =>
     window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 768;
   const syncMouseFromViewportPointer = () => {
+    if (syntheticPointer.enabled) {
+      applyPointerFromClient(syntheticPointer.clientX, syntheticPointer.clientY);
+      return;
+    }
     if (!viewportPointer.seen) {
       return;
     }
@@ -811,9 +860,22 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     zoomBlur.strength = SECTION1_WAVE_TUNING.blurStrength;
     zoomBlur.innerRadius = SECTION1_WAVE_TUNING.blurInnerRadius;
     zoomBlur.radius = SECTION1_WAVE_TUNING.blurRadius;
-    zoomBlur.center = [width * SECTION1_WAVE_TUNING.blurCenterX, height * SECTION1_WAVE_TUNING.blurCenterY];
-    blurFilterArea.x = Math.max(0, width * SECTION1_WAVE_TUNING.blurCenterX - SECTION1_WAVE_TUNING.blurRadius - 64);
-    blurFilterArea.y = Math.max(0, height * SECTION1_WAVE_TUNING.blurCenterY - SECTION1_WAVE_TUNING.blurRadius - 64);
+    zoomBlur.center = [
+      width * (SECTION1_WAVE_TUNING.blurCenterX + stageLayout.compositionOffsetX),
+      height * (SECTION1_WAVE_TUNING.blurCenterY + stageLayout.compositionOffsetY)
+    ];
+    blurFilterArea.x = Math.max(
+      0,
+      width * (SECTION1_WAVE_TUNING.blurCenterX + stageLayout.compositionOffsetX) -
+        SECTION1_WAVE_TUNING.blurRadius -
+        64
+    );
+    blurFilterArea.y = Math.max(
+      0,
+      height * (SECTION1_WAVE_TUNING.blurCenterY + stageLayout.compositionOffsetY) -
+        SECTION1_WAVE_TUNING.blurRadius -
+        64
+    );
     blurFilterArea.width = Math.min(width - blurFilterArea.x, SECTION1_WAVE_TUNING.blurRadius * 2 + 128);
     blurFilterArea.height = Math.min(height - blurFilterArea.y, SECTION1_WAVE_TUNING.blurRadius * 2 + 128);
 
@@ -830,8 +892,8 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     };
     const projectedMouse = {
       ...mouse,
-      projectX: (x) => width * 0.5 + x * width * 0.18,
-      projectY: (y) => height * 0.5 - y * height * 0.18
+      projectX: (x) => width * (0.5 + stageLayout.compositionOffsetX) + x * width * 0.18,
+      projectY: (y) => height * (0.5 + stageLayout.compositionOffsetY) - y * height * 0.18
     };
 
     const wave1 = SECTION1_WAVE_CONFIG.wave1;
@@ -869,7 +931,9 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
         adj2,
         width,
         height,
-        SECTION1_WAVE_CONFIG.global.interactionRadius
+        SECTION1_WAVE_CONFIG.global.interactionRadius,
+        0.5 + stageLayout.compositionOffsetX,
+        0.5 + stageLayout.compositionOffsetY
       );
     }
     const spatialStats = alignmentCache.stats;
@@ -990,7 +1054,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const displayedPseudoProximityIndex = Math.ceil(pseudoProximityIndex);
     const displayedLockProgressPercent = Math.ceil(lockProgressPercent);
     const complexityIndex = 100 - (displayedLockProgressPercent / 2 + displayedPseudoProximityIndex / 2);
-    const pointerHudVisible = mouse.inside;
+    const pointerHudVisible = mouse.inside && !syntheticPointer.enabled;
     pointerHud.classList.toggle('is-visible', pointerHudVisible);
     pointerHud.style.transform = `translate3d(${pointerDisplay.x}px, ${pointerDisplay.y}px, 0)`;
     const curiosityFilled = Math.max(
@@ -1207,6 +1271,16 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     pause,
     resume,
     restart,
+    setSyntheticPointer(clientX, clientY) {
+      syntheticPointer.enabled = true;
+      syntheticPointer.clientX = clientX;
+      syntheticPointer.clientY = clientY;
+      applyPointerFromClient(clientX, clientY);
+    },
+    clearSyntheticPointer() {
+      syntheticPointer.enabled = false;
+      mouse.inside = false;
+    },
     destroy,
     isReducedMotion: reducedMotion
   };
