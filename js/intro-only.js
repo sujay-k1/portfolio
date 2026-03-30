@@ -389,7 +389,7 @@ const finalHorizonCardsData = [
     title: 'Beyond work...',
     bodyHtml: `
       <p>I'm deeply drawn to building things, and I find real satisfaction in making something work. I feel fortunate to do what I love, and that instinct often continues outside of work too:</p>
-      <p>Recently, I built a <a href="https://voter-search.sujaykumar.net" target="_blank" rel="noopener noreferrer">portal for people of Jharkhand</a> to help them find their names in 2003 electoral roll data, where spelling inconsistencies make search difficult ahead of the upcoming SIR.</p>
+      <p>Recently, I built a <a href="https://voter-search.sujaykumar.net" target="_blank" rel="noopener noreferrer">portal for the people of Jharkhand</a> to help them find their names in 2003 electoral roll data, where spelling inconsistencies make search difficult ahead of the upcoming SIR.</p>
       <p>I also explored a <a href="/work/WhatsApp">speculative concept</a> to help WhatsApp users remember and act on actionable messages, and I make films from time to time: <a href="https://www.youtube.com/watch?v=Lv0h4fs75i8" target="_blank" rel="noopener noreferrer">here's one</a> I'm especially fond of.</p>
       <p>My previous portfolio was also a small expression of my long-standing fascination with Bezier curves: you can <a href="/Old_portfolio/">check it out here.</a></p>
     `,
