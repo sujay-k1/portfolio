@@ -17,8 +17,8 @@ RewriteEngine On
 
 # Legacy URL redirects
 RewriteRule ^home\.html$ / [R=301,L,NC]
-RewriteRule ^Work\.html$ /#work [R=301,L,NC]
-RewriteRule ^work/?$ /#work [R=301,L,NC]
+RewriteRule ^Work\.html$ https://sujaykumar.net/#work [R=301,L,NC]
+RewriteRule ^work/?$ https://sujaykumar.net/#work [R=301,L,NC]
 RewriteRule ^Work-Biz2X\.html$ /work/Biz2X [R=301,L,NC]
 RewriteRule ^Work-Jio\.html$ /work/Jio [R=301,L,NC]
 RewriteRule ^Work-MentorConnect\.html$ /work/MentorConnect [R=301,L,NC]
