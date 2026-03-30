@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Section 2 Interaction Prototype</title>
+  <link rel="preconnect" href="https://rsms.me">
+  <link rel="stylesheet" href="css/section2-interaction-prototype.css">
+</head>
+<body>
+  <main class="prototype-shell">
+    <section class="prototype-stage" aria-label="Section 2 interaction prototype">
+      <div class="prototype-grid-mask" aria-hidden="true">
+        <div class="prototype-grid" id="prototype-grid"></div>
+      </div>
+
+      <div class="prototype-copy">
+        <p class="prototype-line">
+          <span>I have </span><span class="prototype-highlight">built and transformed enterprise</span><span> products that power core operational workflows.</span>
+        </p>
+        <p class="prototype-line">
+          <span>I lead product design to help users accomplish critical work with </span><span class="prototype-highlight">less effort and more confidence.</span>
+        </p>
+        <p class="prototype-line">
+          <span>As a manager, I foster </span><span class="prototype-highlight">empathetic collaboration</span><span> and enable a thriving culture of growth!</span>
+        </p>
+        <p class="prototype-line">
+          <span>Outside work, I share my insights and expertise as a </span><span class="prototype-highlight">design educator.</span><span> I teach at MIT-WPU as visiting faculty and mentor designers at Designerrs Academy.</span>
+        </p>
+      </div>
+
+      <div class="prototype-interaction" id="prototype-interaction">
+        <svg class="prototype-path-debug" id="prototype-path-debug" aria-hidden="true"></svg>
+        <div class="prototype-path-hud" aria-live="polite">
+          <div><strong>Path edit</strong></div>
+          <div><span id="prototype-path-hud-node">Node 1</span> <span id="prototype-path-hud-handle">OUT</span></div>
+          <div><span id="prototype-path-hud-tangent">Tangent angle: --</span></div>
+          <div>`1-6` select node, `Tab` cycle</div>
+          <div>Arrows move node, `Shift` = larger step</div>
+          <div>`H` toggle handle, `Q/E` rotate</div>
+          <div>`[` `]` resize handle, `R` reset</div>
+          <div>`P` log current path JSON</div>
+        </div>
+
+        <div class="prototype-path-layer" id="prototype-path-layer">
+          <article class="prototype-card" data-card-index="0">
+            <div class="prototype-card-shell">
+              <div class="prototype-card-frame"></div>
+              <div class="prototype-card-fill"></div>
+              <div class="prototype-card-glow"></div>
+              <div class="prototype-card-content">
+                <h2>Clarity over hidden context</h2>
+              </div>
+            </div>
+          </article>
+          <article class="prototype-card" data-card-index="1">
+            <div class="prototype-card-shell">
+              <div class="prototype-card-frame"></div>
+              <div class="prototype-card-fill"></div>
+              <div class="prototype-card-glow"></div>
+              <div class="prototype-card-content">
+                <h2>System first thinking</h2>
+              </div>
+            </div>
+          </article>
+          <article class="prototype-card" data-card-index="2">
+            <div class="prototype-card-shell">
+              <div class="prototype-card-frame"></div>
+              <div class="prototype-card-fill"></div>
+              <div class="prototype-card-glow"></div>
+              <div class="prototype-card-content">
+                <h2>Efficiency</h2>
+              </div>
+            </div>
+          </article>
+          <article class="prototype-card" data-card-index="3">
+            <div class="prototype-card-shell">
+              <div class="prototype-card-frame"></div>
+              <div class="prototype-card-fill"></div>
+              <div class="prototype-card-glow"></div>
+              <div class="prototype-card-content">
+                <h2>Drive meaningful change</h2>
+              </div>
+            </div>
+          </article>
+          <article class="prototype-card" data-card-index="4">
+            <div class="prototype-card-shell">
+              <div class="prototype-card-frame"></div>
+              <div class="prototype-card-fill"></div>
+              <div class="prototype-card-glow"></div>
+              <div class="prototype-card-content">
+                <h2>Hands-on craft</h2>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="prototype-model-track" id="prototype-model-track" aria-hidden="true">
+          <div class="prototype-model" id="prototype-model"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script type="module" src="js/section2-interaction-prototype.js"></script>
+</body>
+</html>

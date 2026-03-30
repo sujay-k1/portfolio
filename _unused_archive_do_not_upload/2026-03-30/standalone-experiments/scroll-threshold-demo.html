@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scroll Threshold Demo</title>
+  <link rel="stylesheet" href="css/scroll-threshold-demo.css">
+</head>
+<body>
+  <div class="demo-controls" aria-label="Sampling controls">
+    <button class="demo-control-button is-active" data-sample-ms="10" type="button">10ms</button>
+    <button class="demo-control-button" data-sample-ms="50" type="button">50ms</button>
+    <button class="demo-control-button" data-sample-ms="100" type="button">100ms</button>
+    <button class="demo-control-button" data-sample-ms="200" type="button">200ms</button>
+  </div>
+  <div class="demo-controls demo-controls-mode" aria-label="Plot mode controls">
+    <button class="demo-control-button is-active" data-plot-mode="absolute" type="button">Absolute</button>
+    <button class="demo-control-button" data-plot-mode="average" type="button">Average</button>
+  </div>
+
+  <main class="demo-root" id="demo-root">
+    <div class="demo-track" id="demo-track"></div>
+  </main>
+
+  <aside class="demo-hud" aria-live="polite">
+    <div class="demo-hud-title">Raw Wheel</div>
+    <div class="demo-hud-row"><span>Section</span><strong id="hud-section">1 / 15</strong></div>
+    <div class="demo-hud-row"><span>Delta X</span><strong id="hud-delta-x">0</strong></div>
+    <div class="demo-hud-row"><span>Delta Y</span><strong id="hud-delta-y">0</strong></div>
+    <div class="demo-hud-row"><span>Accumulator</span><strong id="hud-accumulator">0</strong></div>
+    <div class="demo-hud-row"><span>Direction</span><strong id="hud-direction">none</strong></div>
+    <div class="demo-hud-row"><span>Heuristic</span><strong id="hud-heuristic">idle</strong></div>
+    <div class="demo-hud-row"><span>Sampling</span><strong id="hud-sampling">10ms</strong></div>
+    <div class="demo-hud-row"><span>Mode</span><strong id="hud-mode">absolute</strong></div>
+    <div class="demo-hud-row"><span>Animating</span><strong id="hud-animating">no</strong></div>
+    <div class="demo-hud-row"><span>Cooldown</span><strong id="hud-cooldown">off</strong></div>
+  </aside>
+
+  <section class="demo-graph-shell" aria-label="Raw delta graph">
+    <div class="demo-graph-title">Delta X / Delta Y sampled every 10ms</div>
+    <canvas class="demo-graph" id="demo-graph" width="1400" height="260"></canvas>
+    <div class="demo-graph-tooltip" id="demo-graph-tooltip" aria-hidden="true"></div>
+  </section>
+
+  <script src="js/scroll-threshold-demo.js"></script>
+</body>
+</html>

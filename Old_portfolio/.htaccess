@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^Work\.html$ work/ [NC,R=301,L]
+RewriteRule ^Work-Biz2X\.html$ work/Biz2X/ [NC,R=301,L]
+RewriteRule ^Work-Jio\.html$ work/Jio/ [NC,R=301,L]
+RewriteRule ^Work-WhatsApp\.html$ work/WhatsApp/ [NC,R=301,L]
+RewriteRule ^Work-MentorConnect\.html$ work/MentorConnect/ [NC,R=301,L]
+RewriteRule ^Work-SurakshaCentral\.html$ work/SurakshaCentral/ [NC,R=301,L]
+RewriteRule ^Work-Spillproof\.html$ work/Spillproof/ [NC,R=301,L]
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^(www\.)?sujaykumar\.net$ [NC]
+RewriteRule ^(.*)$ https://sujaykumar.net/$1 [L,R=301]
+</IfModule>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^(www\.)?sujaykumar\.net$ [NC]
+RewriteRule .* - [E=UPGRADE]
+    <IfModule mod_headers.c>
+        Header always set Content-Security-Policy "upgrade-insecure-requests;" env=UPGRADE
+    </IfModule>
+</IfModule>
