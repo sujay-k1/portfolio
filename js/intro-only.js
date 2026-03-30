@@ -65,7 +65,15 @@ const mainScrollDebugHud = {
   sampling: document.getElementById('main-scroll-debug-sampling'),
   mode: document.getElementById('main-scroll-debug-mode'),
   animating: document.getElementById('main-scroll-debug-animating'),
-  cooldown: document.getElementById('main-scroll-debug-cooldown')
+  cooldown: document.getElementById('main-scroll-debug-cooldown'),
+  layout: document.getElementById('main-scroll-debug-layout'),
+  card: document.getElementById('main-scroll-debug-card'),
+  leftGap: document.getElementById('main-scroll-debug-left-gap'),
+  rightGap: document.getElementById('main-scroll-debug-right-gap'),
+  cardWidth: document.getElementById('main-scroll-debug-card-width'),
+  targetGap: document.getElementById('main-scroll-debug-target-gap'),
+  targetWidth: document.getElementById('main-scroll-debug-target-width'),
+  viewportWidth: document.getElementById('main-scroll-debug-viewport-width')
 };
 let animatedStage = null;
 let snapSections = [];
@@ -161,6 +169,8 @@ const BITCOUNT_CONFIG = {
 const SECTION1_BITCOUNT_AUTOPILOT_MEDIA =
   '(max-width: 767px) and (orientation: portrait) and (hover: none) and (pointer: coarse)';
 const SECTION1_BITCOUNT_AUTOPILOT_DURATION_MS = 2400;
+const SECTION2_TABLET_LANDSCAPE_MEDIA =
+  '(min-width: 768px) and (max-width: 1023px) and (min-height: 601px) and (orientation: landscape)';
 const SECTION2_TABLET_PORTRAIT_MEDIA = '(min-width: 768px) and (max-width: 1023px) and (orientation: portrait)';
 const SECTION2_SPLIT_MEDIA = '(max-width: 767px) and (orientation: portrait)';
 const SECTION2_INLINE_ACCENT_MEDIA = '(max-width: 767px) and (orientation: portrait)';
@@ -465,7 +475,9 @@ const FINAL_HORIZON_STATE = {
   visualIndex: 1,
   x: 0,
   snapPoints: [],
+  collapsedSnapPoints: [],
   sharedLeftAnchor: 0,
+  specialCarryWidth: 0,
   specialExpansionDelta: 0,
   specialCollapseTimer: 0,
   specialCollapsing: false,
@@ -1329,8 +1341,28 @@ function usesMobileLandscapeLayout() {
   return window.matchMedia?.(MOBILE_LANDSCAPE_MEDIA)?.matches ?? false;
 }
 
+function usesFinalHorizonTabletLandscapeLayout() {
+  return window.matchMedia?.(SECTION2_TABLET_LANDSCAPE_MEDIA)?.matches ?? false;
+}
+
 function usesFinalHorizonTabletPortraitLayout() {
   return window.matchMedia?.(SECTION2_TABLET_PORTRAIT_MEDIA)?.matches ?? false;
+}
+
+function getFinalHorizonLayoutLabel() {
+  if (usesFinalHorizonVerticalLayout()) {
+    return 'mobile portrait';
+  }
+  if (usesMobileLandscapeLayout()) {
+    return 'mobile landscape';
+  }
+  if (usesFinalHorizonTabletLandscapeLayout()) {
+    return 'tablet landscape';
+  }
+  if (usesFinalHorizonTabletPortraitLayout()) {
+    return 'tablet portrait';
+  }
+  return 'desktop';
 }
 
 function getScrollAnimationImpactMultiplier() {
@@ -5033,6 +5065,8 @@ function refreshFinalHorizonSnapPoints() {
     const requiredMaxScroll = computedSnapPoints[computedSnapPoints.length - 1] ?? 0;
     const trailingPadding = Math.max(trail + (requiredMaxScroll - currentMaxScroll), 0);
     FINAL_HORIZON_STATE.sharedLeftAnchor = 0;
+    FINAL_HORIZON_STATE.collapsedSnapPoints = [];
+    FINAL_HORIZON_STATE.specialCarryWidth = 0;
     FINAL_HORIZON_STATE.specialExpansionDelta = 0;
     finalHorizonRail.style.setProperty('--folio-special-card-width', `${Math.max(window.innerWidth * 0.75, 0)}px`);
     finalHorizonRail.style.setProperty('--folio-special-card-expanded-width', `${Math.max(window.innerWidth * 0.75, 0)}px`);
@@ -5047,11 +5081,14 @@ function refreshFinalHorizonSnapPoints() {
   const gap = parseFloat(railStyles.columnGap || railStyles.gap) || 0;
   const scrollerWidth = finalHorizonScroller?.clientWidth || window.innerWidth || 0;
   const isMobileLandscape = usesMobileLandscapeLayout();
+  const isTabletLandscape = usesFinalHorizonTabletLandscapeLayout();
   const isTabletPortrait = usesFinalHorizonTabletPortraitLayout();
-  const useSpecialCardCarry = isMobileLandscape || isTabletPortrait;
+  const useSpecialCardCarry = isMobileLandscape || isTabletLandscape || isTabletPortrait;
   const baseYearOffset = clamp(window.innerWidth * 0.017, 18, 28);
   const sharedLeftAnchor = isMobileLandscape
     ? FINAL_HORIZON_LANDSCAPE_LEFT_REVEAL
+    : isTabletLandscape
+      ? FINAL_HORIZON_LANDSCAPE_LEFT_REVEAL
     : isTabletPortrait
       ? Math.max(lead, FINAL_HORIZON_TABLET_PORTRAIT_LEFT_REVEAL)
     : Math.max(0, lead - baseYearOffset);
@@ -5061,6 +5098,12 @@ function refreshFinalHorizonSnapPoints() {
         FINAL_HORIZON_LANDSCAPE_SPECIAL_WIDTH_MIN,
         FINAL_HORIZON_LANDSCAPE_SPECIAL_WIDTH_MAX
       )
+    : isTabletLandscape
+      ? clamp(
+          scrollerWidth * 0.1,
+          FINAL_HORIZON_LANDSCAPE_SPECIAL_WIDTH_MIN,
+          FINAL_HORIZON_LANDSCAPE_SPECIAL_WIDTH_MAX
+        )
     : isTabletPortrait
       ? clamp(
           scrollerWidth * 0.104,
@@ -5071,6 +5114,7 @@ function refreshFinalHorizonSnapPoints() {
   const specialExpandedWidth = specialWidth * 6;
   const currentOpportunityWidth = FINAL_HORIZON_STATE.cards[0]?.offsetWidth || specialWidth;
   FINAL_HORIZON_STATE.sharedLeftAnchor = sharedLeftAnchor;
+  FINAL_HORIZON_STATE.specialCarryWidth = specialWidth;
   FINAL_HORIZON_STATE.specialExpansionDelta = specialExpandedWidth - specialWidth;
   finalHorizonRail.style.setProperty('--folio-special-card-width', `${specialWidth}px`);
   finalHorizonRail.style.setProperty('--folio-special-card-expanded-width', `${specialExpandedWidth}px`);
@@ -5080,25 +5124,46 @@ function refreshFinalHorizonSnapPoints() {
         ? card.offsetLeft - FINAL_HORIZON_STATE.specialExpansionDelta
         : card.offsetLeft;
     const specialCardCarry =
-      useSpecialCardCarry && card.dataset.cardIndex === '1' ? currentOpportunityWidth : 0;
+      useSpecialCardCarry && card.dataset.cardIndex !== '0'
+        ? FINAL_HORIZON_STATE.specialCollapsing
+          ? specialWidth
+          : currentOpportunityWidth
+        : 0;
     return Math.max(0, adjustedLeft - sharedLeftAnchor - specialCardCarry);
   });
+  if (useSpecialCardCarry && !FINAL_HORIZON_STATE.expanded && !FINAL_HORIZON_STATE.specialCollapsing) {
+    FINAL_HORIZON_STATE.collapsedSnapPoints = computedSnapPoints.slice();
+  }
+  const stableSnapPoints =
+    useSpecialCardCarry &&
+    FINAL_HORIZON_STATE.collapsedSnapPoints.length === FINAL_HORIZON_STATE.cards.length &&
+    (FINAL_HORIZON_STATE.expanded || FINAL_HORIZON_STATE.specialCollapsing)
+      ? computedSnapPoints.map((point, index) =>
+          index === 0 ? point : (FINAL_HORIZON_STATE.collapsedSnapPoints[index] ?? point)
+        )
+      : computedSnapPoints;
+  const tabletLandscapeReferenceInset = isTabletLandscape
+    ? sharedLeftAnchor + specialWidth
+    : sharedLeftAnchor;
+  const tabletPortraitReferenceInset = isTabletPortrait
+    ? sharedLeftAnchor + specialWidth
+    : sharedLeftAnchor;
+  finalHorizonRail.style.setProperty(
+    '--folio-tablet-landscape-info-card-width',
+    `${Math.max(scrollerWidth - (tabletLandscapeReferenceInset * 2), 0)}px`
+  );
+  finalHorizonRail.style.setProperty(
+    '--folio-tablet-portrait-info-card-width',
+    `${Math.max(scrollerWidth - (tabletPortraitReferenceInset * 2), 0)}px`
+  );
   const currentMaxScroll = Math.max(
     finalHorizonScroller.scrollWidth - finalHorizonScroller.clientWidth,
     0
   );
-  const requiredMaxScroll = computedSnapPoints[computedSnapPoints.length - 1] ?? 0;
+  const requiredMaxScroll = stableSnapPoints[stableSnapPoints.length - 1] ?? 0;
   const trailingPadding = Math.max(trail + (requiredMaxScroll - currentMaxScroll), 0);
   finalHorizonRail.style.paddingRight = `${trailingPadding}px`;
-  FINAL_HORIZON_STATE.snapPoints = FINAL_HORIZON_STATE.cards.map((card) => {
-    const adjustedLeft =
-      FINAL_HORIZON_STATE.specialCollapsing && card.dataset.cardIndex !== '0'
-        ? card.offsetLeft - FINAL_HORIZON_STATE.specialExpansionDelta
-        : card.offsetLeft;
-    const specialCardCarry =
-      useSpecialCardCarry && card.dataset.cardIndex === '1' ? currentOpportunityWidth : 0;
-    return Math.max(0, adjustedLeft - sharedLeftAnchor - specialCardCarry);
-  });
+  FINAL_HORIZON_STATE.snapPoints = stableSnapPoints;
 }
 
 function updateFinalHorizonVisuals() {
@@ -5604,6 +5669,62 @@ function updateMainScrollDebugHud() {
   if (mainScrollDebugGraphTitle) {
     mainScrollDebugGraphTitle.textContent = `Delta X / Delta Y sampled every ${MAIN_SCROLL_DEBUG_STATE.graphSampleMs}ms`;
   }
+  const inFinalHorizon = SNAP_STATE.index === finalHorizonSectionIndex;
+  const activeCard = inFinalHorizon ? FINAL_HORIZON_STATE.cards[FINAL_HORIZON_STATE.index] || null : null;
+  const activeRect = activeCard?.getBoundingClientRect?.() || null;
+  const referenceInset =
+    inFinalHorizon &&
+    (
+      usesMobileLandscapeLayout() ||
+      usesFinalHorizonTabletLandscapeLayout() ||
+      usesFinalHorizonTabletPortraitLayout()
+    )
+      ? (FINAL_HORIZON_STATE.sharedLeftAnchor || 0) + (FINAL_HORIZON_STATE.specialCarryWidth || 0)
+      : FINAL_HORIZON_STATE.sharedLeftAnchor || 0;
+  const targetGap = inFinalHorizon && !usesFinalHorizonVerticalLayout()
+    ? referenceInset
+    : 0;
+  const targetWidth = inFinalHorizon && !usesFinalHorizonVerticalLayout()
+    ? Math.max(window.innerWidth - (targetGap * 2), 0)
+    : 0;
+  if (mainScrollDebugHud.layout) {
+    mainScrollDebugHud.layout.textContent = inFinalHorizon ? getFinalHorizonLayoutLabel() : '-';
+  }
+  if (mainScrollDebugHud.card) {
+    mainScrollDebugHud.card.textContent = activeCard
+      ? `${FINAL_HORIZON_STATE.index + 1} / ${FINAL_HORIZON_STATE.cards.length}`
+      : '-';
+  }
+  if (mainScrollDebugHud.leftGap) {
+    mainScrollDebugHud.leftGap.textContent = activeRect
+      ? `${activeRect.left.toFixed(2)}px`
+      : '-';
+  }
+  if (mainScrollDebugHud.rightGap) {
+    mainScrollDebugHud.rightGap.textContent = activeRect
+      ? `${Math.max(window.innerWidth - activeRect.right, 0).toFixed(2)}px`
+      : '-';
+  }
+  if (mainScrollDebugHud.cardWidth) {
+    mainScrollDebugHud.cardWidth.textContent = activeRect
+      ? `${activeRect.width.toFixed(2)}px`
+      : '-';
+  }
+  if (mainScrollDebugHud.targetGap) {
+    mainScrollDebugHud.targetGap.textContent = inFinalHorizon && !usesFinalHorizonVerticalLayout()
+      ? `${targetGap.toFixed(2)}px`
+      : '-';
+  }
+  if (mainScrollDebugHud.targetWidth) {
+    mainScrollDebugHud.targetWidth.textContent = inFinalHorizon && !usesFinalHorizonVerticalLayout()
+      ? `${targetWidth.toFixed(2)}px`
+      : '-';
+  }
+  if (mainScrollDebugHud.viewportWidth) {
+    mainScrollDebugHud.viewportWidth.textContent = inFinalHorizon
+      ? `${window.innerWidth.toFixed(2)}px`
+      : '-';
+  }
 }
 
 function restartMainScrollDebugSampling() {
@@ -5845,6 +5966,7 @@ function activateFinalHorizonSection(fromIndex) {
       if (isSection2FlowIndex(fromIndex)) {
         MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry = !usesFinalHorizonVerticalLayout();
         SNAP_STATE.wheelCooldownUntil = 0;
+        goToFinalHorizonCard(1, true);
       } else {
         goToFinalHorizonCard(1, true);
       }
@@ -5950,6 +6072,7 @@ function handleFinalHorizonScroll(deltaX, deltaY) {
       updateMainScrollDebugHud();
       const collapsedTarget = (
         usesMobileLandscapeLayout() ||
+        usesFinalHorizonTabletLandscapeLayout() ||
         usesFinalHorizonTabletPortraitLayout()
       )
         ? (FINAL_HORIZON_STATE.snapPoints[1] ?? 0)
