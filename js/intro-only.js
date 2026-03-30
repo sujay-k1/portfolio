@@ -400,6 +400,25 @@ const finalHorizonCardsData = [
     imageHeightMobile: 'auto',
     imageMaxHeightMobile: 'none',
     imageTranslateXMobile: '-9px'
+  },
+  {
+    kind: 'info',
+    title: 'A new card can live here',
+    eyebrow: 'Placeholder card',
+    bodyHtml: '<p>Use this slot for a teaser, a note, or a mini landing panel. It can point people to your <a href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a> or invite them to <a href="mailto:imsujaykumar@gmail.com">email you</a> while you shape the final content.</p>',
+    links: [
+      {
+        label: 'Resume',
+        href: 'Assets/Resume-SK.pdf',
+        newTab: true
+      },
+      {
+        label: 'Email',
+        href: 'mailto:imsujaykumar@gmail.com'
+      }
+    ],
+    image: 'Assets/profile.jpg',
+    imageAlt: 'Profile portrait'
   }
 ];
 let section2FillTargets = [];
@@ -4611,6 +4630,23 @@ function buildFinalHorizonRows(keywords, cardIndex) {
   }).join('');
 }
 
+function buildFinalHorizonInfoLinks(links) {
+  if (!Array.isArray(links) || !links.length) {
+    return '';
+  }
+  return `
+    <div class="folio-info-card-links">
+      ${links.map((link) => `
+        <a
+          class="folio-info-card-link"
+          href="${link.href}"
+          ${link.newTab ? 'target="_blank" rel="noopener noreferrer"' : ''}
+        >${link.label}</a>
+      `).join('')}
+    </div>
+  `;
+}
+
 function getFinalHorizonHoverChipContent(cardIndex) {
   if (cardIndex === 4) {
     return {
@@ -4814,6 +4850,31 @@ function renderFinalHorizonSection() {
         </article>
       `;
     }
+    if (card.kind === 'info') {
+      return `
+        <article
+          class="folio-hcard-wrap is-info-card"
+          data-card-index="${index}"
+          data-hover-chip-disabled="true"
+        >
+          <div class="folio-hcard">
+            <div class="folio-hcard-frame">
+              <div class="folio-info-card">
+                <div class="folio-info-card-media">
+                  <img src="${card.image}" alt="${card.imageAlt || ''}">
+                </div>
+                <div class="folio-info-card-copy">
+                  ${card.eyebrow ? `<p class="folio-info-card-eyebrow">${card.eyebrow}</p>` : ''}
+                  <h3 class="folio-info-card-title">${card.title || ''}</h3>
+                  <div class="folio-info-card-body">${card.bodyHtml || ''}</div>
+                  ${buildFinalHorizonInfoLinks(card.links)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
     return `
       <article
         class="folio-hcard-wrap ${index === 1 ? 'is-active' : ''}"
@@ -4882,6 +4943,7 @@ function renderFinalHorizonSection() {
       bindOpportunityFavoriteButton(card.querySelector('[data-opportunity-favorite]'));
       return;
     }
+    const hoverChipDisabled = card.dataset.hoverChipDisabled === 'true';
     const href = card.dataset.href;
     const newTab = card.dataset.newTab === 'true';
     const openCardHref = () => {
@@ -4900,6 +4962,7 @@ function renderFinalHorizonSection() {
     };
     card.addEventListener('pointerenter', (event) => {
       if (
+        hoverChipDisabled ||
         document.body.dataset.section !== String(finalHorizonSectionIndex + 1) ||
         !supportsFinalHorizonHover(event)
       ) {
@@ -4909,6 +4972,7 @@ function renderFinalHorizonSection() {
     });
     card.addEventListener('pointermove', (event) => {
       if (
+        hoverChipDisabled ||
         document.body.dataset.section !== String(finalHorizonSectionIndex + 1) ||
         !supportsFinalHorizonHover(event)
       ) {
@@ -5061,7 +5125,10 @@ function updateFinalHorizonVisuals() {
         visibleIndex = index;
       }
     });
-    activeIndex = FINAL_HORIZON_STATE.snapIndex === 0 ? 0 : visibleIndex;
+    activeIndex =
+      FINAL_HORIZON_STATE.snapIndex === 0 || FINAL_HORIZON_STATE.expanded
+        ? 0
+        : visibleIndex;
     FINAL_HORIZON_STATE.visualIndex = activeIndex;
   }
   FINAL_HORIZON_STATE.index = activeIndex;
@@ -5881,7 +5948,10 @@ function handleFinalHorizonScroll(deltaX, deltaY) {
     if (FINAL_HORIZON_STATE.snapIndex === 0 && cardOne) {
       MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit = false;
       updateMainScrollDebugHud();
-      const collapsedTarget = (usesMobileLandscapeLayout() || usesFinalHorizonTabletPortraitLayout())
+      const collapsedTarget = (
+        usesMobileLandscapeLayout() ||
+        usesFinalHorizonTabletPortraitLayout()
+      )
         ? (FINAL_HORIZON_STATE.snapPoints[1] ?? 0)
         : Math.max(
             0,

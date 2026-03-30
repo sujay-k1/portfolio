@@ -202,7 +202,6 @@ body.case-study-page.biz2x-page .biz2x-overview-panel {
 	body.case-study-page .section-heading-block,
 	body.case-study-page.case-study-index-enabled .case-study-index-shell {
 		width: clamp(200px, 28vw, 420px);
-		flex: 0 0 clamp(200px, 28vw, 420px);
 		min-width: 0;
 	}
 
