@@ -128,6 +128,7 @@ body {
 body.app-loading > header,
 body.app-loading > .folio-status-persistent,
 body.app-loading > .folio-bottom-nav-persistent,
+body.app-loading > .ga-consent-banner,
 body.app-loading > main {
   opacity: 0;
   pointer-events: none;
@@ -911,196 +912,6 @@ body.status-persistent-active .snap-section[data-section="9"] .folio-status,
 body.status-persistent-active .snap-section[data-section="10"] .folio-status {
   opacity: 0;
   pointer-events: none;
-}
-
-.main-scroll-debug-controls {
-  position: fixed;
-  top: 24px;
-  left: 24px;
-  z-index: 44;
-  display: flex;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-/* Debug UI intentionally hidden.
-   Keep the DOM, styling, and JS wiring intact because the sampled
-   fresh-input gate for the section 2/3 boundary still depends on it.
-   Remove this block if the graph/HUD/toggles need to be surfaced again. */
-.main-scroll-debug-controls,
-.main-scroll-debug-hud,
-.main-scroll-debug-graph-shell {
-  display: none;
-}
-
-body[data-section="3"] .main-scroll-debug-hud {
-  display: block;
-}
-
-.main-scroll-debug-controls-mode {
-  top: 68px;
-}
-
-.main-scroll-debug-button {
-  appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(20, 16, 26, 0.72);
-  color: rgba(255, 255, 255, 0.78);
-  padding: 10px 12px;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 12px;
-  line-height: 1;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  backdrop-filter: blur(16px);
-}
-
-.main-scroll-debug-button.is-active {
-  border-color: rgba(237, 246, 177, 0.4);
-  color: var(--accent-bright);
-}
-
-.main-scroll-debug-hud {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 44;
-  width: 236px;
-  padding: 16px 16px 14px;
-  border-radius: 18px;
-  background: rgba(20, 16, 26, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  pointer-events: none;
-}
-
-.main-scroll-debug-title {
-  margin-bottom: 14px;
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-bright);
-}
-
-.main-scroll-debug-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.main-scroll-debug-row + .main-scroll-debug-row {
-  margin-top: 7px;
-}
-
-.main-scroll-debug-row span {
-  color: rgba(255, 255, 255, 0.46);
-}
-
-.main-scroll-debug-row strong {
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.main-scroll-debug-graph-shell {
-  position: fixed;
-  left: 24px;
-  right: 24px;
-  bottom: 24px;
-  z-index: 42;
-  border-radius: 18px;
-  background: rgba(20, 16, 26, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px);
-  padding: 14px 16px 12px;
-  overflow: hidden;
-}
-
-.main-scroll-debug-graph-title {
-  margin-bottom: 10px;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-bright);
-}
-
-.main-scroll-debug-graph {
-  display: block;
-  width: 100%;
-  height: 180px;
-}
-
-.main-scroll-debug-tooltip {
-  position: absolute;
-  z-index: 2;
-  min-width: 128px;
-  max-width: 190px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(20, 16, 26, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 11px;
-  line-height: 1.4;
-  letter-spacing: 0.02em;
-  white-space: pre-line;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transform: translate(-50%, calc(-100% - 10px));
-}
-
-.main-scroll-debug-tooltip.is-visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-@media (max-width: 900px) {
-  .main-scroll-debug-controls {
-    top: 16px;
-    left: 16px;
-    flex-wrap: wrap;
-  }
-
-  .main-scroll-debug-controls-mode {
-    top: 62px;
-  }
-
-  .main-scroll-debug-hud {
-    left: 16px;
-    right: auto;
-    top: 16px;
-    width: min(184px, calc(100vw - 32px));
-  }
-
-  .main-scroll-debug-graph-shell {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
-  }
-}
-
-@media (max-width: 640px) {
-  .main-scroll-debug-hud {
-    width: min(168px, calc(100vw - 32px));
-    padding: 14px 14px 12px;
-  }
-
-  .main-scroll-debug-title {
-    margin-bottom: 10px;
-    font-size: 12px;
-  }
-
-  .main-scroll-debug-row {
-    font-size: 11px;
-  }
-
-  .main-scroll-debug-graph {
-    height: 160px;
-  }
 }
 
 .folio-case-top {
@@ -1897,6 +1708,10 @@ body.final-horizon-active {
   margin: 0;
 }
 
+.folio-info-card-body p + p {
+  margin-top: 0.9em;
+}
+
 .folio-info-card-body a {
   color: #edf6b1;
   text-decoration: underline;
@@ -1960,6 +1775,10 @@ body.final-horizon-active {
 }
 
 @media (min-width: 1024px) {
+  .folio-hcard-media {
+    height: clamp(212px, 28vh, 328px);
+  }
+
   .folio-horizon-rail {
     padding-right: var(--space-page-inline);
   }
@@ -3293,6 +3112,12 @@ body.loader-logo-active .brand-loader-slot {
     inset: 0;
   }
 
+  .snap-section[data-section="3"] .folio-hcard-wrap.is-info-card {
+    width: var(--folio-mobile-landscape-info-card-width, min(58vw, 520px));
+    min-width: var(--folio-mobile-landscape-info-card-width, 420px);
+    max-width: var(--folio-mobile-landscape-info-card-width, min(58vw, 520px));
+  }
+
   .folio-hcard-wrap.is-info-card .folio-info-card {
     grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
     grid-template-rows: 1fr;
@@ -3324,6 +3149,14 @@ body.loader-logo-active .brand-loader-slot {
     max-width: none;
     font-size: 12px;
     line-height: 1.45;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 8px;
+    padding-bottom: 16px;
+    scrollbar-gutter: stable;
   }
 
   .folio-hcard-wrap.is-info-card .folio-info-card-links {
@@ -3959,8 +3792,29 @@ body.loader-logo-active .brand-loader-slot {
     inset: 0;
   }
 
+  .snap-section[data-section="3"] .folio-hcard-wrap.is-info-card {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .snap-section[data-section="3"] .folio-hcard-wrap.is-info-card .folio-hcard {
+    position: relative;
+    inset: auto;
+  }
+
+  .snap-section[data-section="3"] .folio-hcard-wrap.is-info-card .folio-hcard-frame {
+    position: relative;
+    inset: auto;
+  }
+
+  .snap-section[data-section="3"] .folio-hcard-wrap.is-info-card .folio-info-card {
+    position: relative;
+    inset: auto;
+    grid-template-rows: auto auto;
+  }
+
   .folio-hcard-wrap.is-info-card .folio-info-card {
-    grid-template-rows: minmax(148px, 40%) 1fr;
     gap: 16px;
     padding: 20px;
   }

@@ -48,33 +48,6 @@ const sectionTransitionLayers = new Map(
     }
   ])
 );
-const mainScrollDebugGraph = document.getElementById('main-scroll-debug-graph');
-const mainScrollDebugGraphCtx = mainScrollDebugGraph?.getContext('2d') || null;
-const mainScrollDebugTooltip = document.getElementById('main-scroll-debug-tooltip');
-const mainScrollDebugGraphTitle = document.getElementById('main-scroll-debug-graph-title');
-const mainScrollDebugSampleButtons = Array.from(document.querySelectorAll('[data-scroll-debug-sample]'));
-const mainScrollDebugModeButtons = Array.from(document.querySelectorAll('[data-scroll-debug-mode]'));
-const mainScrollDebugHud = {
-  section: document.getElementById('main-scroll-debug-section'),
-  deltaX: document.getElementById('main-scroll-debug-delta-x'),
-  deltaY: document.getElementById('main-scroll-debug-delta-y'),
-  primary: document.getElementById('main-scroll-debug-primary'),
-  accumulator: document.getElementById('main-scroll-debug-accumulator'),
-  direction: document.getElementById('main-scroll-debug-direction'),
-  heuristic: document.getElementById('main-scroll-debug-heuristic'),
-  sampling: document.getElementById('main-scroll-debug-sampling'),
-  mode: document.getElementById('main-scroll-debug-mode'),
-  animating: document.getElementById('main-scroll-debug-animating'),
-  cooldown: document.getElementById('main-scroll-debug-cooldown'),
-  layout: document.getElementById('main-scroll-debug-layout'),
-  card: document.getElementById('main-scroll-debug-card'),
-  leftGap: document.getElementById('main-scroll-debug-left-gap'),
-  rightGap: document.getElementById('main-scroll-debug-right-gap'),
-  cardWidth: document.getElementById('main-scroll-debug-card-width'),
-  targetGap: document.getElementById('main-scroll-debug-target-gap'),
-  targetWidth: document.getElementById('main-scroll-debug-target-width'),
-  viewportWidth: document.getElementById('main-scroll-debug-viewport-width')
-};
 let animatedStage = null;
 let snapSections = [];
 let animatedSections = [];
@@ -413,20 +386,13 @@ const finalHorizonCardsData = [
   },
   {
     kind: 'info',
-    title: 'A new card can live here',
-    eyebrow: 'Placeholder card',
-    bodyHtml: '<p>Use this slot for a teaser, a note, or a mini landing panel. It can point people to your <a href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a> or invite them to <a href="mailto:imsujaykumar@gmail.com">email you</a> while you shape the final content.</p>',
-    links: [
-      {
-        label: 'Resume',
-        href: 'Assets/Resume-SK.pdf',
-        newTab: true
-      },
-      {
-        label: 'Email',
-        href: 'mailto:imsujaykumar@gmail.com'
-      }
-    ],
+    title: 'Beyond work...',
+    bodyHtml: `
+      <p>I'm deeply drawn to building things, and I find real satisfaction in making something work. I feel fortunate to do what I love, and that instinct often continues outside of work too:</p>
+      <p>Recently, I built a <a href="https://voter-search.sujaykumar.net" target="_blank" rel="noopener noreferrer">portal for citizens of Jharkhand</a> to help them find their names in 2003 electoral roll data, where spelling inconsistencies make search difficult ahead of the upcoming SIR.</p>
+      <p>I also explored a <a href="/work/WhatsApp">speculative concept</a> to help WhatsApp users remember and act on actionable messages, and I make films from time to time: <a href="https://www.youtube.com/watch?v=Lv0h4fs75i8" target="_blank" rel="noopener noreferrer">here's one</a> I'm especially fond of.</p>
+      <p>My previous portfolio was also a small expression of my long-standing fascination with Bezier curves: you can <a href="/Old_portfolio/">check it out here.</a></p>
+    `,
     image: 'Assets/profile.jpg',
     imageAlt: 'Profile portrait'
   }
@@ -2505,7 +2471,7 @@ function preloadFonts() {
 
 function preloadCriticalLibraries() {
   return new Promise((resolve, reject) => {
-    if (window.gsap && window.SplitText) {
+    if (window.gsap) {
       resolve();
       return;
     }
@@ -5145,9 +5111,16 @@ function refreshFinalHorizonSnapPoints() {
   const tabletLandscapeReferenceInset = isTabletLandscape
     ? sharedLeftAnchor + specialWidth
     : sharedLeftAnchor;
+  const mobileLandscapeReferenceInset = isMobileLandscape
+    ? sharedLeftAnchor + specialWidth
+    : sharedLeftAnchor;
   const tabletPortraitReferenceInset = isTabletPortrait
     ? sharedLeftAnchor + specialWidth
     : sharedLeftAnchor;
+  finalHorizonRail.style.setProperty(
+    '--folio-mobile-landscape-info-card-width',
+    `${Math.max(scrollerWidth - (mobileLandscapeReferenceInset * 2), 0)}px`
+  );
   finalHorizonRail.style.setProperty(
     '--folio-tablet-landscape-info-card-width',
     `${Math.max(scrollerWidth - (tabletLandscapeReferenceInset * 2), 0)}px`
@@ -5291,26 +5264,10 @@ function setFinalHorizonTransitionDuration(durationSeconds) {
 }
 
 function recordMainScrollDebugMotion(type) {
-  const t = performance.now() - MAIN_SCROLL_DEBUG_STATE.startAt;
-  MAIN_SCROLL_DEBUG_STATE.motionMarkers.push({ t, type });
-  while (
-    MAIN_SCROLL_DEBUG_STATE.motionMarkers.length &&
-    t - MAIN_SCROLL_DEBUG_STATE.motionMarkers[0].t > MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS
-  ) {
-    MAIN_SCROLL_DEBUG_STATE.motionMarkers.shift();
-  }
+  void type;
 }
 
 function resizeMainScrollDebugGraph() {
-  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
-    return;
-  }
-  const rect = mainScrollDebugGraph.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  mainScrollDebugGraph.width = Math.max(1, Math.round(rect.width * dpr));
-  mainScrollDebugGraph.height = Math.max(1, Math.round(rect.height * dpr));
-  mainScrollDebugGraphCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  drawMainScrollDebugGraph();
 }
 
 function getMainScrollDebugWindowPrimary(now) {
@@ -5408,323 +5365,9 @@ function sampleMainScrollDebugGraph() {
     MAIN_SCROLL_DEBUG_STATE.heuristicMarkers.shift();
   }
 
-  drawMainScrollDebugGraph();
-}
-
-function drawMainScrollDebugGraph() {
-  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
-    return;
-  }
-  const rect = mainScrollDebugGraph.getBoundingClientRect();
-  const width = rect.width;
-  const height = rect.height;
-  if (!width || !height) {
-    return;
-  }
-
-  mainScrollDebugGraphCtx.clearRect(0, 0, width, height);
-  mainScrollDebugGraphCtx.fillStyle = 'rgba(255,255,255,0.02)';
-  mainScrollDebugGraphCtx.fillRect(0, 0, width, height);
-
-  mainScrollDebugGraphCtx.strokeStyle = 'rgba(255,255,255,0.08)';
-  mainScrollDebugGraphCtx.lineWidth = 1;
-  for (let i = 0; i <= 4; i += 1) {
-    const y = (height / 4) * i;
-    mainScrollDebugGraphCtx.beginPath();
-    mainScrollDebugGraphCtx.moveTo(0, y);
-    mainScrollDebugGraphCtx.lineTo(width, y);
-    mainScrollDebugGraphCtx.stroke();
-  }
-
-  const latestT = MAIN_SCROLL_DEBUG_STATE.graphSamples.length
-    ? MAIN_SCROLL_DEBUG_STATE.graphSamples[MAIN_SCROLL_DEBUG_STATE.graphSamples.length - 1].t
-    : MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS;
-  const minT = Math.max(0, latestT - MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS);
-  const visibleSamples = MAIN_SCROLL_DEBUG_STATE.graphSamples.filter((sample) => sample.t >= minT);
-  const maxAbs = Math.max(
-    1,
-    ...visibleSamples.map((sample) => Math.max(Math.abs(sample.deltaX), Math.abs(sample.deltaY)))
-  );
-  const centerY = height * 0.5;
-  const scaleY = (height * 0.42) / maxAbs;
-
-  mainScrollDebugGraphCtx.strokeStyle = 'rgba(255,255,255,0.18)';
-  mainScrollDebugGraphCtx.lineWidth = 1;
-  mainScrollDebugGraphCtx.beginPath();
-  mainScrollDebugGraphCtx.moveTo(0, centerY);
-  mainScrollDebugGraphCtx.lineTo(width, centerY);
-  mainScrollDebugGraphCtx.stroke();
-
-  const drawLine = (key, color) => {
-    mainScrollDebugGraphCtx.strokeStyle = color;
-    mainScrollDebugGraphCtx.lineWidth = 1.6;
-    mainScrollDebugGraphCtx.beginPath();
-    visibleSamples.forEach((sample, index) => {
-      const x = ((sample.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      const y = centerY - sample[key] * scaleY;
-      if (index === 0) {
-        mainScrollDebugGraphCtx.moveTo(x, y);
-      } else {
-        mainScrollDebugGraphCtx.lineTo(x, y);
-      }
-    });
-    mainScrollDebugGraphCtx.stroke();
-  };
-
-  const drawDeltaYLine = () => {
-    if (visibleSamples.length < 2) {
-      drawLine('deltaY', '#edf6b1');
-      return;
-    }
-    mainScrollDebugGraphCtx.lineWidth = 1.6;
-    for (let i = 1; i < visibleSamples.length; i += 1) {
-      const prev = visibleSamples[i - 1];
-      const current = visibleSamples[i];
-      const x1 = ((prev.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      const y1 = centerY - prev.deltaY * scaleY;
-      const x2 = ((current.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      const y2 = centerY - current.deltaY * scaleY;
-      mainScrollDebugGraphCtx.strokeStyle = current.deltaY > prev.deltaY ? '#56ff8a' : '#edf6b1';
-      mainScrollDebugGraphCtx.beginPath();
-      mainScrollDebugGraphCtx.moveTo(x1, y1);
-      mainScrollDebugGraphCtx.lineTo(x2, y2);
-      mainScrollDebugGraphCtx.stroke();
-    }
-  };
-
-  const drawNegativeAbsoluteYLine = () => {
-    if (visibleSamples.length < 2) {
-      return;
-    }
-    mainScrollDebugGraphCtx.lineWidth = 1.2;
-    for (let i = 1; i < visibleSamples.length; i += 1) {
-      const prev = visibleSamples[i - 1];
-      const current = visibleSamples[i];
-      if (prev.deltaY >= 0 || current.deltaY >= 0) {
-        continue;
-      }
-      const x1 = ((prev.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      const y1 = centerY - Math.abs(prev.deltaY) * scaleY;
-      const x2 = ((current.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      const y2 = centerY - Math.abs(current.deltaY) * scaleY;
-      mainScrollDebugGraphCtx.strokeStyle =
-        Math.abs(current.deltaY) > Math.abs(prev.deltaY) ? '#0f6b43' : '#ff9c43';
-      mainScrollDebugGraphCtx.beginPath();
-      mainScrollDebugGraphCtx.moveTo(x1, y1);
-      mainScrollDebugGraphCtx.lineTo(x2, y2);
-      mainScrollDebugGraphCtx.stroke();
-    }
-  };
-
-  drawLine('deltaX', '#56a6ff');
-  drawDeltaYLine();
-  drawNegativeAbsoluteYLine();
-
-  MAIN_SCROLL_DEBUG_STATE.heuristicMarkers
-    .filter((marker) => marker.t >= minT)
-    .forEach((marker) => {
-      const x = ((marker.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      mainScrollDebugGraphCtx.fillStyle =
-        marker.heuristic === 'fresh' ? '#9b6bff' : marker.heuristic === 'existing' ? '#ff78d2' : '#ff9c43';
-      mainScrollDebugGraphCtx.beginPath();
-      mainScrollDebugGraphCtx.arc(x, 10, 4, 0, Math.PI * 2);
-      mainScrollDebugGraphCtx.fill();
-    });
-
-  MAIN_SCROLL_DEBUG_STATE.motionMarkers
-    .filter((marker) => marker.t >= minT)
-    .forEach((marker) => {
-      const x = ((marker.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-      mainScrollDebugGraphCtx.strokeStyle =
-        marker.type === 'start' ? 'rgba(255, 92, 92, 0.95)' : 'rgba(255, 120, 210, 0.95)';
-      mainScrollDebugGraphCtx.lineWidth = 1;
-      mainScrollDebugGraphCtx.beginPath();
-      mainScrollDebugGraphCtx.moveTo(x, 0);
-      mainScrollDebugGraphCtx.lineTo(x, height);
-      mainScrollDebugGraphCtx.stroke();
-    });
-
-  MAIN_SCROLL_DEBUG_STATE.renderedPoints = [];
-  visibleSamples.forEach((sample) => {
-    const x = ((sample.t - minT) / MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS) * width;
-    const yX = centerY - sample.deltaX * scaleY;
-    const yY = centerY - sample.deltaY * scaleY;
-    mainScrollDebugGraphCtx.fillStyle = '#56a6ff';
-    mainScrollDebugGraphCtx.beginPath();
-    mainScrollDebugGraphCtx.arc(x, yX, 2.2, 0, Math.PI * 2);
-    mainScrollDebugGraphCtx.fill();
-    if (sample.deltaY >= 0) {
-      mainScrollDebugGraphCtx.fillStyle = '#edf6b1';
-      mainScrollDebugGraphCtx.beginPath();
-      mainScrollDebugGraphCtx.arc(x, yY, 2.2, 0, Math.PI * 2);
-      mainScrollDebugGraphCtx.fill();
-    }
-    MAIN_SCROLL_DEBUG_STATE.renderedPoints.push({ x, y: yX, axis: 'X', sample });
-    if (sample.deltaY >= 0) {
-      MAIN_SCROLL_DEBUG_STATE.renderedPoints.push({ x, y: yY, axis: 'Y', sample });
-    }
-  });
-}
-
-function hideMainScrollDebugTooltip() {
-  if (mainScrollDebugTooltip) {
-    mainScrollDebugTooltip.classList.remove('is-visible');
-  }
-}
-
-function showMainScrollDebugTooltip(point) {
-  if (!mainScrollDebugTooltip || !mainScrollDebugGraph) {
-    return;
-  }
-  const rect = mainScrollDebugGraph.getBoundingClientRect();
-  const shellRect = mainScrollDebugGraph.closest('.main-scroll-debug-graph-shell')?.getBoundingClientRect();
-  if (!shellRect) {
-    return;
-  }
-  const signedValue = point.axis === 'X' ? point.sample.deltaX : point.sample.deltaY;
-  mainScrollDebugTooltip.textContent =
-    `axis ${point.axis}\nmode ${MAIN_SCROLL_DEBUG_STATE.plotMode}\nplotted ${Math.abs(signedValue).toFixed(2)}\nsigned ${signedValue.toFixed(2)}\ndeltaX ${point.sample.deltaX.toFixed(2)}\ndeltaY ${point.sample.deltaY.toFixed(2)}\nprimary ${point.sample.primaryDelta.toFixed(2)}\ntime ${(point.sample.t / 1000).toFixed(2)}s`;
-  mainScrollDebugTooltip.classList.add('is-visible');
-
-  const rawLeft = (rect.left - shellRect.left) + point.x;
-  const rawTop = (rect.top - shellRect.top) + point.y;
-  const tipRect = mainScrollDebugTooltip.getBoundingClientRect();
-  const halfWidth = tipRect.width * 0.5;
-  const minLeft = halfWidth + 8;
-  const maxLeft = shellRect.width - halfWidth - 8;
-  const clampedLeft = Math.max(minLeft, Math.min(maxLeft, rawLeft));
-  const minTop = tipRect.height + 16;
-  const maxTop = shellRect.height - 8;
-  const clampedTop = Math.max(minTop, Math.min(maxTop, rawTop));
-
-  mainScrollDebugTooltip.style.left = `${clampedLeft}px`;
-  mainScrollDebugTooltip.style.top = `${clampedTop}px`;
-}
-
-function handleMainScrollDebugGraphHover(event) {
-  if (!mainScrollDebugGraph) {
-    return;
-  }
-  const rect = mainScrollDebugGraph.getBoundingClientRect();
-  const x = event.clientX - rect.left;
-  const y = event.clientY - rect.top;
-  let closest = null;
-  let closestDistance = 10;
-
-  MAIN_SCROLL_DEBUG_STATE.renderedPoints.forEach((point) => {
-    const dx = point.x - x;
-    const dy = point.y - y;
-    const distance = Math.hypot(dx, dy);
-    if (distance <= closestDistance) {
-      closestDistance = distance;
-      closest = point;
-    }
-  });
-
-  if (!closest) {
-    hideMainScrollDebugTooltip();
-    return;
-  }
-  showMainScrollDebugTooltip(closest);
 }
 
 function updateMainScrollDebugHud() {
-  if (mainScrollDebugHud.section) {
-    mainScrollDebugHud.section.textContent = `${SNAP_STATE.index + 1} / ${snapSections.length}`;
-  }
-  if (mainScrollDebugHud.deltaX) {
-    mainScrollDebugHud.deltaX.textContent = MAIN_SCROLL_DEBUG_STATE.lastDeltaX.toFixed(2);
-  }
-  if (mainScrollDebugHud.deltaY) {
-    mainScrollDebugHud.deltaY.textContent = MAIN_SCROLL_DEBUG_STATE.lastDeltaY.toFixed(2);
-  }
-  if (mainScrollDebugHud.primary) {
-    mainScrollDebugHud.primary.textContent = MAIN_SCROLL_DEBUG_STATE.lastPrimaryDelta.toFixed(2);
-  }
-  if (mainScrollDebugHud.accumulator) {
-    mainScrollDebugHud.accumulator.textContent = getMainScrollDebugAccumulator().toFixed(2);
-  }
-  if (mainScrollDebugHud.direction) {
-    mainScrollDebugHud.direction.textContent =
-      MAIN_SCROLL_DEBUG_STATE.lastDirection > 0 ? 'forward' : MAIN_SCROLL_DEBUG_STATE.lastDirection < 0 ? 'back' : 'none';
-  }
-  if (mainScrollDebugHud.heuristic) {
-    mainScrollDebugHud.heuristic.textContent = MAIN_SCROLL_DEBUG_STATE.heuristic;
-  }
-  if (mainScrollDebugHud.sampling) {
-    mainScrollDebugHud.sampling.textContent = `${MAIN_SCROLL_DEBUG_STATE.graphSampleMs}ms`;
-  }
-  if (mainScrollDebugHud.mode) {
-    mainScrollDebugHud.mode.textContent = MAIN_SCROLL_DEBUG_STATE.plotMode;
-  }
-  if (mainScrollDebugHud.animating) {
-    mainScrollDebugHud.animating.textContent = SNAP_STATE.isAnimating || FINAL_HORIZON_STATE.isAnimating ? 'yes' : 'no';
-  }
-  if (mainScrollDebugHud.cooldown) {
-    const gateActive =
-      MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry ||
-      MAIN_SCROLL_DEBUG_STATE.requireFreshSpecialExit;
-    mainScrollDebugHud.cooldown.textContent = gateActive ? 'fresh' : 'off';
-  }
-  if (mainScrollDebugGraphTitle) {
-    mainScrollDebugGraphTitle.textContent = `Delta X / Delta Y sampled every ${MAIN_SCROLL_DEBUG_STATE.graphSampleMs}ms`;
-  }
-  const inFinalHorizon = SNAP_STATE.index === finalHorizonSectionIndex;
-  const activeCard = inFinalHorizon ? FINAL_HORIZON_STATE.cards[FINAL_HORIZON_STATE.index] || null : null;
-  const activeRect = activeCard?.getBoundingClientRect?.() || null;
-  const referenceInset =
-    inFinalHorizon &&
-    (
-      usesMobileLandscapeLayout() ||
-      usesFinalHorizonTabletLandscapeLayout() ||
-      usesFinalHorizonTabletPortraitLayout()
-    )
-      ? (FINAL_HORIZON_STATE.sharedLeftAnchor || 0) + (FINAL_HORIZON_STATE.specialCarryWidth || 0)
-      : FINAL_HORIZON_STATE.sharedLeftAnchor || 0;
-  const targetGap = inFinalHorizon && !usesFinalHorizonVerticalLayout()
-    ? referenceInset
-    : 0;
-  const targetWidth = inFinalHorizon && !usesFinalHorizonVerticalLayout()
-    ? Math.max(window.innerWidth - (targetGap * 2), 0)
-    : 0;
-  if (mainScrollDebugHud.layout) {
-    mainScrollDebugHud.layout.textContent = inFinalHorizon ? getFinalHorizonLayoutLabel() : '-';
-  }
-  if (mainScrollDebugHud.card) {
-    mainScrollDebugHud.card.textContent = activeCard
-      ? `${FINAL_HORIZON_STATE.index + 1} / ${FINAL_HORIZON_STATE.cards.length}`
-      : '-';
-  }
-  if (mainScrollDebugHud.leftGap) {
-    mainScrollDebugHud.leftGap.textContent = activeRect
-      ? `${activeRect.left.toFixed(2)}px`
-      : '-';
-  }
-  if (mainScrollDebugHud.rightGap) {
-    mainScrollDebugHud.rightGap.textContent = activeRect
-      ? `${Math.max(window.innerWidth - activeRect.right, 0).toFixed(2)}px`
-      : '-';
-  }
-  if (mainScrollDebugHud.cardWidth) {
-    mainScrollDebugHud.cardWidth.textContent = activeRect
-      ? `${activeRect.width.toFixed(2)}px`
-      : '-';
-  }
-  if (mainScrollDebugHud.targetGap) {
-    mainScrollDebugHud.targetGap.textContent = inFinalHorizon && !usesFinalHorizonVerticalLayout()
-      ? `${targetGap.toFixed(2)}px`
-      : '-';
-  }
-  if (mainScrollDebugHud.targetWidth) {
-    mainScrollDebugHud.targetWidth.textContent = inFinalHorizon && !usesFinalHorizonVerticalLayout()
-      ? `${targetWidth.toFixed(2)}px`
-      : '-';
-  }
-  if (mainScrollDebugHud.viewportWidth) {
-    mainScrollDebugHud.viewportWidth.textContent = inFinalHorizon
-      ? `${window.innerWidth.toFixed(2)}px`
-      : '-';
-  }
 }
 
 function restartMainScrollDebugSampling() {
@@ -5735,13 +5378,6 @@ function restartMainScrollDebugSampling() {
     sampleMainScrollDebugGraph,
     MAIN_SCROLL_DEBUG_STATE.graphSampleMs
   );
-  mainScrollDebugSampleButtons.forEach((button) => {
-    button.classList.toggle('is-active', Number(button.dataset.scrollDebugSample) === MAIN_SCROLL_DEBUG_STATE.graphSampleMs);
-  });
-  mainScrollDebugModeButtons.forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.scrollDebugMode === MAIN_SCROLL_DEBUG_STATE.plotMode);
-  });
-  updateMainScrollDebugHud();
 }
 
 function recordMainScrollDebugInput(deltaX, deltaY) {
@@ -5773,39 +5409,7 @@ function consumeMainScrollDebugFreshGate() {
 }
 
 function initMainScrollDebug() {
-  if (!mainScrollDebugGraph || !mainScrollDebugGraphCtx) {
-    return;
-  }
-  resizeMainScrollDebugGraph();
   restartMainScrollDebugSampling();
-  updateMainScrollDebugHud();
-
-  mainScrollDebugSampleButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const nextMs = Number(button.dataset.scrollDebugSample);
-      if (!nextMs || nextMs === MAIN_SCROLL_DEBUG_STATE.graphSampleMs) {
-        return;
-      }
-      MAIN_SCROLL_DEBUG_STATE.graphSampleMs = nextMs;
-      restartMainScrollDebugSampling();
-      drawMainScrollDebugGraph();
-    });
-  });
-
-  mainScrollDebugModeButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      const nextMode = button.dataset.scrollDebugMode;
-      if (!nextMode || nextMode === MAIN_SCROLL_DEBUG_STATE.plotMode) {
-        return;
-      }
-      MAIN_SCROLL_DEBUG_STATE.plotMode = nextMode;
-      restartMainScrollDebugSampling();
-      drawMainScrollDebugGraph();
-    });
-  });
-
-  mainScrollDebugGraph.addEventListener('mousemove', handleMainScrollDebugGraphHover);
-  mainScrollDebugGraph.addEventListener('mouseleave', hideMainScrollDebugTooltip);
 }
 
 function updateFinalHorizonCardOneSplit(card, isActive) {
@@ -5829,6 +5433,94 @@ function settleFinalHorizonCardSnap() {
   SNAP_STATE.finalCardsAccumulator = 0;
   SNAP_STATE.finalCardsDirection = 0;
   SNAP_STATE.wheelCooldownUntil = 0;
+}
+
+function getFinalHorizonInfoCardOverflowRange() {
+  if (!usesFinalHorizonVerticalLayout() || !finalHorizonScroller || !FINAL_HORIZON_STATE.cards.length) {
+    return null;
+  }
+  const lastIndex = FINAL_HORIZON_STATE.cards.length - 1;
+  const lastCard = FINAL_HORIZON_STATE.cards[lastIndex];
+  if (!lastCard || !lastCard.classList.contains('is-info-card') || FINAL_HORIZON_STATE.snapIndex !== lastIndex) {
+    return null;
+  }
+  const minScroll = FINAL_HORIZON_STATE.snapPoints[lastIndex] ?? 0;
+  const maxScroll = Math.max(
+    minScroll,
+    finalHorizonScroller.scrollHeight - finalHorizonScroller.clientHeight
+  );
+  if (maxScroll <= minScroll + 1) {
+    return null;
+  }
+  return {
+    minScroll,
+    maxScroll,
+    currentScroll: getFinalHorizonScrollPosition()
+  };
+}
+
+function consumeFinalHorizonInfoCardOverflow(delta) {
+  const overflowRange = getFinalHorizonInfoCardOverflowRange();
+  if (!overflowRange || delta === 0) {
+    return false;
+  }
+  const { minScroll, maxScroll, currentScroll } = overflowRange;
+  const nextScroll = clamp(currentScroll + delta, minScroll, maxScroll);
+  if (Math.abs(nextScroll - currentScroll) < 0.5) {
+    return delta > 0 && currentScroll >= maxScroll - 0.5;
+  }
+  setFinalHorizonScrollPosition(nextScroll);
+  updateFinalHorizonVisuals();
+  settleFinalHorizonCardSnap();
+  return true;
+}
+
+function getActiveMobileLandscapeInfoCardBody() {
+  if (
+    !usesMobileLandscapeLayout() ||
+    SNAP_STATE.index !== finalHorizonSectionIndex ||
+    FINAL_HORIZON_STATE.isAnimating ||
+    !FINAL_HORIZON_STATE.cards.length
+  ) {
+    return null;
+  }
+  const lastIndex = FINAL_HORIZON_STATE.cards.length - 1;
+  if (FINAL_HORIZON_STATE.snapIndex !== lastIndex) {
+    return null;
+  }
+  const lastCard = FINAL_HORIZON_STATE.cards[lastIndex];
+  if (!lastCard || !lastCard.classList.contains('is-info-card')) {
+    return null;
+  }
+  const body = lastCard.querySelector('.folio-info-card-body');
+  if (!(body instanceof HTMLElement)) {
+    return null;
+  }
+  if (body.scrollHeight - body.clientHeight <= 1) {
+    return null;
+  }
+  return body;
+}
+
+function consumeMobileLandscapeInfoCardBodyScroll(target, deltaY) {
+  if (!(target instanceof Element) || deltaY === 0) {
+    return false;
+  }
+  const body = getActiveMobileLandscapeInfoCardBody();
+  if (!body || !body.contains(target)) {
+    return false;
+  }
+  const maxScroll = Math.max(body.scrollHeight - body.clientHeight, 0);
+  if (maxScroll <= 0) {
+    return false;
+  }
+  const currentScroll = body.scrollTop;
+  const nextScroll = clamp(currentScroll + deltaY, 0, maxScroll);
+  if (Math.abs(nextScroll - currentScroll) < 0.5) {
+    return false;
+  }
+  body.scrollTop = nextScroll;
+  return true;
 }
 
 function goToFinalHorizonCard(index, immediate = false, targetOverride = null) {
@@ -5993,6 +5685,9 @@ function handleFinalHorizonScroll(deltaX, deltaY) {
   const primaryDelta = Math.abs(deltaX) > Math.abs(deltaY) ? deltaX : deltaY;
   const direction = primaryDelta > 0 ? 1 : primaryDelta < 0 ? -1 : 0;
   if (!direction) {
+    return true;
+  }
+  if (consumeFinalHorizonInfoCardOverflow(primaryDelta)) {
     return true;
   }
   if (MAIN_SCROLL_DEBUG_STATE.requireFreshSection3Entry) {
@@ -6608,6 +6303,9 @@ function initSnapScroll() {
       const now = performance.now();
       const adjustedDeltaX = scaleScrollAnimationDelta(event.deltaX);
       const adjustedDeltaY = scaleScrollAnimationDelta(event.deltaY);
+      if (consumeMobileLandscapeInfoCardBodyScroll(event.target, event.deltaY)) {
+        return;
+      }
       SNAP_STATE.lastPrimaryInputDelta =
         Math.abs(adjustedDeltaX) > Math.abs(adjustedDeltaY) ? adjustedDeltaX : adjustedDeltaY;
       recordMainScrollDebugInput(event.deltaX, event.deltaY);
@@ -6724,6 +6422,10 @@ function initSnapScroll() {
       const rawDy = SNAP_STATE.touchLastY - currentY;
       SNAP_STATE.touchLastTs = now;
       SNAP_STATE.touchLastY = currentY;
+      if (consumeMobileLandscapeInfoCardBodyScroll(event.target, rawDy)) {
+        SNAP_STATE.touchStartY = currentY;
+        return;
+      }
       if (routeTouchScrollDelta(rawDy)) {
         SNAP_STATE.touchStartY = currentY;
       }

@@ -3,8 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Curious Designer for Complex Systems</title>
-  <meta name="description" content="Scroll-sequenced portfolio narrative with animated typography.">
+  <title>Sujay Kumar — Product Designer for Complex Systems</title>
+  <meta name="description" content="Portfolio of Sujay Kumar, a product designer specializing in complex systems, enterprise platforms, and user-focused solutions.">
+  <link rel="icon" type="image/x-icon" href="Assets/Logo-full.ico">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Sujay Kumar — Product Designer for Complex Systems">
+  <meta property="og:description" content="Portfolio of Sujay Kumar, a product designer specializing in complex systems, enterprise platforms, and user-focused solutions.">
+  <meta property="og:image" content="https://sujaykumar.net/Assets/Link-preview-thumbnail.jpg">
+  <meta property="og:url" content="https://sujaykumar.net">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sujay Kumar — Product Designer for Complex Systems">
+  <meta name="twitter:description" content="Portfolio of Sujay Kumar, a product designer specializing in complex systems, enterprise platforms, and user-focused solutions.">
+  <meta name="twitter:image" content="https://sujaykumar.net/Assets/Link-preview-thumbnail.jpg">
+
   <link rel="preconnect" href="https://rsms.me">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,45 +96,6 @@
   <div class="final-horizon-lottie-marker" id="final-horizon-lottie-marker" aria-hidden="true">
     <div class="final-horizon-lottie-marker-inner" id="final-horizon-lottie-marker-inner"></div>
   </div>
-  <!-- Debug UI: hidden via CSS on purpose. Keep this markup intact so the
-       section 2/3 fresh-input sampler can be resurfaced quickly later. -->
-  <div class="main-scroll-debug-controls" aria-label="Scroll debug sampling controls">
-    <button class="main-scroll-debug-button" data-scroll-debug-sample="10" type="button">10ms</button>
-    <button class="main-scroll-debug-button" data-scroll-debug-sample="50" type="button">50ms</button>
-    <button class="main-scroll-debug-button" data-scroll-debug-sample="100" type="button">100ms</button>
-    <button class="main-scroll-debug-button is-active" data-scroll-debug-sample="200" type="button">200ms</button>
-  </div>
-  <div class="main-scroll-debug-controls main-scroll-debug-controls-mode" aria-label="Scroll debug plot mode controls">
-    <button class="main-scroll-debug-button" data-scroll-debug-mode="absolute" type="button">Absolute</button>
-    <button class="main-scroll-debug-button is-active" data-scroll-debug-mode="average" type="button">Average</button>
-  </div>
-  <aside class="main-scroll-debug-hud" aria-live="polite">
-    <div class="main-scroll-debug-title">Raw Wheel</div>
-    <div class="main-scroll-debug-row"><span>Section</span><strong id="main-scroll-debug-section">1 / 10</strong></div>
-    <div class="main-scroll-debug-row"><span>Delta X</span><strong id="main-scroll-debug-delta-x">0</strong></div>
-    <div class="main-scroll-debug-row"><span>Delta Y</span><strong id="main-scroll-debug-delta-y">0</strong></div>
-    <div class="main-scroll-debug-row"><span>Primary</span><strong id="main-scroll-debug-primary">0</strong></div>
-    <div class="main-scroll-debug-row"><span>Accumulator</span><strong id="main-scroll-debug-accumulator">0</strong></div>
-    <div class="main-scroll-debug-row"><span>Direction</span><strong id="main-scroll-debug-direction">none</strong></div>
-    <div class="main-scroll-debug-row"><span>Heuristic</span><strong id="main-scroll-debug-heuristic">idle</strong></div>
-    <div class="main-scroll-debug-row"><span>Sampling</span><strong id="main-scroll-debug-sampling">200ms</strong></div>
-    <div class="main-scroll-debug-row"><span>Mode</span><strong id="main-scroll-debug-mode">average</strong></div>
-    <div class="main-scroll-debug-row"><span>Animating</span><strong id="main-scroll-debug-animating">no</strong></div>
-    <div class="main-scroll-debug-row"><span>Fresh Gate</span><strong id="main-scroll-debug-cooldown">off</strong></div>
-    <div class="main-scroll-debug-row"><span>Layout</span><strong id="main-scroll-debug-layout">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Card</span><strong id="main-scroll-debug-card">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Left Gap</span><strong id="main-scroll-debug-left-gap">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Right Gap</span><strong id="main-scroll-debug-right-gap">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Card Width</span><strong id="main-scroll-debug-card-width">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Target Gap</span><strong id="main-scroll-debug-target-gap">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Target Width</span><strong id="main-scroll-debug-target-width">-</strong></div>
-    <div class="main-scroll-debug-row"><span>Viewport W</span><strong id="main-scroll-debug-viewport-width">-</strong></div>
-  </aside>
-  <section class="main-scroll-debug-graph-shell" aria-label="Raw delta graph">
-    <div class="main-scroll-debug-graph-title" id="main-scroll-debug-graph-title">Delta X / Delta Y sampled every 200ms</div>
-    <canvas class="main-scroll-debug-graph" id="main-scroll-debug-graph" width="1400" height="260"></canvas>
-    <div class="main-scroll-debug-tooltip" id="main-scroll-debug-tooltip" aria-hidden="true"></div>
-  </section>
   <main class="snap-root" id="snap-root" aria-label="Snap sections">
     <div class="snap-track" id="snap-track">
       <section class="snap-section snap-section-first" data-section="1" aria-label="Section 1">
@@ -350,13 +326,15 @@
       heartTemplateId: 'template_5wjo5pc'
     };
   </script>
+  <script src="js/ga-consent.js"></script>
+  <script src="js/ga4-config.js"></script>
+  <script src="js/ga4-tracker.js"></script>
   <script src="js/loader-page-handoff.js"></script>
   <script src="js/startup-loader-core.js"></script>
   <script src="js/startup-loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://assets.codepen.io/16327/SplitText3.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <script type="module" src="js/intro-only.js"></script>
 </body>
 </html>
