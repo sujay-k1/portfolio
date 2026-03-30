@@ -1,15 +1,4 @@
 (function () {
-  var userAgent = navigator.userAgent || "";
-  var isSafari = /Safari\//.test(userAgent)
-    && !/Chrome\//.test(userAgent)
-    && !/Chromium\//.test(userAgent)
-    && !/CriOS\//.test(userAgent)
-    && !/Android/.test(userAgent);
-
-  if (isSafari) {
-    return;
-  }
-
   var phrases = Array.from(document.querySelectorAll(".scroll-fill"));
   if (!phrases.length) {
     return;
