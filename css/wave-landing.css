@@ -1900,6 +1900,36 @@ body.final-horizon-active {
   margin-bottom: 1.2em;
 }
 
+.folio-opportunity-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2em;
+}
+
+.folio-opportunity-heading p {
+  margin: 0;
+  font-size: 1.06em;
+}
+
+.folio-opportunity-github {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.18s ease;
+}
+
+.folio-opportunity-github:hover {
+  opacity: 1;
+}
+
+.folio-opportunity-github img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
 .folio-opportunity-copy p:last-child {
   margin-bottom: 0;
 }

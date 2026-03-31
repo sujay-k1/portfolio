@@ -4816,7 +4816,16 @@ function renderFinalHorizonSection() {
                 </svg>
               </div>
               <div class="folio-opportunity-copy">
-                <p>Like what you see?</p>
+                <div class="folio-opportunity-heading">
+                  <p>Like what you see?</p>
+                  <a
+                    class="folio-opportunity-github"
+                    href="https://github.com/sujay-k1/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View GitHub profile"
+                  ><img src="Assets/github-logo.png" alt="GitHub"></a>
+                </div>
                 <p>I’d love to share the thinking and stories behind my work. If you’re exploring collaborators for your project, I’d be happy to chat.</p>
                 <p>I’m also building a side passion project that I’d be delighted to geek out about.</p>
               </div>
@@ -4838,9 +4847,6 @@ function renderFinalHorizonSection() {
                   href="tel:+918828290489"
                   aria-label="Call +91 88282 90489"
                 ><img src="Assets/contact-icons-02.png" alt=""></a>
-                <button class="folio-opportunity-favorite" type="button" data-opportunity-favorite aria-pressed="false" aria-label="Favorite this card">
-                  <span class="material-symbols-rounded folio-opportunity-favorite-icon" aria-hidden="true">favorite</span>
-                </button>
               </div>
             </div>
             <div class="folio-opportunity-pill"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
