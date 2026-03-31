@@ -33,7 +33,34 @@
   }
 
   function createStartupDependencyPromise() {
-    return Promise.resolve(true);
+    var promises = [];
+
+    // Wait for all images to finish loading
+    Array.from(document.querySelectorAll('img')).forEach(function (img) {
+      if (img.complete && img.naturalWidth > 0) {
+        return;
+      }
+      promises.push(new Promise(function (resolve) {
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      }));
+    });
+
+    // Wait for videos to have first-frame data ready
+    Array.from(document.querySelectorAll('video')).forEach(function (video) {
+      if (video.readyState >= 2) {
+        return;
+      }
+      promises.push(new Promise(function (resolve) {
+        video.addEventListener('loadeddata', resolve, { once: true });
+        video.addEventListener('canplay', resolve, { once: true });
+        video.addEventListener('error', resolve, { once: true });
+      }));
+    });
+
+    return promises.length
+      ? Promise.all(promises).then(function () { return true; })
+      : Promise.resolve(true);
   }
 
   async function init() {
