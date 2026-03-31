@@ -70,12 +70,9 @@
 
   function createStartupDependencyPromise() {
     var promises = [];
-    var loaded = 0;
-    var total = 0;
 
-    function tick() {
-      loaded++;
-      setLoaderStatus('Preloading — ' + loaded + ' / ' + total);
+    function tick(category) {
+      setLoaderStatus('Preloading ' + category);
     }
 
     // Visible images that haven't finished loading yet
@@ -119,19 +116,19 @@
       }
     });
 
-    total = visibleImages.length + visibleVideos.length + toggleImages.length + toggleVideos.length;
+    var hasAssets = visibleImages.length || visibleVideos.length || toggleImages.length || toggleVideos.length;
 
-    if (total === 0) {
+    if (!hasAssets) {
       return Promise.resolve(true);
     }
 
-    setLoaderStatus('Preloading — 0 / ' + total);
+    setLoaderStatus('Preloading image');
 
     // Wait for visible images
     visibleImages.forEach(function (img) {
       promises.push(new Promise(function (resolve) {
-        img.addEventListener('load',  function () { tick(); resolve(); }, { once: true });
-        img.addEventListener('error', function () { tick(); resolve(); }, { once: true });
+        img.addEventListener('load',  function () { tick('image'); resolve(); }, { once: true });
+        img.addEventListener('error', function () { tick('image'); resolve(); }, { once: true });
       }));
     });
 
@@ -139,7 +136,7 @@
     visibleVideos.forEach(function (video) {
       promises.push(new Promise(function (resolve) {
         var done = false;
-        function finish() { if (done) { return; } done = true; tick(); resolve(); }
+        function finish() { if (done) { return; } done = true; tick('video'); resolve(); }
         video.addEventListener('loadeddata', finish, { once: true });
         video.addEventListener('canplay',    finish, { once: true });
         video.addEventListener('error',      finish, { once: true });
@@ -149,9 +146,9 @@
     // Wait for toggle images
     toggleImages.forEach(function (img) {
       promises.push(new Promise(function (resolve) {
-        if (img.complete && img.naturalWidth > 0) { tick(); resolve(); return; }
-        img.addEventListener('load',  function () { tick(); resolve(); }, { once: true });
-        img.addEventListener('error', function () { tick(); resolve(); }, { once: true });
+        if (img.complete && img.naturalWidth > 0) { tick('image'); resolve(); return; }
+        img.addEventListener('load',  function () { tick('image'); resolve(); }, { once: true });
+        img.addEventListener('error', function () { tick('image'); resolve(); }, { once: true });
       }));
     });
 
@@ -159,7 +156,7 @@
     toggleVideos.forEach(function (video) {
       promises.push(new Promise(function (resolve) {
         var done = false;
-        function finish() { if (done) { return; } done = true; tick(); resolve(); }
+        function finish() { if (done) { return; } done = true; tick('video'); resolve(); }
         if (video.readyState >= 2) { finish(); return; }
         video.addEventListener('loadeddata', finish, { once: true });
         video.addEventListener('canplay',    finish, { once: true });
