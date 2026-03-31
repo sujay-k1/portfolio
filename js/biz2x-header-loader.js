@@ -75,24 +75,29 @@
       setLoaderStatus('Preloading ' + category);
     }
 
-    // Visible images that haven't finished loading yet
+    // Visible images that haven't finished loading yet.
+    // Use !img.complete (not complete && naturalWidth > 0) so that failed/404
+    // images (complete=true, naturalWidth=0) are also skipped — their error
+    // event already fired and won't fire again, which would hang Promise.all.
     var visibleImages = Array.from(document.querySelectorAll('img')).filter(function (img) {
-      return !(img.complete && img.naturalWidth > 0);
+      return !img.complete;
     });
 
-    // Visible videos that don't have first-frame data yet
+    // Visible videos that don't have first-frame data yet and haven't errored.
+    // If video.error is set the error event already fired; don't add a listener.
     var visibleVideos = Array.from(document.querySelectorAll('video')).filter(function (v) {
-      return v.readyState < 2;
+      return v.readyState < 2 && !v.error;
     });
 
-    // Toggle media — collect sources not already represented in the DOM
+    // Toggle media — kick off background loads (fire-and-forget).
+    // We do NOT block markReady() on these: browsers aggressively throttle
+    // zero-dimension / off-screen media elements, so waiting for their events
+    // causes the loader to hang until the 20 s timeout.
     var seenSrcs = new Set(
       Array.from(document.querySelectorAll('img[src], video[src]')).map(function (el) {
         return el.getAttribute('src');
       })
     );
-    var toggleImages = [];  // Image() objects
-    var toggleVideos = [];  // detached <video> elements appended to body
 
     Array.from(document.querySelectorAll('.biz2x-video-toggle')).forEach(function (btn) {
       var mediaType = btn.getAttribute('data-media-type') || 'video';
@@ -101,22 +106,23 @@
       seenSrcs.add(src);
 
       if (mediaType === 'image') {
+        // new Image().src is enough to warm the browser cache
         var img = new Image();
         img.src = src;
-        toggleImages.push(img);
       } else {
+        // 1×1 off-screen video (not 0×0) — browsers are more willing to load
+        // non-zero-dimension elements; position:fixed keeps it out of flow
         var video = document.createElement('video');
         video.preload = 'auto';
         video.muted = true;
         video.setAttribute('aria-hidden', 'true');
-        video.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none;';
+        video.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;pointer-events:none;';
         document.body.appendChild(video);
-        video.src = src;  // set src after append so load starts
-        toggleVideos.push(video);
+        video.src = src;
       }
     });
 
-    var hasAssets = visibleImages.length || visibleVideos.length || toggleImages.length || toggleVideos.length;
+    var hasAssets = visibleImages.length || visibleVideos.length;
 
     if (!hasAssets) {
       return Promise.resolve(true);
@@ -137,27 +143,6 @@
       promises.push(new Promise(function (resolve) {
         var done = false;
         function finish() { if (done) { return; } done = true; tick('video'); resolve(); }
-        video.addEventListener('loadeddata', finish, { once: true });
-        video.addEventListener('canplay',    finish, { once: true });
-        video.addEventListener('error',      finish, { once: true });
-      }));
-    });
-
-    // Wait for toggle images
-    toggleImages.forEach(function (img) {
-      promises.push(new Promise(function (resolve) {
-        if (img.complete && img.naturalWidth > 0) { tick('image'); resolve(); return; }
-        img.addEventListener('load',  function () { tick('image'); resolve(); }, { once: true });
-        img.addEventListener('error', function () { tick('image'); resolve(); }, { once: true });
-      }));
-    });
-
-    // Wait for toggle videos
-    toggleVideos.forEach(function (video) {
-      promises.push(new Promise(function (resolve) {
-        var done = false;
-        function finish() { if (done) { return; } done = true; tick('video'); resolve(); }
-        if (video.readyState >= 2) { finish(); return; }
         video.addEventListener('loadeddata', finish, { once: true });
         video.addEventListener('canplay',    finish, { once: true });
         video.addEventListener('error',      finish, { once: true });
