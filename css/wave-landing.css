@@ -1912,18 +1912,6 @@ body.final-horizon-active {
   font-size: 1.06em;
 }
 
-.folio-opportunity-github {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  opacity: 0.6;
-  transition: opacity 0.18s ease;
-}
-
-.folio-opportunity-github:hover {
-  opacity: 1;
-}
-
 .folio-opportunity-github img {
   width: 28px;
   height: 28px;
