@@ -1,3 +1,6 @@
+# Ensure sitemap is served with the correct MIME type
+AddType text/xml .xml
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteCond %{HTTPS} off
