@@ -1,32 +1,22 @@
 (function () {
-  if (!document.body.classList.contains("biz2x-page")) {
-    return;
-  }
-
   var ACTIVATION_BAND_PX = 72;
   var RELEASE_COOLDOWN_MS = 180;
   var WHEEL_DELTA_CAP = 56;
   var WHEEL_INERTIA_WINDOW_MS = 80;
   var WHEEL_INERTIA_MIN_DELTA = 10;
-  var scrubSections = Array.prototype.slice.call(
-    document.querySelectorAll(".biz2x-pan-scrub")
-  ).map(function (section) {
+  var galleries = Array.prototype.slice.call(
+    document.querySelectorAll("[data-horizontal-handoff]")
+  ).map(function (gallery) {
     return {
-      section: section,
-      track: section.querySelector(".biz2x-pan-scrub-window"),
-      strip: section.querySelector(".biz2x-pan-scrub-strip"),
-      image: section.querySelector(".biz2x-pan-scrub-image"),
+      gallery: gallery,
+      sticky: gallery.querySelector("[data-horizontal-handoff-sticky]"),
+      track: gallery.querySelector("[data-horizontal-handoff-track]"),
       overflow: 0,
       active: false
     };
   }).filter(function (entry) {
-    return entry.track && entry.strip && entry.image;
+    return entry.sticky && entry.track;
   });
-
-  if (!scrubSections.length) {
-    return;
-  }
-
   var state = {
     activeEntry: null,
     lockedScrollY: 0,
@@ -49,16 +39,14 @@
     event.stopPropagation();
   }
 
-  function getTriggerY(entry) {
-    var raw = window.getComputedStyle(entry.section)
-      .getPropertyValue("--biz2x-pan-handoff-top")
-      .trim();
+  function getStickyTopPx(entry) {
+    var raw = window.getComputedStyle(entry.gallery).getPropertyValue("--mc-handoff-top").trim();
 
     if (raw.indexOf("vh") > -1) {
-      return (parseFloat(raw) || 30) * window.innerHeight / 100;
+      return (parseFloat(raw) || 40) * window.innerHeight / 100;
     }
 
-    return parseFloat(raw) || window.innerHeight * 0.3;
+    return parseFloat(raw) || window.innerHeight * 0.4;
   }
 
   function getMaxScrollY() {
@@ -69,8 +57,8 @@
   }
 
   function getEntryActivationScrollY(entry) {
-    var rect = entry.section.getBoundingClientRect();
-    var activationLine = getTriggerY(entry);
+    var rect = entry.gallery.getBoundingClientRect();
+    var activationLine = getStickyTopPx(entry);
 
     return clamp(window.scrollY + rect.top - activationLine, 0, Math.max(getMaxScrollY(), 0));
   }
@@ -122,7 +110,7 @@
     window.scrollTo(0, state.lockedScrollY);
   }
 
-  function measureSection(entry) {
+  function measureGallery(entry) {
     entry.overflow = Math.max(entry.track.scrollWidth - entry.track.clientWidth, 0);
     entry.active = entry.overflow > 1;
 
@@ -132,7 +120,7 @@
   }
 
   function measureAll() {
-    scrubSections.forEach(measureSection);
+    galleries.forEach(measureGallery);
 
     if (state.activeEntry && !state.activeEntry.active) {
       state.activeEntry = null;
@@ -142,22 +130,22 @@
 
   function activationPointReached(entry) {
     var rect;
-    var triggerY;
+    var activationLine;
 
     if (!entry.active) {
       return false;
     }
 
-    rect = entry.section.getBoundingClientRect();
-    triggerY = getTriggerY(entry);
+    rect = entry.gallery.getBoundingClientRect();
+    activationLine = getStickyTopPx(entry);
 
-    return rect.bottom >= triggerY &&
-      Math.abs(rect.top - triggerY) <= ACTIVATION_BAND_PX;
+    return rect.bottom >= activationLine &&
+      Math.abs(rect.top - activationLine) <= ACTIVATION_BAND_PX;
   }
 
   function doesSweepAcrossActivation(entry, deltaY) {
     var rect;
-    var triggerY;
+    var activationLine;
     var projectedTop;
     var projectedBottom;
     var bandTop;
@@ -167,16 +155,16 @@
       return false;
     }
 
-    rect = entry.section.getBoundingClientRect();
-    triggerY = getTriggerY(entry);
+    rect = entry.gallery.getBoundingClientRect();
+    activationLine = getStickyTopPx(entry);
     projectedTop = rect.top - deltaY;
     projectedBottom = rect.bottom - deltaY;
-    bandTop = triggerY - ACTIVATION_BAND_PX;
-    bandBottom = triggerY + ACTIVATION_BAND_PX;
+    bandTop = activationLine - ACTIVATION_BAND_PX;
+    bandBottom = activationLine + ACTIVATION_BAND_PX;
 
     return Math.min(rect.top, projectedTop) <= bandBottom &&
       Math.max(rect.top, projectedTop) >= bandTop &&
-      Math.max(rect.bottom, projectedBottom) >= triggerY;
+      Math.max(rect.bottom, projectedBottom) >= activationLine;
   }
 
   function hasRemainingScroll(entry, direction) {
@@ -205,7 +193,7 @@
 
     direction = deltaY > 0 ? 1 : -1;
 
-    scrubSections.forEach(function (entry) {
+    galleries.forEach(function (entry) {
       if (candidate) {
         return;
       }
@@ -278,26 +266,12 @@
     }
 
     nextLeft = clamp(entry.track.scrollLeft + deltaY, 0, entry.overflow);
-
-    if (Math.abs(nextLeft - entry.track.scrollLeft) < 0.5) {
-      return false;
-    }
-
     entry.track.scrollLeft = nextLeft;
     return true;
   }
 
-  function handleWheel(event) {
-    var deltaY;
-
-    if (event.defaultPrevented || event.ctrlKey) {
-      return;
-    }
-
-    deltaY = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? normalizeWheelDelta(event.deltaY) : 0;
-    if (!deltaY) {
-      return;
-    }
+  function onWheel(event) {
+    var deltaY = normalizeWheelDelta(event.deltaY);
 
     if (!state.activeEntry && Date.now() < state.releaseUntil) {
       consumeEvent(event);
@@ -319,7 +293,7 @@
     }
   }
 
-  function handleTouchStart(event) {
+  function onTouchStart(event) {
     if (event.touches.length !== 1) {
       state.touchY = null;
       return;
@@ -328,17 +302,17 @@
     state.touchY = event.touches[0].clientY;
   }
 
-  function handleTouchMove(event) {
-    var touch;
+  function onTouchMove(event) {
+    var nextY;
     var deltaY;
 
-    if (!event.touches || event.touches.length !== 1 || state.touchY === null) {
+    if (event.touches.length !== 1 || state.touchY === null) {
       return;
     }
 
-    touch = event.touches[0];
-    deltaY = state.touchY - touch.clientY;
-    state.touchY = touch.clientY;
+    nextY = event.touches[0].clientY;
+    deltaY = state.touchY - nextY;
+    state.touchY = nextY;
 
     if (!state.activeEntry && Date.now() < state.releaseUntil) {
       consumeEvent(event);
@@ -355,34 +329,42 @@
     }
   }
 
-  function clearTouchState() {
+  function onTouchEnd() {
     state.touchY = null;
   }
 
-  scrubSections.forEach(function (entry) {
-    if (entry.image.complete) {
-      return;
-    }
+  function onResize() {
+    measureAll();
+  }
 
-    entry.image.addEventListener("load", measureAll, { once: true });
+  if (!galleries.length) {
+    return;
+  }
+
+  galleries.forEach(function (entry) {
+    Array.prototype.forEach.call(entry.track.querySelectorAll("img"), function (img) {
+      if (img.complete) {
+        return;
+      }
+
+      img.addEventListener("load", onResize, { once: true });
+    });
   });
 
-    if (typeof ResizeObserver === "function") {
-    var observer = new ResizeObserver(measureAll);
-
-    scrubSections.forEach(function (entry) {
+  if (typeof ResizeObserver === "function") {
+    var observer = new ResizeObserver(onResize);
+    galleries.forEach(function (entry) {
       observer.observe(entry.track);
-      observer.observe(entry.section);
-      observer.observe(entry.strip);
+      observer.observe(entry.sticky);
     });
   }
 
-  window.addEventListener("resize", measureAll);
-  window.addEventListener("wheel", handleWheel, { passive: false });
-  window.addEventListener("touchstart", handleTouchStart, { passive: true });
-  window.addEventListener("touchmove", handleTouchMove, { passive: false });
-  window.addEventListener("touchend", clearTouchState, { passive: true });
-  window.addEventListener("touchcancel", clearTouchState, { passive: true });
+  window.addEventListener("wheel", onWheel, { passive: false });
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchmove", onTouchMove, { passive: false });
+  window.addEventListener("touchend", onTouchEnd);
+  window.addEventListener("touchcancel", onTouchEnd);
+  window.addEventListener("resize", onResize);
 
-  measureAll();
+  onResize();
 })();

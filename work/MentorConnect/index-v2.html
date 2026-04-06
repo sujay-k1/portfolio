@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<base href="/">
+	
+					<!-- Open Graph Meta Tags -->
+<meta property="og:title" content="BYJU'S MentorConnect: A product design case study">
+<meta property="og:description" content="Mentorship solution at scale for students to set and achieve their learning goals.">
+<meta property="og:image" content="https://sujaykumar.net/MentorConnect-assets/Flow.png">
+<meta property="og:url" content="https://sujaykumar.net/work/MentorConnect">
+<meta property="og:type" content="website">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BYJU'S MentorConnect: A product design case study">
+<meta name="twitter:description" content="Mentorship solution at scale for students to set and achieve their learning goals.">
+<meta name="twitter:image" content="https://sujaykumar.net/MentorConnect-assets/Flow.png">
+	
+<title>BYJU'S MentorConnect — Sujay Kumar</title>
+<meta name="description" content="Sujay Kumar's product design case study: BYJU'S MentorConnect, a mentorship solution at scale helping students set and achieve their learning goals.">
+
+<link href="css/Style sheet.css" rel="stylesheet" type="text/css" media="screen and (max-width: 767px) and (orientation: portrait)">
+<link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 768px), screen and (max-width: 767px) and (orientation: landscape)">
+<link href="css/biz2x-case-study.css" rel="stylesheet" type="text/css">
+<link href="css/case-study-responsive.css" rel="stylesheet" type="text/css">
+<link href="css/flowchart-viewer.css" rel="stylesheet" type="text/css">
+<link href="css/mentorconnect-gallery.css" rel="stylesheet" type="text/css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+	<link rel="icon" type="image/x-icon" href="Assets/Logo-full.ico">
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@type": "Article",
+	  "headline": "BYJU'S MentorConnect: Mentorship at Scale",
+	  "description": "Designing BYJU'S MentorConnect, a mentorship solution at scale that helps students set and achieve their learning goals through structured guidance.",
+	  "url": "https://sujaykumar.net/work/MentorConnect",
+	  "author": {
+	    "@type": "Person",
+	    "name": "Sujay Kumar",
+	    "jobTitle": "Senior Product Designer",
+	    "url": "https://sujaykumar.net"
+	  }
+	}
+	</script>
+	<!-- Preload loader scripts at highest priority so the animation starts
+	     before images/videos compete for bandwidth -->
+	<link rel="preload" href="js/startup-loader-core.js" as="script">
+	<link rel="preload" href="js/biz2x-header-loader.js" as="script">
+
+</head>
+
+<body class="case-study-page biz2x-page app-loading">
+
+	<div class="startup-loader" id="startup-loader" aria-hidden="true">
+		<div class="startup-loader-stage">
+			<span class="startup-loader-measure" id="startup-loader-measure"></span>
+			<div class="startup-loader-box-shadow" id="startup-loader-box-shadow"></div>
+			<div class="startup-loader-box-wrap" id="startup-loader-box-wrap">
+				<div class="startup-loader-box" id="startup-loader-box">
+					<span class="startup-loader-handle startup-loader-handle-tl"></span>
+					<span class="startup-loader-handle startup-loader-handle-tr"></span>
+					<span class="startup-loader-handle startup-loader-handle-bl"></span>
+					<span class="startup-loader-handle startup-loader-handle-br"></span>
+					<div class="startup-loader-content" id="startup-loader-content">
+						<div class="startup-loader-mask" id="startup-loader-mask">
+							<div class="startup-loader-mask-group" id="startup-loader-mask-group">
+								<span class="startup-loader-mask-left" id="startup-loader-mask-left"></span>
+								<span class="startup-loader-mask-right" id="startup-loader-mask-right"></span>
+							</div>
+						</div>
+						<div class="startup-loader-typing" id="startup-loader-typing">
+							<span class="startup-loader-typing-text" id="startup-loader-typing-text"></span>
+							<span class="startup-loader-caret" id="startup-loader-caret"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="startup-loader-cursor" id="startup-loader-cursor">
+				<svg class="startup-loader-cursor-arrow" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M3 3.2L17.8 9.3L11.4 11.5L9.2 17.8L3 3.2Z" fill="#0A0A0A" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+				</svg>
+				<svg class="startup-loader-cursor-resize" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M2.2 9H15.8" stroke="white" stroke-width="1.6" stroke-linecap="round" />
+					<path d="M5.4 5.8L2.2 9L5.4 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+					<path d="M12.6 5.8L15.8 9L12.6 12.2" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+			</div>
+		</div>
+	</div>
+
+	<!-- Loader scripts run immediately — already downloaded via preload hints.
+	     Placing them here means they execute before any img/video src values
+	     are parsed, so media downloads start after the loader has initialised. -->
+	<script src="js/startup-loader-core.js"></script>
+	<script src="js/biz2x-header-loader.js"></script>
+
+	<header class="top-nav" aria-label="Primary navigation">
+		<a class="brand" href="/" aria-label="Home">
+			<span class="brand-loader-slot" id="brand-loader-slot" aria-hidden="true"></span>
+		</a>
+		<nav class="menu" aria-label="Main menu">
+			<a class="menu-link" href="/">about</a>
+			<a class="menu-link is-active" href="/#work">&larr; work</a>
+			<a class="menu-link" href="Assets/Resume-SK.pdf" target="_blank" rel="noopener noreferrer">resume</a>
+		</nav>
+	</header>
+	
+	<div class="project-banner">
+		<video src="MentorConnect-assets/MentorConnect-Banner.mp4" width="100%" height="auto" muted loop autoplay preload="auto" aria-label="Banner video for the MentorConnect case study.">Banner video for the MentorConnect case study.</video>
+	</div>
+
+	<div class="biz2x-banner-statement">
+		Improved student performance and subscription renewal for India's largest EduTech.
+	</div>
+
+	<div class="biz2x-overview-panel">
+		<div class="biz2x-overview-grid">
+			<div class="biz2x-overview-column">
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">About</p>
+					<p class="biz2x-overview-copy">
+						BYJU'S built MentorConnect to help students and parents stay connected with mentors, with the larger goal of improving <span class="highlight">learning consistency, confidence, and academic outcomes</span>.
+					</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Project Overview</p>
+					<p class="biz2x-overview-copy">
+						This project reframed MentorConnect from a passive chat utility into a <span class="highlight">proactive mentorship layer</span> with contextual recommendations, habit-forming nudges, and stronger parent collaboration to support <span class="highlight">student success at scale</span>.
+					</p>
+				</div>
+			</div>
+			<div class="biz2x-overview-column">
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Role</p>
+					<p class="biz2x-overview-copy">Product Designer</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Team</p>
+					<p class="biz2x-overview-copy">Mentors, students, parents, product stakeholders, and engineers</p>
+				</div>
+				<div class="biz2x-overview-block">
+					<p class="biz2x-overview-label">Impact</p>
+					<ul class="biz2x-overview-list">
+						<li><span class="highlight">Accelerated app engagement to 3X</span> with steady WoW engagement</li>
+						<li>Freed up Mentor's productivity with a <span class="highlight">30% reduction in tickets</span></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<main class="project-main" role="main">
+	<article class="project-content" aria-label="BYJU'S MentorConnect: A product design case study">
+		<div class="section">
+			<div class="section-heading-block">
+			<h2 class="headline">
+				Introduction
+			</h2>
+		</div>
+			<div class="content-section-block">
+			<h3 class="section-title">
+				Providing personalized, actionable mentorship to help students set and achieve their learning goals.
+			</h3>
+			<p class="section-body">
+				BYJU’S, one of India’s top Ed-Tech startups, serves a vast student base with online classes and recorded learning materials. To ensure customer satisfaction, they employ <span class="scroll-fill">customer success specialists, known as mentors</span>, who are responsible for <span class="scroll-fill">supporting students'</span> learning goals and managing parents' expectations.
+			</p>
+		</div>
+		</div>
+		
+		<div class="section">
+			<div class="section-heading-block">
+			<h2 class="headline">
+				The problem
+			</h2>
+		</div>
+			<div class="content-section-block">
+			<h3 class="section-title">
+				MentorConnect had limited outcome in driving students success.
+			</h3>
+				<div class="mentorconnect-problem-gallery" data-horizontal-handoff aria-label="MentorConnect app screen gallery">
+					<div class="mentorconnect-problem-gallery__sticky" data-horizontal-handoff-sticky>
+						<div class="mentorconnect-problem-gallery__surface">
+							<div class="mentorconnect-problem-gallery__track" data-horizontal-handoff-track>
+								<div class="mentorconnect-problem-gallery__item">
+									<img src="MentorConnect-assets/Play%20store%20-%20One%20on%20one.png" alt="MentorConnect Play Store screen showing one-on-one mentor support.">
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<img src="MentorConnect-assets/Play%20store%20-%20Group%20Chat.png" alt="MentorConnect Play Store screen showing group chat.">
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<img src="MentorConnect-assets/Play%20store%20-%20Attendance.png" alt="MentorConnect Play Store screen showing attendance tracking.">
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<img src="MentorConnect-assets/Play%20store%20-%20Performance.png" alt="MentorConnect Play Store screen showing performance insights.">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			<p class="section-body">
+				MentorConnect offered students and parents to <span class="scroll-fill">connect with mentors on chat</span>, but there was no active engagement.
+			</p>
+			<ul>
+					<li style="margin-bottom:16px;"><span class="scroll-fill">Reactive</span>, one-off conversations instead of continuous academic support.</li>
+					<li style="margin-bottom:16px;"><span class="scroll-fill">Little guidance</span> on attendance, assignments, or study consistency.</li>
+					<li style="margin-bottom:16px;"><span class="scroll-fill">Limited visibility for parents</span> into progress and where intervention was needed.</li>
+					<li style="margin-bottom:16px;"><span class="scroll-fill">Mentors relying on manual judgment</span> rather than structured product support.</li>
+				</ul>
+		</div>
+		</div>
+	
+		<div class="section">
+			<div class="section-heading-block">
+			<h2 class="headline">
+				Business objective
+			</h2>
+		</div>
+			<div class="content-section-block">
+                <h3 class="section-title">
+                    Students’ success tied to business goals
+                </h3>
+                <p class="section-body">
+                    Although students are the end users, parents are the ones making and renewing the purchase decision. Their <span class="scroll-fill">perception of progress, support, and academic outcomes directly shapes retention</span>. As a result, mentorship was not just an add-on service but a key lever to boost business, which depended on the following outcomes:
+                </p>
+				<p class="section-body">
+                    🏆 <span class="scroll-fill"><strong>Drive Student Success</strong></span><br>Attendance, assignment submission, participation in the class, test scores, concept clarity.
+                </p>
+				<p class="section-body">
+                    😊 <span class="scroll-fill"><strong>Drive parent delight</strong></span>:<br>Manage and meet their expectations to build confidence.
+                </p>
+				<p class="section-body">
+                    📈 <span class="scroll-fill"><strong>Drive Users’ Adoption and Engagement</strong></span><br>Open MentorConnect and BYJU’S app multiple times a day.
+                </p>
+			</div>
+		</div>
+
+		<div class="section">
+        	<div class="section-heading-block">
+			<h2 class="headline">
+				Research & Discovery
+			</h2>
+			</div>
+            <div class="content-section-block">
+                <h3 class="section-title">
+                    Effective mentorship requires trust: Trust requires Consistency, Expertise, and Positive Relationships.
+                </h3>
+                <p class="section-body">
+					<a href="https://grad.uw.edu/current-students/student-success/mentoring/" target="_blank">Academic studies suggest that mentoring helps individuals manage their learning, maximize potential, develop skills, and improve performance.</a>
+                </p>
+				<figure class="case-study-media-card">
+					<img class="modal-image case-study-media-card__image" src="MentorConnect-assets/PrimaryResearchInterview.png" alt="Primary research interview notes and highlights from MentorConnect user interviews.">
+					<figcaption class="caption case-study-media-card__caption">
+					To understand what academic excellence means to parents and gauge their expectations, I conducted customer interviews. In my research, I gathered fascinating stories from students and parents that gave me deep insights into learning challenges. I learned about the factors that affect motivation, learning and attendance.
+                	</figcaption>
+				</figure>
+					<section class="case-study-media-card mentorconnect-quote-rotator" data-mentorconnect-quotes aria-label="Rotating research quotes">
+						<div class="mentorconnect-quote-rotator__halo" aria-hidden="true"></div>
+						<div class="mentorconnect-quote-rotator__viewport">
+							<article class="mentorconnect-quote is-active" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“I sometimes miss class because I was playing or forgot.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Aman, Class 9</p>
+							</article>
+							<article class="mentorconnect-quote" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“There’s nothing I don’t like about studies, as my future depends on it.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Shweta, Class 8</p>
+							</article>
+							<article class="mentorconnect-quote" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“My Maths is weak, currently. I’m not able to understand word problems.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Andrew, Class 5</p>
+							</article>
+							<article class="mentorconnect-quote" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“I get stressed before exams as some concepts are not clear. I use google to get my answers.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Eram, Class 10</p>
+							</article>
+							<article class="mentorconnect-quote" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“Today schools are for giving exams only, I want Byjus to cater to Santosh’s all study needs as we are not able to give his that much time.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Mr. Iqbal, Eram's father</p>
+							</article>
+							<article class="mentorconnect-quote" data-mentorconnect-quote-item>
+								<p class="mentorconnect-quote__text">
+									“I used to teach Niraj until class 6th, now I just take care on the monitoring front.”
+								</p>
+								<p class="mentorconnect-quote__attribution">Mrs. Cecilia, Andrew's mother</p>
+							</article>
+						</div>
+					</section>
+					<br>
+					<hr>
+				<figure class="case-study-media-card">
+					<img class="modal-image case-study-media-card__image" src="MentorConnect-assets/PrimaryResearchwithMentors.png" alt="Primary research interview notes and highlights from MentorConnect user interviews.">
+					<figcaption class="caption case-study-media-card__caption">
+					I also spoke with mentors to learn about their experiences with students, their perspectives on mentorship, their roles, and the systems they work within.
+                	</figcaption>
+				</figure>
+				<p class="section-body">
+					By triangulating insights from these conversations, I got a holistic view of the ecosystem. I mapped a student’s daily journey, capturing their implicit and explicit needs, challenges, insights, and opportunity areas.
+				</p>
+				<p class="section-body">
+					The students profile could be determined around four parameters: <span class="scroll-fill">Class attendance, Engagement, Assignment submission, and Performance.</span>
+				</p>
+				<p class="section-body">
+					Broadly, I identified 4 cohorts of students and everything in between.
+				</p>
+				<div class="case-study-media-card mentorconnect-cohort-map" role="img" aria-label="A cohort matrix showing four student profiles across attendance, engagement, assignment, and performance.">
+					<div class="mentorconnect-cohort-map__scroller">
+						<div class="mentorconnect-cohort-map__grid">
+							<div class="mentorconnect-cohort-map__spacer" aria-hidden="true"></div>
+							<div class="mentorconnect-cohort-map__header">Attendance</div>
+							<div class="mentorconnect-cohort-map__header">Engagement</div>
+							<div class="mentorconnect-cohort-map__header">Assignment</div>
+							<div class="mentorconnect-cohort-map__header">Performance</div>
+
+							<div class="mentorconnect-cohort-map__label">Absent, low performer</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+
+							<div class="mentorconnect-cohort-map__label">Hard-working, low performer</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+
+							<div class="mentorconnect-cohort-map__label">Absent, high-performer</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--red mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--green mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+
+							<div class="mentorconnect-cohort-map__label">Selectively present, average performer</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+							<div class="mentorconnect-cohort-map__dots" aria-hidden="true">
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot mentorconnect-cohort-map__dot--amber mentorconnect-cohort-map__dot--filled"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+								<span class="mentorconnect-cohort-map__dot"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+	            </div>
+			</div>
+		
+		<div class="section">
+        	<div class="section-heading-block">
+			<h2 class="headline">
+				The findings
+			</h2>
+			</div>
+            <div class="content-section-block">
+                <h3 class="section-title">
+                    Effective mentorship is a blend of guidance technique, context, and personalization
+                </h3>
+				<p class="section-body">There are three crucial aspects in the Student’s Journey:</p>
+				<ul>
+					<li><strong><span class="scroll-fill">Time Management</span></strong>: Students often find themselves struggling with variety of classes, extra-curricular activities, and assignment from each of them</li>
+					<li><strong><span class="scroll-fill">Performance Management</span></strong>: The exact root cause that is leading to difficulty in comprehension of a topic is often unidentified</li>
+					<li><strong><span class="scroll-fill">Parent Engagement</span></strong>: Parents do not have an accurate visibility of performance, struggles, and improvements to be able to monitor</li>
+				</ul>
+				<p class="section-body">I identified following themes that played a role in a student engagement:</p>
+				<ul>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Performance Indicators with actionable suggestions</span></strong> to students and parents to elicit desired academic outcomes.</li>
+						<!--<br>To Student: “Score in Rotational Motion is consistently low, please revise this topic.”<br>To Parent: “Gopal hasn’t attended last 3 Physics classes, we need your help in motivating him.”</li> -->
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Social influence</span></strong> to motivate students through healthy competition and companionship.</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Incentives and gamified experiences</span></strong> will ensure constant encouragement for students, for increased engagement.</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Use local languages</span></strong> in communication to create a sense of belongingness</li>
+				</ul>
+            </div>
+		</div>
+		<div class="section">
+        	<div class="section-heading-block">
+				<h2 class="headline">
+					Opportunity areas & Ideation
+				</h2>
+			</div>
+            <div class="content-section-block">
+                <h3 class="section-title">
+                    Used brain-writing ideation technique, and used DVF framework for filtering.
+                </h3>
+				<p class="section-body">
+					For each problem area, I ideated broadly with a team of stakeholders. For example, for attendance, how can we encourage a student who is low on motivation? And, on the other hand, how do we ensure a student who is occupied with a lot of their plate attends the class?
+				</p>
+				<figure class="case-study-media-card">
+					<img class="modal-image case-study-media-card__image" src="MentorConnect-assets/Ideation.png" alt="Primary research interview notes and highlights from MentorConnect user interviews.">
+					<figcaption class="caption case-study-media-card__caption">
+						I used the DVF framework to consolidate them into product ideas.
+                	</figcaption>
+				</figure>
+				<p class="heading3">Product idea 1: Surface nudges to motivate students through-out the application</p>
+					<div class="biz2x-pan-scrub mentorconnect-idea1-scrub">
+					<div class="biz2x-pan-scrub-sticky">
+						<div class="biz2x-pan-scrub-window">
+							<div class="biz2x-pan-scrub-strip" style="width: 400%">
+								<img class="modal-image biz2x-pan-scrub-image" src="MentorConnect-assets/Idea1.png" alt="A horizontally scrubbed view of the ideation process for surfacing nudges to motivate students.">
+							</div>
+						</div>
+					</div>
+				</div>
+				<p class="heading3">Product idea 2: Smart planner that makes recommendations to the students</p>
+				<div class="mentorconnect-problem-gallery mentorconnect-problem-gallery--captioned" data-horizontal-handoff aria-label="Concept explorations for smart planner">
+					<div class="mentorconnect-problem-gallery__sticky" data-horizontal-handoff-sticky>
+						<div class="mentorconnect-problem-gallery__surface">
+							<div class="mentorconnect-problem-gallery__track" data-horizontal-handoff-track>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Quick onboarding steps to understand students' day and smartly plan their day</p>
+									<video src="MentorConnect-assets/Concept1.mov" muted loop autoplay playsinline></video>
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Students can plan their day by adding pre-defined day-to-day activity</p>
+									<video src="MentorConnect-assets/Concept2.mov" muted loop autoplay playsinline></video>
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Students can organize their activities to adjust to changes in their day</p>
+									<video src="MentorConnect-assets/Concept3.mov" muted loop autoplay playsinline></video>
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Call before class begins, students can log reason of not attending the class for mentorship</p>
+									<video src="MentorConnect-assets/Concept4.mov" muted loop autoplay playsinline></video>
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Rewards section for gamified experience that incentivizes engagement</p>
+									<img src="MentorConnect-assets/Concept5.png" alt="Rewards section for gamified experience that incentivizes engagement.">
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Actionable insights with positive re-enforcement</p>
+									<img src="MentorConnect-assets/Concept6.png" alt="Actionable insights with positive re-enforcement.">
+								</div>
+								<div class="mentorconnect-problem-gallery__item">
+									<p class="mentorconnect-problem-gallery__caption">Tasks view</p>
+									<img src="MentorConnect-assets/Concept7.png" alt="Tasks view for smart planner.">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+				<p class="heading3">Product idea 3: Home-feed that summarizes actionable insights and recommendations to improve performance.</p>
+				<img class="modal-image" src="MentorConnect-assets/Idea3.png" alt="A list of use case scenarios utilizing the framework of generating the home feed elements.">
+				<p class="section-body">After alignment with business and engineering stakeholders, Idea 3 seemed to have the following advantages over the others:</p>
+				<ul>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Scalability</span></strong> owing to the modular nature of its constituents</li>
+						<!--<br>To Student: “Score in Rotational Motion is consistently low, please revise this topic.”<br>To Parent: “Gopal hasn’t attended last 3 Physics classes, we need your help in motivating him.”</li> -->
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Low impact on app architecture</span></strong> given the standalone nature of the home-feed</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Low-risk of failure</span></strong> because it does not rely on user's proactive feature usage.</li>
+				</ul>
+            </div>
+		</div>
+		<div class="section">
+        	<div class="section-heading-block">
+				<h2 class="headline">
+					Solution
+				</h2>
+			</div>
+            <div class="content-section-block">
+                <h3 class="section-title">
+                    Homefeed with personalized guidance, encouraging nudges, and engaging activities.
+                </h3>
+				<p class="section-body">
+					I refined the third idea to have 3 sections:
+				</p>
+				<ul>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Mentor recommends</span></strong>: "Real" (Personalized) mentorship in form of contextual recommendations based on persona and performance insights</li>
+						<!--<br>To Student: “Score in Rotational Motion is consistently low, please revise this topic.”<br>To Parent: “Gopal hasn’t attended last 3 Physics classes, we need your help in motivating him.”</li> -->
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Student Corner</span></strong>: CMS driven content controlled by mentors to engage with students at scale.</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">Things you may try</span></strong>: Space for BYJU'S to do upselling and cross-selling</li>
+				</ul>
+				<h4 class="heading3">How does "Mentor recommends" work?</h4>
+				<p class="section-body">
+					Here's the journey of a mentor's recommendation:
+				</p>
+				<img class="modal-image" src="MentorConnect-assets/RecommendationFlow.png" alt="A list of use case scenarios utilizing the framework of generating the home feed elements.">
+				<p class="section-body">
+					Here's the break-down of nudge framework for each performance parameter:
+				</p>
+				<div id="fc-chart" data-fc-src="MentorConnect-assets/chart-data.json"></div>
+				<p class="section-body">
+					Nudges are delivered on cards which are configured to subjects and performance parameter. Here's an example:
+				</p>
+				<div class="mc-delivery-row">
+					<div class="mc-delivery-row__loops">
+						<div class="loop_wrapA">
+							<img src="MentorConnect-assets/row1.png" alt="A collection of homefeed cards"/>
+							<img src="MentorConnect-assets/row1.png" alt="A collection of homefeed cards"/>
+						</div>
+						<div class="loop_wrapB">
+							<img src="MentorConnect-assets/row2.png" alt="A collection of homefeed cards"/>
+							<img src="MentorConnect-assets/row2.png" alt="A collection of homefeed cards"/>
+						</div>
+						<div class="loop_wrapC">
+							<img src="MentorConnect-assets/row3.png" alt="A collection of homefeed cards"/>
+							<img src="MentorConnect-assets/row3.png" alt="A collection of homefeed cards"/>
+						</div>
+					</div>
+					<div class="mc-delivery-row__guide-wrap">
+						<img class="mc-delivery-row__guide" src="MentorConnect-assets/Guide.png" alt="Guide showing mentorship delivery flow.">
+					</div>
+				</div>
+				<h4 class="heading3">How does "Student Corner" work?</h4>
+				<p class="section-body">
+					A dedicated CMS for Mentors to surface communication and activity cards on MentorConnect for students to engage at scale:
+				</p>
+				<video class="modal-image" src="MentorConnect-assets/MCCMS_mock.mp4" muted loop autoplay preload="auto" aria-label="A task-oriented post-eligibility experience with stronger status visibility.">A task-oriented post-eligibility experience with stronger status visibility.</video>
+				<br>
+				<p class="section-body">
+					Here's how the home-feed looks:
+				</p>
+				<iframe
+					class="mentorconnect-prototype-embed"
+					background="#222222"
+					marginwidth="0"
+					allowtransparency="true"
+					frameborder="0"
+					width="100%"
+					height="600"
+					src="https://embed.figma.com/proto/kegAd8mbui0VrTNI5NPs44/Portfolio?page-id=0%3A1&node-id=4971-83782&node-type=frame&viewport=59314%2C-26468%2C0.62&t=8kajgGJ2sQb872Sw-8&scaling=contain&content-scaling=fixed&starting-point-node-id=2099%3A50318&show-proto-sidebar=1&hotspot-hints=0&disable-default-keyboard-nav=1&hide-ui=1&embed-host=share"
+					data-desktop-src="https://embed.figma.com/proto/kegAd8mbui0VrTNI5NPs44/Portfolio?page-id=0%3A1&node-id=4971-83782&node-type=frame&viewport=59314%2C-26468%2C0.62&t=8kajgGJ2sQb872Sw-8&scaling=contain&content-scaling=fixed&starting-point-node-id=2099%3A50318&show-proto-sidebar=1&hotspot-hints=0&disable-default-keyboard-nav=1&hide-ui=1&embed-host=share"
+					data-mobile-src="https://embed.figma.com/proto/kegAd8mbui0VrTNI5NPs44/Portfolio?page-id=0%3A1&node-id=4971-83782&node-type=frame&viewport=59314%2C-26468%2C0.62&t=8kajgGJ2sQb872Sw-8&scaling=contain&content-scaling=responsive&starting-point-node-id=2099%3A50318&show-proto-sidebar=1&hotspot-hints=0&disable-default-keyboard-nav=1&hide-ui=1&embed-host=share"
+					allowfullscreen
+				></iframe>
+            </div>
+		</div>
+		<div class="section">
+        	<div class="section-heading-block">
+				<h2 class="headline">
+					Outcome
+				</h2>
+			</div>
+            <div class="content-section-block">
+                <h3 class="section-title">
+                    I enabled a shift in Mentors role from solving trivial issues on chats to being involved in students learn journey.
+                </h3>
+				<p class="section-body">
+				A pilot was run first on 1000 users and their performance and engagement were tracked over a period of 3 weeks. Eventually, the update was pushed to a larger set of 30,000 students.
+				</p>
+				<ul>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">3x engagement spike</span></strong> followed by a steady WoW engagement</li>
+					<li style="margin-bottom:16px;">Mentor's workload <strong><span class="scroll-fill">reduced by 30%</span></strong> as a result of reduction in tickets</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">We noticed a sustained growth in attendance</span></strong> that originated from click-throughs via MentorConnect</li>
+					<li style="margin-bottom:16px;"><strong><span class="scroll-fill">A surge in assignment attempt</span></strong> was seen across cohorts</li>
+				</ul>
+				<p class="section-body" style="padding-bottom: 48px">
+				As a consolidation exercise done across BYJU’S products, MentorConnect was subsumed under the parent “BYJU’S the Premium app” or BTLP.
+				</p>
+            </div>
+		</div>
+	</div>
+	
+<!--Image viewer modal-->
+
+<div id="myModal" class="modal">
+    <!-- Modal Content (The image will be dynamically inserted here) -->
+    <img class="modal-content" id="img01" alt="Expanded view of the selected image">
+    <!-- Close Button -->
+    <span class="close">&times;</span>
+</div>
+
+	<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+<!--Image viewer script	-->
+
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the image and insert it inside the modal
+var modalImg = document.getElementById("img01");
+
+// Get all the thumbnail images
+var thumbnails = document.querySelectorAll(".modal-image");
+
+// Loop through each thumbnail image
+thumbnails.forEach(function(img) {
+    img.onclick = function() {
+        modal.style.display = "flex"; // Open modal
+        modalImg.src = this.src; // Set the source of the modal image to the clicked thumbnail's source
+    }
+});
+
+// When the user clicks on <span> (x), close the modal
+var span = document.getElementsByClassName("close")[0];
+span.onclick = function() {
+    modal.style.display = "none"; // Close the modal
+}
+</script>
+
+<script>
+(function () {
+	var mentorConnectEmbed = document.querySelector(".mentorconnect-prototype-embed");
+
+	if (!mentorConnectEmbed) {
+		return;
+	}
+
+	var mobilePortraitMedia = window.matchMedia("(max-width: 767px) and (orientation: portrait)");
+	var desktopSrc = mentorConnectEmbed.getAttribute("data-desktop-src") || mentorConnectEmbed.getAttribute("src");
+	var mobileSrc = mentorConnectEmbed.getAttribute("data-mobile-src");
+
+	function syncMentorConnectEmbedSource() {
+		var nextSrc = mobilePortraitMedia.matches ? mobileSrc : desktopSrc;
+
+		if (nextSrc && mentorConnectEmbed.getAttribute("src") !== nextSrc) {
+			mentorConnectEmbed.setAttribute("src", nextSrc);
+		}
+	}
+
+	if (typeof mobilePortraitMedia.addEventListener === "function") {
+		mobilePortraitMedia.addEventListener("change", syncMentorConnectEmbedSource);
+	} else if (typeof mobilePortraitMedia.addListener === "function") {
+		mobilePortraitMedia.addListener(syncMentorConnectEmbedSource);
+	}
+
+	syncMentorConnectEmbedSource();
+})();
+</script>
+
+<!--Playing image when it comes in viewport-->
+
+
+	
+	<script>
+        function animateVideoToTopLeft() {
+			const video = document.querySelector('.intro-video'); // Select the video element
+			video.classList.add('animate'); // Add the animation class
+			
+			const banner = document.querySelector('.intro-banner');
+			banner.classList.add('hide');
+			
+			const logoPiece1 = document.querySelector('.logo-piece1');
+			logoPiece1.classList.add('moveDiagonal');
+			
+			const logoPiece1a = document.querySelector('.logo-piece1a');
+			logoPiece1a.classList.add('sklogo');
+			
+			const logoPiece2 = document.querySelector('.logo-piece2');
+			logoPiece2.classList.add('moveArrow');
+			
+		}
+//		function closeBanner(){
+//			const div = document.querySelector('.intro-banner'):
+//			div.classList.add('animate')
+//		}
+    </script>
+
+	<script src="js/ga-consent.js"></script>
+	<script src="js/ga4-config.js"></script>
+	<script src="js/ga4-tracker.js"></script>
+	<script src="js/scroll-fill.js"></script>
+	<script src="js/loader-page-handoff.js"></script>
+	<script src="js/case-study-index.js"></script>
+	<script src="js/mentorconnect-gallery.js"></script>
+	<script src="js/mentorconnect-quotes.js"></script>
+	<script src="js/next-case-study-card.js"></script>
+	<script src="js/biz2x-pan-scrub.js"></script>
+	<script src="js/mc-delivery-row.js"></script>
+	<script src="js/flowchart-viewer.js"></script>
+	<script>FlowchartViewer.init(document.getElementById('fc-chart'));</script>
+
+</body>
+</html>

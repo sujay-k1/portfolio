@@ -16,6 +16,7 @@
     indexShell: null,
     onIndexClick: null,
     onScroll: null,
+    onResize: null,
     onHashChange: null
   };
 
@@ -107,6 +108,165 @@
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function parseHexColor(value) {
+    var hex = (value || "").trim().replace(/^#/, "");
+
+    if (hex.length === 3) {
+      hex = hex.split("").map(function (ch) {
+        return ch + ch;
+      }).join("");
+    }
+
+    if (hex.length !== 6) {
+      return null;
+    }
+
+    return {
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16)
+    };
+  }
+
+  function parseCssColor(value) {
+    var color = (value || "").trim();
+    var rgbMatch;
+
+    if (!color) {
+      return null;
+    }
+
+    if (color.charAt(0) === "#") {
+      return parseHexColor(color);
+    }
+
+    rgbMatch = color.match(/^rgba?\(([^)]+)\)$/i);
+    if (!rgbMatch) {
+      return null;
+    }
+
+    var channels = rgbMatch[1].split(",").map(function (part) {
+      return parseFloat(part.trim());
+    });
+
+    if (channels.length < 3 || channels.some(function (channel) { return isNaN(channel); })) {
+      return null;
+    }
+
+    return {
+      r: channels[0],
+      g: channels[1],
+      b: channels[2]
+    };
+  }
+
+  function getCaseStudyGradientStops() {
+    var styles = window.getComputedStyle(body);
+    var topColor = parseCssColor(styles.getPropertyValue("--bg-0")) || parseHexColor("#15101a");
+    var bottomColor = parseCssColor(styles.getPropertyValue("--bg-2")) || parseHexColor("#2a2433");
+
+    return {
+      top: topColor,
+      bottom: bottomColor
+    };
+  }
+
+  function getGradientColorAtViewportY(y) {
+    var stops = getCaseStudyGradientStops();
+    var height = Math.max(window.innerHeight - 1, 1);
+    var t = clamp(y / height, 0, 1);
+
+    return {
+      r: stops.top.r + ((stops.bottom.r - stops.top.r) * t),
+      g: stops.top.g + ((stops.bottom.g - stops.top.g) * t),
+      b: stops.top.b + ((stops.bottom.b - stops.top.b) * t)
+    };
+  }
+
+  function rgbaString(color, alpha) {
+    return "rgba(" +
+      Math.round(color.r) + ", " +
+      Math.round(color.g) + ", " +
+      Math.round(color.b) + ", " +
+      alpha + ")";
+  }
+
+  function clearStickyTitleBackdrop(section) {
+    var title = section && section.titleNode;
+
+    if (!title) {
+      return;
+    }
+
+    title.style.removeProperty("--section-title-bg-top");
+    title.style.removeProperty("--section-title-bg-bottom");
+    title.classList.remove("is-stuck");
+    section._sectionTitlePinned = false;
+  }
+
+  function freezeStickyTitleBackdrop(section) {
+    var title = section && section.titleNode;
+    var titleRect;
+    var beforeStyles;
+    var beforeTop;
+    var beforeBottom;
+    var stripTop;
+    var stripBottom;
+    var topColor;
+    var bottomColor;
+
+    if (!title) {
+      return;
+    }
+
+    titleRect = title.getBoundingClientRect();
+    beforeStyles = window.getComputedStyle(title, "::before");
+    beforeTop = parseFloat(beforeStyles.top) || 0;
+    beforeBottom = parseFloat(beforeStyles.bottom) || 0;
+    stripTop = titleRect.top + beforeTop;
+    stripBottom = titleRect.bottom - beforeBottom;
+    topColor = getGradientColorAtViewportY(stripTop);
+    bottomColor = getGradientColorAtViewportY(stripBottom);
+
+    title.style.setProperty("--section-title-bg-top", rgbaString(topColor, 0.9));
+    title.style.setProperty("--section-title-bg-bottom", rgbaString(bottomColor, 0.98));
+    title.classList.add("is-stuck");
+    section._sectionTitlePinned = true;
+  }
+
+  function updateStickyTitleBackdrops(forceRefresh) {
+    if (!state.enabled || !state.sections.length) {
+      return;
+    }
+
+    state.sections.forEach(function (section) {
+      var title = section.titleNode;
+      var titleRect;
+      var stickyOffset;
+      var isPinned;
+
+      if (!title) {
+        return;
+      }
+
+      titleRect = title.getBoundingClientRect();
+      stickyOffset = parseFloat(window.getComputedStyle(title).top);
+      stickyOffset = isNaN(stickyOffset) ? STICKY_TOP : stickyOffset;
+      isPinned = titleRect.top <= stickyOffset + 0.5 && titleRect.bottom > 0;
+
+      if (!isPinned) {
+        if (section._sectionTitlePinned) {
+          clearStickyTitleBackdrop(section);
+        }
+        return;
+      }
+
+      if (forceRefresh || !section._sectionTitlePinned) {
+        freezeStickyTitleBackdrop(section);
+      }
+    });
   }
 
   function initMediaViewer() {
@@ -317,7 +477,8 @@
           node: section,
           titleNode: titleNode,
           anchorNode: anchorNode,
-          kickerNode: kickerNode
+          kickerNode: kickerNode,
+          _sectionTitlePinned: false
         };
       })
     };
@@ -383,6 +544,8 @@
     if (state.enabled) {
       syncStickyTop();
       updateActiveSection();
+      updateTitlePrepush();
+      updateStickyTitleBackdrops(true);
       return;
     }
 
@@ -405,6 +568,14 @@
       syncStickyTop();
       updateActiveSection();
       updateTitlePrepush();
+      updateStickyTitleBackdrops(false);
+    };
+
+    state.onResize = function () {
+      syncStickyTop();
+      updateActiveSection();
+      updateTitlePrepush();
+      updateStickyTitleBackdrops(true);
     };
 
     state.onIndexClick = function (event) {
@@ -455,6 +626,7 @@
           }
           updateActiveSection();
           updateTitlePrepush();
+          updateStickyTitleBackdrops(true);
         }, 0);
         return;
       }
@@ -462,18 +634,20 @@
       window.setTimeout(function () {
         updateActiveSection();
         updateTitlePrepush();
+        updateStickyTitleBackdrops(true);
       }, 0);
     };
 
     state.indexShell.addEventListener("click", state.onIndexClick);
     window.addEventListener("scroll", state.onScroll, { passive: true });
-    window.addEventListener("resize", state.onScroll);
+    window.addEventListener("resize", state.onResize);
     window.addEventListener("hashchange", state.onHashChange);
 
     state.enabled = true;
     syncStickyTop();
     updateActiveSection();
     updateTitlePrepush();
+    updateStickyTitleBackdrops(true);
   }
 
   function disable() {
@@ -481,13 +655,17 @@
       return;
     }
 
+    state.sections.forEach(function (section) {
+      clearStickyTitleBackdrop(section);
+    });
+
     if (state.indexShell && state.indexShell.parentNode) {
       state.indexShell.removeEventListener("click", state.onIndexClick);
       state.indexShell.parentNode.removeChild(state.indexShell);
     }
 
     window.removeEventListener("scroll", state.onScroll);
-    window.removeEventListener("resize", state.onScroll);
+    window.removeEventListener("resize", state.onResize);
     window.removeEventListener("hashchange", state.onHashChange);
 
     body.classList.remove("case-study-index-enabled");
@@ -499,6 +677,7 @@
     state.indexShell = null;
     state.onIndexClick = null;
     state.onScroll = null;
+    state.onResize = null;
     state.onHashChange = null;
   }
 

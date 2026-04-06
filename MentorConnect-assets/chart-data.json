@@ -1,0 +1,604 @@
+{
+  "tabs": [
+    {
+      "id": "attendance",
+      "label": "Attendance",
+      "columns": ["Performance criteria", "Trigger", "Persona", "Recent behaviour", "Subject-wise behaviour", "Nudge", "Update persona"],
+      "tree": {
+        "label": "Attendance",
+        "color": "mint",
+        "children": [
+          {
+            "label": "Missed a class",
+            "color": "yellow",
+            "children": [
+              {
+                "label": "Misses frequently",
+                "color": "red",
+                "children": [
+                  {
+                    "label": "attended the previous class",
+                    "color": "green",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One class back can steady this subject.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One class back can steady your subjects.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One class back can steady everything.", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "peach" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 3 classes",
+                    "color": "orange",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "A fresh start can lift this subject.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "A fresh start can lift your subjects.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "A fresh start can lift everything.", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 5 classes",
+                    "color": "darkred",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Your next class can restart this subject.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Your next class can restart your momentum.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "our next class can reset everything", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Regular attendee",
+                "color": "green",
+                "children": [
+                  {
+                    "label": "Had attended the previous classes",
+                    "color": "green",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You usually show up — keep this subject strong.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You usually show up — keep your subjects strong.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You usually show up — keep everything strong.", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "peach" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 3 classes",
+                    "color": "orange",
+                    "sublabel": "At risk",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One comeback class can rebuild this subject.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One comeback class can rebuild momentum.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "One comeback class can rebuild everything.", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 5 classes",
+                    "color": "darkred",
+                    "sublabel": "Lapse",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You can turn this around starting now.", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You can turn this around across subjects.", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "You can turn this around everywhere.", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Attended the class",
+            "color": "green",
+            "children": [
+              {
+                "label": "Misses frequently",
+                "color": "red",
+                "children": [
+                  {
+                    "label": "Had attended the previous classes",
+                    "color": "green",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "peach" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 3 classes",
+                    "color": "orange",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "peach" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 5 classes",
+                    "color": "darkred",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "Regular attendee",
+                "color": "green",
+                "children": [
+                  {
+                    "label": "Had attended the previous classes",
+                    "color": "green",
+                    "children": [
+                      {
+                        "label": "attending only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "attending other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "attending all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "yellow", "children": [
+                            { "label": "Impacting all subjects", "color": "peach" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 3 classes",
+                    "color": "orange",
+                    "sublabel": "At risk",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Missed > 5 classes",
+                    "color": "darkred",
+                    "sublabel": "Lapse",
+                    "children": [
+                      {
+                        "label": "missing only 1 subject",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
+                            { "label": "Impacting only 1 subject", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing other subjects as well",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
+                            { "label": "Impacting other subjects", "color": "peach" }
+                          ]}
+                        ]
+                      },
+                      {
+                        "label": "Missing all other subjects",
+                        "color": "peach",
+                        "children": [
+                          { "label": "Missing all other subjects", "color": "red", "children": [
+                            { "label": "Impacting all subjects", "color": "red" }
+                          ]}
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "assignment",
+      "label": "Assignment submission",
+      "columns": ["Performance criteria", "Trigger", "Persona", "Nudge"],
+      "tree": {
+        "label": "Assignment submission",
+        "color": "mint",
+        "children": [
+          {
+            "label": "Missed deadline",
+            "color": "yellow",
+            "children": [
+              {
+                "label": "First-time miss",
+                "color": "green",
+                "children": [
+                  { "label": "One missed deadline doesn't define you — submit it now.", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Repeat offender",
+                "color": "orange",
+                "children": [
+                  { "label": "Assignments are piling up — let's clear the backlog.", "color": "red" }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Submitted on time",
+            "color": "green",
+            "children": [
+              {
+                "label": "Consistent submitter",
+                "color": "green",
+                "children": [
+                  { "label": "Great streak — keep the momentum going!", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Improving trend",
+                "color": "green",
+                "children": [
+                  { "label": "You're building a habit — nice progress!", "color": "yellow" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "engagement",
+      "label": "Class engagement",
+      "columns": ["Performance criteria", "Trigger", "Engagement level", "Nudge"],
+      "tree": {
+        "label": "Class engagement",
+        "color": "mint",
+        "children": [
+          {
+            "label": "Low participation",
+            "color": "orange",
+            "children": [
+              {
+                "label": "Silent observer",
+                "color": "yellow",
+                "children": [
+                  { "label": "Your voice matters — try answering one question today.", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Distracted",
+                "color": "red",
+                "children": [
+                  { "label": "Focus for the next 10 minutes — small wins add up.", "color": "red" }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Active participant",
+            "color": "green",
+            "children": [
+              {
+                "label": "Consistent contributor",
+                "color": "green",
+                "children": [
+                  { "label": "You're one of the most engaged — keep leading!", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Rising star",
+                "color": "green",
+                "children": [
+                  { "label": "Your engagement is climbing — great trajectory!", "color": "yellow" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "quiz",
+      "label": "Quiz performance",
+      "columns": ["Performance criteria", "Trigger", "Score trend", "Nudge"],
+      "tree": {
+        "label": "Quiz performance",
+        "color": "mint",
+        "children": [
+          {
+            "label": "Score dropped",
+            "color": "orange",
+            "children": [
+              {
+                "label": "First dip",
+                "color": "yellow",
+                "children": [
+                  { "label": "One off day — review and come back stronger.", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Declining trend",
+                "color": "red",
+                "children": [
+                  { "label": "Scores are slipping — let's revisit the basics.", "color": "red" }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Score improved",
+            "color": "green",
+            "children": [
+              {
+                "label": "Steady climber",
+                "color": "green",
+                "children": [
+                  { "label": "Your hard work is paying off — scores are up!", "color": "yellow" }
+                ]
+              },
+              {
+                "label": "Breakthrough",
+                "color": "green",
+                "children": [
+                  { "label": "Huge jump! Keep this energy going.", "color": "yellow" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

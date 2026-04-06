@@ -1,0 +1,502 @@
+/* MentorConnect problem gallery */
+
+.mentorconnect-problem-gallery {
+  --mc-handoff-top: 40vh;
+  width: 100%;
+  align-self: stretch;
+  margin: 0 0 calc(-1 * var(--Passcode-font-size, 24px));
+  position: relative;
+}
+
+.mentorconnect-problem-gallery__sticky {
+  position: relative;
+}
+
+.mentorconnect-problem-gallery__surface {
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.mentorconnect-problem-gallery__track {
+  --mc-shot-gap: clamp(14px, 1.9vw, 22px);
+  --mc-shot-min-width: 180px;
+  display: flex;
+  align-items: stretch;
+  gap: var(--mc-shot-gap);
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+  padding: 4px 2px 8px;
+}
+
+.mentorconnect-problem-gallery__track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mentorconnect-problem-gallery__track::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mentorconnect-problem-gallery__track::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+}
+
+.mentorconnect-problem-gallery__item {
+  flex: 1 1 0;
+  min-width: var(--mc-shot-min-width);
+  max-width: 100%;
+}
+
+.mentorconnect-problem-gallery__item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.26);
+}
+
+/* Captioned variant — scoped to --captioned modifier */
+.mentorconnect-problem-gallery--captioned .mentorconnect-problem-gallery__surface {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.mentorconnect-problem-gallery--captioned .mentorconnect-problem-gallery__item {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.mentorconnect-problem-gallery__caption {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.mentorconnect-problem-gallery--captioned .mentorconnect-problem-gallery__item video,
+.mentorconnect-problem-gallery--captioned .mentorconnect-problem-gallery__item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Delivery row — looping cards + Guide image side by side.
+   Loops define the row height; guide scales to match via aspect-ratio. */
+.mc-delivery-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.mc-delivery-row__loops {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Keep loop wraps at full viewport width so their height stays constant
+   even when the loops container narrows. */
+body.case-study-page .mc-delivery-row__loops [class^="loop_wrap"] {
+  width: 100vw;
+  max-width: none;
+  background: transparent;
+}
+
+.mc-delivery-row__guide-wrap {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 8px;
+  /* Width is set by JS based on the loops' height × guide aspect ratio */
+}
+
+body.case-study-page .mc-delivery-row__guide-wrap img.mc-delivery-row__guide {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+}
+
+/* Stack when the loops container would be too narrow.
+   Guide image natural width ≈ loops-height × its intrinsic aspect ratio.
+   We stack when loops would be < 20% of that guide width.
+   On most viewports this roughly corresponds to ~900px. */
+@media (max-width: 900px) {
+  .mc-delivery-row {
+    flex-direction: column;
+  }
+
+  .mc-delivery-row__loops {
+    flex: 0 0 auto;
+  }
+
+  body.case-study-page .mc-delivery-row__loops [class^="loop_wrap"] {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .mc-delivery-row__guide-wrap {
+    width: 100% !important; /* override JS-set width */
+  }
+
+  body.case-study-page .mc-delivery-row__guide-wrap img.mc-delivery-row__guide {
+    width: 100%;
+    height: auto;
+  }
+}
+
+.mentorconnect-idea1-scrub {
+  --biz2x-pan-handoff-top: 40vh;
+}
+
+.mentorconnect-quote-rotator {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  align-items: stretch;
+  gap: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.mentorconnect-quote-rotator__halo {
+  position: absolute;
+  right: -8%;
+  bottom: -28%;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(234, 162, 108, 0.18) 0%, rgba(169, 130, 235, 0.1) 42%, transparent 74%);
+  filter: blur(12px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mentorconnect-quote-rotator__eyebrow {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: var(--project-font-family, "InterVariable", "Inter", "Avenir Next", "Futura", sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mentorconnect-quote-rotator__viewport {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 100%;
+  min-height: 124px;
+}
+
+.mentorconnect-quote-rotator__viewport::before {
+  content: "\201C";
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: rgba(255, 255, 255, 0.07);
+  font-family: "Instrument Serif", Georgia, serif !important;
+  font-size: clamp(128px, 12vw, 192px);
+  line-height: 0.8;
+  pointer-events: none;
+}
+
+.mentorconnect-quote {
+  grid-area: 1 / 1;
+  align-self: start;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 320ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  padding-top: 30px;
+}
+
+.mentorconnect-quote.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.mentorconnect-quote__text {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  color: rgba(248, 241, 233, 0.94);
+  font-family: "Instrument Serif", Georgia, serif !important;
+  font-size: clamp(22px, 2.35vw, 34px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+.mentorconnect-quote__attribution {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: var(--project-font-family, "InterVariable", "Inter", "Avenir Next", "Futura", sans-serif);
+  font-size: clamp(10px, 0.78vw, 12px);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mentorconnect-quote-rotator__controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mentorconnect-quote-rotator__dot {
+  appearance: none;
+  border: 0;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: width 220ms ease, background-color 220ms ease, transform 220ms ease;
+}
+
+.mentorconnect-quote-rotator__dot:hover,
+.mentorconnect-quote-rotator__dot:focus-visible {
+  background: rgba(255, 255, 255, 0.34);
+  outline: none;
+}
+
+.mentorconnect-quote-rotator__dot.is-active {
+  width: 36px;
+  background: linear-gradient(90deg, rgba(239, 166, 102, 0.98), rgba(176, 141, 255, 0.95));
+  transform: translateY(-1px);
+}
+
+.mentorconnect-cohort-map {
+  width: 100%;
+  overflow: hidden;
+  padding: clamp(14px, 1.8vw, 20px);
+}
+
+.mentorconnect-cohort-map__scroller {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.mentorconnect-cohort-map__scroller::-webkit-scrollbar {
+  height: 8px;
+}
+
+.mentorconnect-cohort-map__scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mentorconnect-cohort-map__scroller::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+}
+
+.mentorconnect-cohort-map__grid {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, 1.7fr) repeat(4, minmax(0, 1fr));
+  gap: 14px 24px;
+  align-items: center;
+  padding: 4px 2px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1.1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.mentorconnect-cohort-map__spacer {
+  min-height: 1px;
+}
+
+.mentorconnect-cohort-map__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04)),
+    rgba(12, 10, 16, 0.8);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 12px 24px rgba(0, 0, 0, 0.16);
+  color: rgba(255, 255, 255, 0.96);
+  font-family: "Lexend", "DM Sans", sans-serif;
+  font-size: clamp(12px, 1vw, 14px);
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.mentorconnect-cohort-map__label {
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(9px, 0.75vw, 11px);
+  font-weight: 500;
+  line-height: 1.16;
+  text-align: right;
+  padding-right: 6px;
+}
+
+.mentorconnect-cohort-map__dots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  align-items: center;
+  justify-items: center;
+}
+
+.mentorconnect-cohort-map__dot {
+  width: clamp(12px, 1vw, 16px);
+  height: clamp(12px, 1vw, 16px);
+  border-radius: 999px;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+}
+
+.mentorconnect-cohort-map__dot--filled {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+.mentorconnect-cohort-map__dot--red {
+  border-color: #d95a35;
+  background: #f06e45;
+}
+
+.mentorconnect-cohort-map__dot--amber {
+  border-color: #de8b31;
+  background: #ffaf52;
+}
+
+.mentorconnect-cohort-map__dot--green {
+  border-color: #6cad58;
+  background: #8ed07a;
+}
+
+@media (max-width: 1080px) and (min-width: 768px) {
+  .mentorconnect-cohort-map {
+    padding: 14px;
+  }
+
+  .mentorconnect-cohort-map__grid {
+    grid-template-columns: minmax(156px, 1.55fr) repeat(4, minmax(0, 1fr));
+    gap: 12px 18px;
+    background-size: 18px 18px;
+  }
+
+  .mentorconnect-cohort-map__header {
+    min-height: 30px;
+    font-size: 12px;
+  }
+
+  .mentorconnect-cohort-map__label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mentorconnect-problem-gallery {
+    --mc-handoff-top: 24vh;
+    margin-bottom: calc(-1 * var(--Passcode-font-size, 24px));
+  }
+
+  .mentorconnect-problem-gallery__surface {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .mentorconnect-problem-gallery__track {
+    --mc-shot-gap: 12px;
+    --mc-shot-min-width: 148px;
+    padding-bottom: 6px;
+  }
+
+  .mentorconnect-problem-gallery__item img {
+    border-radius: 6px;
+  }
+
+  .mentorconnect-quote-rotator {
+    gap: 0;
+    padding: 0;
+  }
+
+  .mentorconnect-quote-rotator__viewport {
+    min-height: 112px;
+  }
+
+  .mentorconnect-quote__text {
+    font-size: clamp(20px, 7vw, 28px);
+  }
+
+  .mentorconnect-quote__attribution {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .mentorconnect-cohort-map {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .mentorconnect-cohort-map__grid {
+    width: max-content;
+    min-width: 640px;
+    grid-template-columns: minmax(180px, 1.35fr) repeat(4, minmax(74px, 1fr));
+    gap: 12px 18px;
+    background-size: 18px 18px;
+  }
+
+  .mentorconnect-cohort-map__header {
+    min-height: 48px;
+    border-radius: 14px;
+    font-size: 12px;
+  }
+
+  .mentorconnect-cohort-map__label {
+    font-size: 11px;
+  }
+
+  .mentorconnect-cohort-map__dot {
+    width: 14px;
+    height: 14px;
+  }
+}
