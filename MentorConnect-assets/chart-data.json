@@ -3,7 +3,15 @@
     {
       "id": "attendance",
       "label": "Attendance",
-      "columns": ["Performance criteria", "Trigger", "Persona", "Recent behaviour", "Subject-wise behaviour", "Nudge", "Update persona"],
+      "columns": [
+        "Performance criteria",
+        "Trigger",
+        "Persona",
+        "Recent behaviour",
+        "Subject-wise behaviour",
+        "Nudge",
+        "Update persona"
+      ],
       "tree": {
         "label": "Attendance",
         "color": "mint",
@@ -24,27 +32,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "One class back can steady this subject.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up before, catch up with this video.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "One class back can steady your subjects.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up before, catch up across subjects with videos.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "One class back can steady everything.", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up before, catch up across all subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -57,27 +86,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "A fresh start can lift this subject.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You can still do this, catch up with this video.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "A fresh start can lift your subjects.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "Your mentors can help you get back on track.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "A fresh start can lift everything.", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "It's tough, not impossible, your mentors can help.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -90,27 +140,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Your next class can restart this subject.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "This subject feels tough, book an expert session.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Your next class can restart your momentum.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "Across subjects, mentor support can help you recover.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "our next class can reset everything", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "Discuss attendance challenges, mentor support can help.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -129,27 +200,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "You usually show up — keep this subject strong.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You've been consistent, catch up with this video.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "You usually show up — keep your subjects strong.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You've been consistent, catch up across subjects here.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "You usually show up — keep everything strong.", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You usually show up, catch up across all subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -163,27 +255,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "One comeback class can rebuild this subject.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You can rebuild this subject, start with this video.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "One comeback class can rebuild momentum.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You can recover this, start catching up across subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "One comeback class can rebuild everything.", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "You can rebuild this, catch up across all subjects.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -197,27 +310,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "You can turn this around starting now.", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "This subject feels tough, a subject expert can help.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "You can turn this around across subjects.", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "Mentor support can help you recover across subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "You can turn this around everywhere.", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "Mentor support can help you rebuild across all subjects.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -242,27 +376,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up again, finish this assignment next.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up again, finish these assignments next.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up again, finish assignments across all subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -275,27 +430,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You made it back, start with this assignment.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You made it back, start with these assignments.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You made it back, take assignments one at a time.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -308,27 +484,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up despite it all, finish this assignment.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You showed up despite it all, finish these assignments.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "You showed up despite it all, rebuild with assignments.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -347,27 +544,48 @@
                         "label": "attending only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You've been consistent, finish this assignment today.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "attending other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You've been consistent, finish assignments across subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "attending all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "yellow", "children": [
-                            { "label": "Impacting all subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You usually stay on track, finish assignments across all subjects.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -381,27 +599,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You're back, complete this assignment and keep going.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "You're back, complete these assignments and keep going.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "You made it back, rebuild one assignment at a time.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -415,27 +654,48 @@
                         "label": "missing only 1 subject",
                         "color": "peach",
                         "children": [
-                          { "label": "Impacting only 1 subject", "color": "yellow", "children": [
-                            { "label": "Impacting only 1 subject", "color": "peach" }
-                          ]}
+                          {
+                            "label": "Strong return, complete this assignment to restart momentum.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting only 1 subject",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing other subjects as well",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing other subjects as well", "color": "yellow", "children": [
-                            { "label": "Impacting other subjects", "color": "peach" }
-                          ]}
+                          {
+                            "label": "Strong return, complete these assignments to restart momentum.",
+                            "color": "yellow",
+                            "children": [
+                              {
+                                "label": "Impacting other subjects",
+                                "color": "peach"
+                              }
+                            ]
+                          }
                         ]
                       },
                       {
                         "label": "Missing all other subjects",
                         "color": "peach",
                         "children": [
-                          { "label": "Missing all other subjects", "color": "red", "children": [
-                            { "label": "Impacting all subjects", "color": "red" }
-                          ]}
+                          {
+                            "label": "Strong return, complete assignments to rebuild momentum everywhere.",
+                            "color": "red",
+                            "children": [
+                              {
+                                "label": "Impacting all subjects",
+                                "color": "red"
+                              }
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -450,7 +710,12 @@
     {
       "id": "assignment",
       "label": "Assignment submission",
-      "columns": ["Performance criteria", "Trigger", "Persona", "Nudge"],
+      "columns": [
+        "Performance criteria",
+        "Trigger",
+        "Persona",
+        "Nudge"
+      ],
       "tree": {
         "label": "Assignment submission",
         "color": "mint",
@@ -463,14 +728,20 @@
                 "label": "First-time miss",
                 "color": "green",
                 "children": [
-                  { "label": "One missed deadline doesn't define you — submit it now.", "color": "yellow" }
+                  {
+                    "label": "One missed deadline doesn't define you — submit it now.",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Repeat offender",
                 "color": "orange",
                 "children": [
-                  { "label": "Assignments are piling up — let's clear the backlog.", "color": "red" }
+                  {
+                    "label": "Assignments are piling up — let's clear the backlog.",
+                    "color": "red"
+                  }
                 ]
               }
             ]
@@ -483,14 +754,20 @@
                 "label": "Consistent submitter",
                 "color": "green",
                 "children": [
-                  { "label": "Great streak — keep the momentum going!", "color": "yellow" }
+                  {
+                    "label": "Great streak — keep the momentum going!",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Improving trend",
                 "color": "green",
                 "children": [
-                  { "label": "You're building a habit — nice progress!", "color": "yellow" }
+                  {
+                    "label": "You're building a habit — nice progress!",
+                    "color": "yellow"
+                  }
                 ]
               }
             ]
@@ -501,7 +778,12 @@
     {
       "id": "engagement",
       "label": "Class engagement",
-      "columns": ["Performance criteria", "Trigger", "Engagement level", "Nudge"],
+      "columns": [
+        "Performance criteria",
+        "Trigger",
+        "Engagement level",
+        "Nudge"
+      ],
       "tree": {
         "label": "Class engagement",
         "color": "mint",
@@ -514,14 +796,20 @@
                 "label": "Silent observer",
                 "color": "yellow",
                 "children": [
-                  { "label": "Your voice matters — try answering one question today.", "color": "yellow" }
+                  {
+                    "label": "Your voice matters — try answering one question today.",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Distracted",
                 "color": "red",
                 "children": [
-                  { "label": "Focus for the next 10 minutes — small wins add up.", "color": "red" }
+                  {
+                    "label": "Focus for the next 10 minutes — small wins add up.",
+                    "color": "red"
+                  }
                 ]
               }
             ]
@@ -534,14 +822,20 @@
                 "label": "Consistent contributor",
                 "color": "green",
                 "children": [
-                  { "label": "You're one of the most engaged — keep leading!", "color": "yellow" }
+                  {
+                    "label": "You're one of the most engaged — keep leading!",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Rising star",
                 "color": "green",
                 "children": [
-                  { "label": "Your engagement is climbing — great trajectory!", "color": "yellow" }
+                  {
+                    "label": "Your engagement is climbing — great trajectory!",
+                    "color": "yellow"
+                  }
                 ]
               }
             ]
@@ -552,7 +846,12 @@
     {
       "id": "quiz",
       "label": "Quiz performance",
-      "columns": ["Performance criteria", "Trigger", "Score trend", "Nudge"],
+      "columns": [
+        "Performance criteria",
+        "Trigger",
+        "Score trend",
+        "Nudge"
+      ],
       "tree": {
         "label": "Quiz performance",
         "color": "mint",
@@ -565,14 +864,20 @@
                 "label": "First dip",
                 "color": "yellow",
                 "children": [
-                  { "label": "One off day — review and come back stronger.", "color": "yellow" }
+                  {
+                    "label": "One off day — review and come back stronger.",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Declining trend",
                 "color": "red",
                 "children": [
-                  { "label": "Scores are slipping — let's revisit the basics.", "color": "red" }
+                  {
+                    "label": "Scores are slipping — let's revisit the basics.",
+                    "color": "red"
+                  }
                 ]
               }
             ]
@@ -585,14 +890,20 @@
                 "label": "Steady climber",
                 "color": "green",
                 "children": [
-                  { "label": "Your hard work is paying off — scores are up!", "color": "yellow" }
+                  {
+                    "label": "Your hard work is paying off — scores are up!",
+                    "color": "yellow"
+                  }
                 ]
               },
               {
                 "label": "Breakthrough",
                 "color": "green",
                 "children": [
-                  { "label": "Huge jump! Keep this energy going.", "color": "yellow" }
+                  {
+                    "label": "Huge jump! Keep this energy going.",
+                    "color": "yellow"
+                  }
                 ]
               }
             ]
