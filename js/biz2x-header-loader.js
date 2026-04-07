@@ -4,40 +4,132 @@
   var core = window.StartupLoaderCore;
   var appRevealed = false;
   var loaderRevealStarted = false;
-  var statusEl = null;
+  var statusEls = null;
 
-  // ── Status label ────────────────────────────────────────────────────────────
+  // ── Status UI ───────────────────────────────────────────────────────────────
 
-  function setLoaderStatus(text) {
-    if (!startupLoader) { return; }
-    if (!statusEl) {
-      statusEl = document.createElement('div');
-      statusEl.id = 'startup-loader-status';
-      statusEl.setAttribute('aria-live', 'polite');
-      statusEl.setAttribute('aria-atomic', 'true');
-      Object.assign(statusEl.style, {
-        position: 'absolute',
-        bottom: '32px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        fontSize: '11px',
-        letterSpacing: '0.06em',
-        color: 'rgba(255,255,255,0.38)',
-        fontFamily: 'Inter, Arial, Helvetica, sans-serif',
-        pointerEvents: 'none',
-        whiteSpace: 'nowrap',
-        userSelect: 'none',
-      });
-      startupLoader.appendChild(statusEl);
-    }
-    statusEl.textContent = text;
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function ensureLoaderStatus() {
+    var root;
+    var row;
+    var label;
+    var percent;
+    var track;
+    var fill;
+
+    if (!startupLoader) { return null; }
+    if (statusEls) { return statusEls; }
+
+    root = document.createElement('div');
+    root.id = 'startup-loader-status';
+    root.className = 'startup-loader-status';
+    root.setAttribute('role', 'status');
+    root.setAttribute('aria-live', 'polite');
+    root.setAttribute('aria-atomic', 'true');
+
+    row = document.createElement('div');
+    row.className = 'startup-loader-status-row';
+
+    label = document.createElement('span');
+    label.className = 'startup-loader-status-label';
+
+    percent = document.createElement('span');
+    percent.className = 'startup-loader-status-percent';
+
+    track = document.createElement('div');
+    track.className = 'startup-loader-progress';
+    track.setAttribute('aria-hidden', 'true');
+
+    fill = document.createElement('span');
+    fill.className = 'startup-loader-progress-fill';
+
+    row.appendChild(label);
+    row.appendChild(percent);
+    track.appendChild(fill);
+    root.appendChild(row);
+    root.appendChild(track);
+    startupLoader.appendChild(root);
+
+    statusEls = {
+      root: root,
+      label: label,
+      percent: percent
+    };
+
+    return statusEls;
+  }
+
+  function setLoaderStatus(options) {
+    var status = ensureLoaderStatus();
+    var label;
+    var progress;
+    var percentText;
+
+    if (!status) { return; }
+
+    label = (options && options.label) || 'Preloading media';
+    progress = options && typeof options.progress === 'number'
+      ? clamp(options.progress, 0, 1)
+      : 0;
+    percentText = Math.round(progress * 100) + '%';
+
+    status.label.textContent = label;
+    status.percent.textContent = percentText;
+    status.root.style.setProperty('--startup-loader-progress', progress.toFixed(4));
+    status.root.setAttribute('aria-label', label + ' ' + percentText);
   }
 
   function clearLoaderStatus() {
-    if (statusEl) {
-      statusEl.remove();
-      statusEl = null;
+    if (statusEls && statusEls.root) {
+      statusEls.root.remove();
+      statusEls = null;
     }
+  }
+
+  function getLoaderStatusLabel(remainingImages, remainingVideos) {
+    if (remainingImages > 0 && remainingVideos > 0) {
+      return 'Preloading media';
+    }
+    if (remainingVideos > 0) {
+      return remainingVideos === 1 ? 'Preloading video' : 'Preloading videos';
+    }
+    if (remainingImages > 0) {
+      return remainingImages === 1 ? 'Preloading image' : 'Preloading images';
+    }
+    return 'Putting it all together';
+  }
+
+  function createLoaderProgressTracker(imageCount, videoCount) {
+    var total = imageCount + videoCount;
+    var completed = 0;
+    var remainingImages = imageCount;
+    var remainingVideos = videoCount;
+
+    function render() {
+      if (!total) { return; }
+      setLoaderStatus({
+        label: getLoaderStatusLabel(remainingImages, remainingVideos),
+        progress: completed / total
+      });
+    }
+
+    render();
+
+    return {
+      markComplete: function (type) {
+        completed = Math.min(completed + 1, total);
+        if (type === 'video' && remainingVideos > 0) {
+          remainingVideos -= 1;
+        } else if (type === 'image' && remainingImages > 0) {
+          remainingImages -= 1;
+        }
+        render();
+      },
+      hasAssets: total > 0
+    };
   }
 
   // ── Reveal helpers ───────────────────────────────────────────────────────────
@@ -70,24 +162,21 @@
 
   function createStartupDependencyPromise() {
     var promises = [];
+    var progressTracker;
 
-    function tick(category) {
-      setLoaderStatus('Preloading ' + category);
-    }
-
-    // Visible images that haven't finished loading yet.
-    // Use !img.complete (not complete && naturalWidth > 0) so that failed/404
-    // images (complete=true, naturalWidth=0) are also skipped — their error
-    // event already fired and won't fire again, which would hang Promise.all.
+    // These are the assets that currently block the loader from resolving.
+    // The browser does not expose exact partial byte progress for native img/video
+    // loads here, so the progress bar reflects the precise percentage of blocker
+    // elements that have reached their ready state.
     var visibleImages = Array.from(document.querySelectorAll('img')).filter(function (img) {
       return !img.complete;
     });
 
-    // Visible videos that don't have first-frame data yet and haven't errored.
-    // If video.error is set the error event already fired; don't add a listener.
     var visibleVideos = Array.from(document.querySelectorAll('video')).filter(function (v) {
       return v.readyState < 2 && !v.error;
     });
+
+    progressTracker = createLoaderProgressTracker(visibleImages.length, visibleVideos.length);
 
     // Toggle media — kick off background loads (fire-and-forget).
     // We do NOT block markReady() on these: browsers aggressively throttle
@@ -128,13 +217,29 @@
       return Promise.resolve(true);
     }
 
-    setLoaderStatus('Preloading image');
-
     // Wait for visible images
     visibleImages.forEach(function (img) {
       promises.push(new Promise(function (resolve) {
-        img.addEventListener('load',  function () { tick('image'); resolve(); }, { once: true });
-        img.addEventListener('error', function () { tick('image'); resolve(); }, { once: true });
+        var done = false;
+
+        function finish() {
+          if (done) { return; }
+          done = true;
+          progressTracker.markComplete('image');
+          resolve();
+        }
+
+        if (img.complete) {
+          finish();
+          return;
+        }
+
+        img.addEventListener('load', finish, { once: true });
+        img.addEventListener('error', finish, { once: true });
+
+        if (img.complete) {
+          finish();
+        }
       }));
     });
 
@@ -142,10 +247,26 @@
     visibleVideos.forEach(function (video) {
       promises.push(new Promise(function (resolve) {
         var done = false;
-        function finish() { if (done) { return; } done = true; tick('video'); resolve(); }
+
+        function finish() {
+          if (done) { return; }
+          done = true;
+          progressTracker.markComplete('video');
+          resolve();
+        }
+
+        if (video.readyState >= 2 || video.error) {
+          finish();
+          return;
+        }
+
         video.addEventListener('loadeddata', finish, { once: true });
-        video.addEventListener('canplay',    finish, { once: true });
-        video.addEventListener('error',      finish, { once: true });
+        video.addEventListener('canplay', finish, { once: true });
+        video.addEventListener('error', finish, { once: true });
+
+        if (video.readyState >= 2 || video.error) {
+          finish();
+        }
       }));
     });
 

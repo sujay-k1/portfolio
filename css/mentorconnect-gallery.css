@@ -167,6 +167,10 @@ body.case-study-page .mc-delivery-row__guide-wrap img.mc-delivery-row__guide {
   --biz2x-pan-handoff-top: 40vh;
 }
 
+.mentorconnect-problem-gallery--captioned {
+  --mc-handoff-top: 50vh;
+}
+
 .mentorconnect-quote-rotator {
   position: relative;
   isolation: isolate;
@@ -434,8 +438,16 @@ body.case-study-page .mc-delivery-row__guide-wrap img.mc-delivery-row__guide {
 
 @media (max-width: 767px) {
   .mentorconnect-problem-gallery {
-    --mc-handoff-top: 24vh;
+    --mc-handoff-top: 40vh;
     margin-bottom: calc(-1 * var(--Passcode-font-size, 24px));
+  }
+
+  .mentorconnect-idea1-scrub {
+    --biz2x-pan-handoff-top: 50vh;
+  }
+
+  .mentorconnect-idea1-scrub .biz2x-pan-scrub-strip {
+    width: 800% !important;
   }
 
   .mentorconnect-problem-gallery__surface {
