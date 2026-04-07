@@ -1,6 +1,5 @@
 (function () {
   var STARTUP_LOADER_TIMEOUT_MS = 20000;
-  var MIN_PROGRESS_UI_VISIBLE_MS = 320;
   var startupLoader = document.getElementById('startup-loader');
   var core = window.StartupLoaderCore;
   var appRevealed = false;
@@ -108,14 +107,12 @@
     var completed = 0;
     var remainingImages = imageCount;
     var remainingVideos = videoCount;
-    var shownAt = (window.performance && typeof window.performance.now === 'function')
-      ? window.performance.now()
-      : Date.now();
 
     function render() {
+      if (!total) { return; }
       setLoaderStatus({
         label: getLoaderStatusLabel(remainingImages, remainingVideos),
-        progress: total ? completed / total : 1
+        progress: completed / total
       });
     }
 
@@ -131,27 +128,7 @@
         }
         render();
       },
-      hasAssets: total > 0,
-      finish: function () {
-        completed = total;
-        remainingImages = 0;
-        remainingVideos = 0;
-        render();
-      },
-      waitForMinimumVisibleTime: function () {
-        var now = (window.performance && typeof window.performance.now === 'function')
-          ? window.performance.now()
-          : Date.now();
-        var remaining = Math.max(0, MIN_PROGRESS_UI_VISIBLE_MS - (now - shownAt));
-
-        if (!remaining) {
-          return Promise.resolve();
-        }
-
-        return new Promise(function (resolve) {
-          window.setTimeout(resolve, remaining);
-        });
-      }
+      hasAssets: total > 0
     };
   }
 
@@ -237,8 +214,7 @@
     var hasAssets = visibleImages.length || visibleVideos.length;
 
     if (!hasAssets) {
-      progressTracker.finish();
-      return progressTracker.waitForMinimumVisibleTime().then(function () { return true; });
+      return Promise.resolve(true);
     }
 
     // Wait for visible images
@@ -294,12 +270,7 @@
       }));
     });
 
-    return Promise.all(promises)
-      .then(function () {
-        progressTracker.finish();
-        return progressTracker.waitForMinimumVisibleTime();
-      })
-      .then(function () { return true; });
+    return Promise.all(promises).then(function () { return true; });
   }
 
   // ── Init ─────────────────────────────────────────────────────────────────────
