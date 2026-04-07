@@ -60,8 +60,8 @@
     if (normalized.length > 1 && normalized.endsWith("/")) {
       normalized = normalized.slice(0, -1);
     }
-    if (normalized.endsWith("/index.html")) {
-      normalized = normalized.slice(0, -11);
+    if (/\/index(?:-v\d+)?\.html$/.test(normalized)) {
+      normalized = normalized.replace(/\/index(?:-v\d+)?\.html$/, "");
     }
     return normalized;
   }
