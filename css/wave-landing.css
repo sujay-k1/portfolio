@@ -625,6 +625,7 @@ body.snap-mode {
 }
 
 .section2-interaction-grid-mask,
+.section2-title-layer,
 .section2-interaction-path-layer,
 .section2-model-track {
   position: absolute;
@@ -708,11 +709,45 @@ body.snap-mode {
   will-change: transform;
 }
 
+.section2-title-layer {
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: clamp(76px, 16%, 138px);
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  z-index: 1;
+}
+
+.section2-title {
+  width: min(92%, 16ch);
+  margin: 0;
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(18px, 2.25vw, 34px);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  text-align: center;
+  color: transparent;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.48) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-wrap: balance;
+  filter: drop-shadow(0 10px 24px rgba(10, 8, 12, 0.12));
+}
+
 .section2-interaction-path-layer {
   inset: 0;
   height: 2460px;
   pointer-events: none;
   will-change: transform;
+  z-index: 2;
 }
 
 .section2-card {
@@ -844,6 +879,7 @@ body.snap-mode {
 .section2-model-track {
   inset: 0;
   pointer-events: none;
+  z-index: 3;
 }
 
 .section2-model-view {
@@ -3396,6 +3432,15 @@ body.loader-logo-active .brand-loader-slot {
     max-height: 100%;
   }
 
+  .section2-title-layer {
+    padding-top: clamp(72px, 13%, 110px);
+  }
+
+  .section2-title {
+    width: min(88%, 14ch);
+    font-size: clamp(17px, 2.7vw, 29px);
+  }
+
   .section2-interaction-path-layer {
     height: 2260px;
   }
@@ -3983,6 +4028,19 @@ body.loader-logo-active .brand-loader-slot {
 
   .section2-card h2 {
     font-size: clamp(28px, 9vw, 42px);
+  }
+
+  .section2-title-layer {
+    padding-top: clamp(52px, 10vw, 84px);
+  }
+
+  .section2-title {
+    width: auto;
+    max-width: calc(100% - 32px);
+    font-size: clamp(30px, 8.5vw, 48px);
+    line-height: 0.94;
+    white-space: nowrap;
+    text-wrap: nowrap;
   }
 
   .section2-card[data-card-index="0"] {

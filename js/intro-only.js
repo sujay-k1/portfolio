@@ -31,6 +31,7 @@ const section2DesktopInteractionSlot = document.getElementById('section2-desktop
 const section2MobileInteractionSlot = document.getElementById('section2-mobile-interaction-slot');
 const section2InteractionShell = document.getElementById('section2-interaction-shell');
 const section2ModelMount = document.getElementById('section2-model');
+const section2TitleLayer = document.getElementById('section2-title-layer');
 const persistentBottomNav = document.querySelector('.folio-bottom-nav-persistent');
 const persistentStatus = document.querySelector('.folio-status-persistent');
 const startupLoader = document.getElementById('startup-loader');
@@ -68,6 +69,7 @@ const SNAP_STATE = {
   wheelCooldownUntil: 0,
   section2YellowFillUnits: 0,
   section2WhiteFillProgress: 0,
+  section2InteractionLeadProgress: 0,
   section2InteractionProgress: 0,
   section2ParagraphLockUntil: 0,
   section2EdgeAccumulator: 0,
@@ -155,6 +157,8 @@ const SECTION2_MODEL_DEFAULT_SPIN = 0.55;
 const SECTION2_MODEL_SCROLL_SPIN_FACTOR = 1;
 const SECTION2_MODEL_RENDER_PIXEL_RATIO_CAP = 1.5;
 const SECTION2_GRID_SCROLL_FACTOR = 120;
+const SECTION2_DESKTOP_TITLE_LEAD_IN_PX = 110;
+const SECTION2_TITLE_SCROLL_BLEND = 0.34;
 const SECTION2_MODEL_VIEWER_ALIGN_LERP = 0.16;
 const SECTION2_MODEL_DIRECTION_FLIP_LERP = 0.18;
 const SECTION2_MODEL_BASE_TILT_Z = Math.PI * 1.5;
@@ -1605,22 +1609,27 @@ function syncSection2SplitLayout() {
   scheduleSection2MobileStageHeightSync();
   if (!snapSections.length) {
     SNAP_STATE.index = 0;
+    syncSection2TitlePresentation();
     return;
   }
   if (!currentSection) {
     SNAP_STATE.index = clamp(SNAP_STATE.index, 0, snapSections.length - 1);
+    syncSection2TitlePresentation();
     return;
   }
   const nextIndex = snapSections.indexOf(currentSection);
   if (nextIndex >= 0) {
     SNAP_STATE.index = nextIndex;
+    syncSection2TitlePresentation();
     return;
   }
   if (currentSection === section2InteractionSection) {
     SNAP_STATE.index = section2TextSectionIndex;
+    syncSection2TitlePresentation();
     return;
   }
   SNAP_STATE.index = clamp(SNAP_STATE.index, 0, snapSections.length - 1);
+  syncSection2TitlePresentation();
 }
 
 function getSectionTransitionGradient(index) {
@@ -3447,6 +3456,7 @@ async function initSection2Model() {
   try {
     const section2About = section2ModelMount.closest('.folio-about');
     const grid = section2About?.querySelector('#section2-grid') || null;
+    const titleLayer = section2ModelMount.querySelector('#section2-title-layer');
     const pathLayer = section2ModelMount.querySelector('#section2-path-layer');
     const modelView = section2ModelMount.querySelector('#section2-model-view');
     const cards = Array.from(section2ModelMount.querySelectorAll('.section2-card'));
@@ -3781,6 +3791,14 @@ async function initSection2Model() {
       const centerY = getSection2ViewportCenterY();
       const translateY = centerY - point.y;
       pathLayer.style.transform = `translate3d(0, ${translateY.toFixed(2)}px, 0)`;
+      if (titleLayer) {
+        const initialPoint = getBezierPoint(0);
+        const initialTranslateY = centerY - initialPoint.y;
+        const pathOffset = translateY - initialTranslateY;
+        const gridOffset = -section2ModelScene.displayProgress * SECTION2_GRID_SCROLL_FACTOR;
+        const titleOffset = gridOffset + ((pathOffset - gridOffset) * SECTION2_TITLE_SCROLL_BLEND);
+        titleLayer.style.transform = `translate3d(0, ${titleOffset.toFixed(2)}px, 0)`;
+      }
 
       section2ModelScene.modelX = point.x;
       section2ModelScene.modelY = centerY;
@@ -5844,6 +5862,7 @@ function initSection2FillTargets() {
 
   applySection2WhiteFill(0);
   applySection2YellowFill(0);
+  applySection2InteractionLeadProgress(0);
   applySection2InteractionProgress(0);
 }
 
@@ -5891,8 +5910,29 @@ function applySection2YellowFill(progressUnits) {
   });
 }
 
+function syncSection2TitlePresentation() {
+  if (!section2TitleLayer) {
+    return;
+  }
+  let opacity = 0;
+  if (usesSection2SplitLayout()) {
+    opacity = 1;
+  } else if (SNAP_STATE.section2InteractionProgress > 0.0001) {
+    opacity = 1;
+  } else {
+    opacity = SNAP_STATE.section2InteractionLeadProgress;
+  }
+  section2TitleLayer.style.opacity = clamp(opacity, 0, 1).toFixed(3);
+}
+
+function applySection2InteractionLeadProgress(progress) {
+  SNAP_STATE.section2InteractionLeadProgress = clamp(progress, 0, 1);
+  syncSection2TitlePresentation();
+}
+
 function applySection2InteractionProgress(progress) {
   SNAP_STATE.section2InteractionProgress = clamp(progress, 0, 1);
+  syncSection2TitlePresentation();
 }
 
 function usesSection2InlineAccentLayout() {
@@ -5913,10 +5953,12 @@ function syncSection2FillLayoutMode() {
   }
   const whiteProgress = SNAP_STATE.section2WhiteFillProgress;
   const yellowUnits = SNAP_STATE.section2YellowFillUnits;
+  const interactionLeadProgress = SNAP_STATE.section2InteractionLeadProgress;
   const interactionProgress = SNAP_STATE.section2InteractionProgress;
   initSection2FillTargets();
   applySection2WhiteFill(whiteProgress);
   applySection2YellowFill(yellowUnits);
+  applySection2InteractionLeadProgress(interactionLeadProgress);
   applySection2InteractionProgress(interactionProgress);
 }
 
@@ -6060,6 +6102,8 @@ function handleSection2Scroll(deltaY) {
   }
   const atTop = SNAP_STATE.section2YellowFillUnits <= 0.0001;
   const atBottom = SNAP_STATE.section2YellowFillUnits >= section2YellowFillTotalUnits - 0.0001;
+  const leadAtStart = SNAP_STATE.section2InteractionLeadProgress <= 0.0001;
+  const leadAtEnd = SNAP_STATE.section2InteractionLeadProgress >= 0.9999;
   const interactionAtStart = SNAP_STATE.section2InteractionProgress <= 0.0001;
   const interactionAtEnd = SNAP_STATE.section2InteractionProgress >= 0.9999;
 
@@ -6075,7 +6119,18 @@ function handleSection2Scroll(deltaY) {
     return true;
   }
 
-  if (!splitMode && isTextSection && deltaY > 0 && atBottom && !interactionAtEnd) {
+  if (!splitMode && isTextSection && deltaY > 0 && atBottom && interactionAtStart && !leadAtEnd) {
+    SNAP_STATE.section2EdgeAccumulator = 0;
+    applySection2InteractionLeadProgress(clamp(
+      SNAP_STATE.section2InteractionLeadProgress + deltaY / SECTION2_DESKTOP_TITLE_LEAD_IN_PX,
+      0,
+      1
+    ));
+    ensureSectionAnimationLoop();
+    return true;
+  }
+
+  if (!splitMode && isTextSection && deltaY > 0 && atBottom && leadAtEnd && !interactionAtEnd) {
     SNAP_STATE.section2EdgeAccumulator = 0;
     applySection2InteractionProgress(clamp(
       SNAP_STATE.section2InteractionProgress + deltaY / SECTION2_INTERACTION_TRAVEL_PX,
@@ -6090,6 +6145,17 @@ function handleSection2Scroll(deltaY) {
     SNAP_STATE.section2EdgeAccumulator = 0;
     applySection2InteractionProgress(clamp(
       SNAP_STATE.section2InteractionProgress + deltaY / SECTION2_INTERACTION_TRAVEL_PX,
+      0,
+      1
+    ));
+    ensureSectionAnimationLoop();
+    return true;
+  }
+
+  if (!splitMode && isTextSection && deltaY < 0 && interactionAtStart && !leadAtStart) {
+    SNAP_STATE.section2EdgeAccumulator = 0;
+    applySection2InteractionLeadProgress(clamp(
+      SNAP_STATE.section2InteractionLeadProgress + deltaY / SECTION2_DESKTOP_TITLE_LEAD_IN_PX,
       0,
       1
     ));
@@ -6151,6 +6217,7 @@ function goToSection(nextIndex, immediate = false, options = {}) {
   if (clamped === 0) {
     applySection2WhiteFill(0);
     applySection2YellowFill(0);
+    applySection2InteractionLeadProgress(0);
     applySection2InteractionProgress(0);
   }
 
