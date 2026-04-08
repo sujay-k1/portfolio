@@ -1058,11 +1058,17 @@
 		padding: 16px;
 	}
 
-.biz2x-video-description-text {
-	font-size: 16px;
+	.biz2x-video-description-text {
+		font-size: 16px;
+	}
+
+	.biz2x-pan-scrub {
+		margin: 20px 0 28px 0;
+	}
 }
 
-.biz2x-pan-scrub {
-	margin: 20px 0 28px 0;
-}
+@media screen and (max-width: 767px) {
+	.biz2x-pan-scrub-strip {
+		width: 500%;
+	}
 }

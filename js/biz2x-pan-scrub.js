@@ -8,6 +8,8 @@
   var WHEEL_DELTA_CAP = 56;
   var WHEEL_INERTIA_WINDOW_MS = 80;
   var WHEEL_INERTIA_MIN_DELTA = 10;
+  var HANDOFF_OWNER_KEY = "__caseStudyHandoffOwner";
+  var HANDOFF_OWNER_ID = "biz2x-pan-scrub";
   var scrubSections = Array.prototype.slice.call(
     document.querySelectorAll(".biz2x-pan-scrub")
   ).map(function (section) {
@@ -34,11 +36,31 @@
     releaseUntil: 0,
     lastWheelTs: 0,
     lastWheelDelta: 0,
-    bodyLockStyles: null
+    bodyLockStyles: null,
+    lastObservedScrollY: window.scrollY
   };
 
   function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function hasForeignLock() {
+    return !!(window[HANDOFF_OWNER_KEY] && window[HANDOFF_OWNER_KEY] !== HANDOFF_OWNER_ID);
+  }
+
+  function claimLock() {
+    if (hasForeignLock()) {
+      return false;
+    }
+
+    window[HANDOFF_OWNER_KEY] = HANDOFF_OWNER_ID;
+    return true;
+  }
+
+  function releaseLock() {
+    if (window[HANDOFF_OWNER_KEY] === HANDOFF_OWNER_ID) {
+      window[HANDOFF_OWNER_KEY] = "";
+    }
   }
 
   function consumeEvent(event) {
@@ -77,7 +99,11 @@
 
   function lockPage(targetScrollY) {
     if (state.bodyLockStyles) {
-      return;
+      return true;
+    }
+
+    if (!claimLock()) {
+      return false;
     }
 
     state.lockedScrollY = clamp(
@@ -105,6 +131,8 @@
     document.body.style.right = "0";
     document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
+    syncObservedScrollY();
+    return true;
   }
 
   function unlockPage() {
@@ -120,6 +148,14 @@
     document.body.style.overflow = state.bodyLockStyles.overflow;
     state.bodyLockStyles = null;
     window.scrollTo(0, state.lockedScrollY);
+    releaseLock();
+    syncObservedScrollY();
+  }
+
+  function syncObservedScrollY() {
+    state.lastObservedScrollY = state.activeEntry
+      ? state.lockedScrollY
+      : window.scrollY;
   }
 
   function measureSection(entry) {
@@ -179,6 +215,23 @@
       Math.max(rect.bottom, projectedBottom) >= triggerY;
   }
 
+  function doesScrollSweepAcrossActivation(entry, startScrollY, endScrollY) {
+    var activationScrollY;
+    var bandTop;
+    var bandBottom;
+
+    if (!entry.active) {
+      return false;
+    }
+
+    activationScrollY = getEntryActivationScrollY(entry);
+    bandTop = activationScrollY - ACTIVATION_BAND_PX;
+    bandBottom = activationScrollY + ACTIVATION_BAND_PX;
+
+    return Math.max(startScrollY, endScrollY) >= bandTop &&
+      Math.min(startScrollY, endScrollY) <= bandBottom;
+  }
+
   function hasRemainingScroll(entry, direction) {
     if (!entry || !entry.active) {
       return false;
@@ -194,20 +247,32 @@
   function maybeActivateEntry(deltaY) {
     var direction;
     var candidate = null;
+    var candidateActivationScrollY;
 
     if (state.activeEntry) {
       return state.activeEntry;
     }
 
-    if (Date.now() < state.releaseUntil) {
+    if (Date.now() < state.releaseUntil || hasForeignLock()) {
       return null;
     }
 
     direction = deltaY > 0 ? 1 : -1;
+    candidateActivationScrollY = direction > 0 ? -Infinity : Infinity;
 
     scrubSections.forEach(function (entry) {
+      var activationScrollY;
+
+      activationScrollY = getEntryActivationScrollY(entry);
+
       if (candidate) {
-        return;
+        if (
+          direction > 0
+            ? activationScrollY <= candidateActivationScrollY
+            : activationScrollY >= candidateActivationScrollY
+        ) {
+          return;
+        }
       }
 
       if (
@@ -215,6 +280,7 @@
         (activationPointReached(entry) || doesSweepAcrossActivation(entry, deltaY))
       ) {
         candidate = entry;
+        candidateActivationScrollY = activationScrollY;
       }
     });
 
@@ -222,9 +288,65 @@
       return null;
     }
 
+    if (!lockPage(getEntryActivationScrollY(candidate))) {
+      return null;
+    }
+
     state.activeEntry = candidate;
-    lockPage(getEntryActivationScrollY(candidate));
-    return candidate;
+    return state.activeEntry;
+  }
+
+  function maybeActivateEntryFromScroll(previousScrollY, currentScrollY) {
+    var direction;
+    var candidate = null;
+    var candidateActivationScrollY;
+
+    if (state.activeEntry) {
+      return state.activeEntry;
+    }
+
+    if (Date.now() < state.releaseUntil || previousScrollY === currentScrollY || hasForeignLock()) {
+      return null;
+    }
+
+    direction = currentScrollY > previousScrollY ? 1 : -1;
+    candidateActivationScrollY = direction > 0 ? -Infinity : Infinity;
+
+    scrubSections.forEach(function (entry) {
+      var activationScrollY;
+
+      activationScrollY = getEntryActivationScrollY(entry);
+
+      if (candidate) {
+        if (
+          direction > 0
+            ? activationScrollY <= candidateActivationScrollY
+            : activationScrollY >= candidateActivationScrollY
+        ) {
+          return;
+        }
+      }
+
+      if (
+        hasRemainingScroll(entry, direction) &&
+        (activationPointReached(entry) ||
+          doesScrollSweepAcrossActivation(entry, previousScrollY, currentScrollY))
+      ) {
+        candidate = entry;
+        candidateActivationScrollY = activationScrollY;
+      }
+    });
+
+    if (!candidate) {
+      return null;
+    }
+
+    if (!lockPage(getEntryActivationScrollY(candidate))) {
+      return null;
+    }
+
+    state.activeEntry = candidate;
+    return state.activeEntry;
   }
 
   function normalizeWheelDelta(deltaY) {
@@ -359,6 +481,29 @@
     state.touchY = null;
   }
 
+  function onScroll() {
+    var previousScrollY = state.lastObservedScrollY;
+    var currentScrollY = window.scrollY;
+
+    if (hasForeignLock()) {
+      state.lastObservedScrollY = currentScrollY;
+      return;
+    }
+
+    if (state.activeEntry || state.bodyLockStyles) {
+      syncObservedScrollY();
+      return;
+    }
+
+    if (Math.abs(currentScrollY - previousScrollY) < 0.5) {
+      state.lastObservedScrollY = currentScrollY;
+      return;
+    }
+
+    maybeActivateEntryFromScroll(previousScrollY, currentScrollY);
+    syncObservedScrollY();
+  }
+
   scrubSections.forEach(function (entry) {
     if (entry.image.complete) {
       return;
@@ -377,12 +522,16 @@
     });
   }
 
-  window.addEventListener("resize", measureAll);
+  window.addEventListener("resize", function () {
+    measureAll();
+    syncObservedScrollY();
+  });
   window.addEventListener("wheel", handleWheel, { passive: false });
   window.addEventListener("touchstart", handleTouchStart, { passive: true });
   window.addEventListener("touchmove", handleTouchMove, { passive: false });
   window.addEventListener("touchend", clearTouchState, { passive: true });
   window.addEventListener("touchcancel", clearTouchState, { passive: true });
+  window.addEventListener("scroll", onScroll, { passive: true });
 
   measureAll();
 })();
