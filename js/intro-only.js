@@ -186,7 +186,7 @@ const SECTION2_CARD_STAGE_LAYOUTS = [
   { anchor: 'left', inset: SECTION2_STAGE_REFERENCE.width * 0.02, top: 2060, width: 328, minWidth: 216, height: 156, minHeight: 104 },
   { anchor: 'right', inset: -32, top: 2360, width: 266, minWidth: 182, height: 132, minHeight: 94 }
 ];
-const STARTUP_LOADER_TIMEOUT_MS = 20000;
+const STARTUP_LOADER_TIMEOUT_MS = 40000;
 const BRAND_LOADER_DOCK_OFFSET_Y = -6;
 const SECTION_MORPH_TRANSITION_DURATION = 0.78;
 const SECTION_MORPH_HINT_DELAY_MS = 420;

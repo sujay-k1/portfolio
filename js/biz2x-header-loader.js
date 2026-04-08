@@ -1,5 +1,5 @@
 (function () {
-  var STARTUP_LOADER_TIMEOUT_MS = 20000;
+  var STARTUP_LOADER_TIMEOUT_MS = 40000;
   var startupLoader = document.getElementById('startup-loader');
   var core = window.StartupLoaderCore;
   var appRevealed = false;
