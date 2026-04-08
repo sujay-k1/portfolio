@@ -171,12 +171,12 @@
 			<ul>
 				<li>The intent and <span class="scroll-fill">specifics of borrowing</span></li>
 				<li>The <span class="scroll-fill">identity</span> of the borrower</li>
-				<li><span class="scroll-fill">Credit worthiness check</span> (collaterals, co-applicants/guarantors, financials)</li>
+				<li><span class="scroll-fill">Creditworthiness check</span> (collaterals, co-applicants/guarantors, financials)</li>
 				<li><span class="scroll-fill">Repayment</span> promise and details</li>
 			</ul>
 			<img class="modal-image" src="Biz2X-assets/LoanApplicationVisual.png" alt="A high-level flow of three types of customer journeys.">
 			<p class="section-body">
-				These <span class="scroll-fill">vary based on earning profiles</span> (salaried, self employed, business, etc.), <span class="scroll-fill">loan type</span> (secured, unsecured, etc.), lender’s <span class="scroll-fill">schemes</span> and their credit policies.
+				These <span class="scroll-fill">vary based on earning profiles</span> (salaried, self-employed, business, etc.), <span class="scroll-fill">loan type</span> (secured, unsecured, etc.), lender’s <span class="scroll-fill">schemes</span> and their credit policies.
 			</p>
 			<p class="section-body">
 				Among the clients Biz2X had, the solutions were custom-made out of previous implementations. The next customer’s need was <span class="scroll-fill">“frankensteined” from forked modules</span>.
@@ -196,7 +196,7 @@
 				The scaling problem
 			</h4>
 			<p class="section-body">
-				In practice, Biz2X reused parts of the product but still heavily modified the application journey for each lender. The count of implementation was combinatorial: <span class="scroll-fill">loan types × program types × client-specific requirements</span>.
+				In practice, Biz2X reused parts of the product but still heavily modified the application journey for each lender. The count of implementations was combinatorial: <span class="scroll-fill">loan types × program types × client-specific requirements</span>.
 			</p>
 			<p class="section-body">
 				That created four issues:
@@ -215,7 +215,7 @@
 			</h4>
 			<img class="modal-image" src="Biz2X-assets/previously.png" alt="An image illustrating an old design that followed a basic forward and back navigation.">
 			<p class="section-body">
-				The existing journey also had <span class="scroll-fill"> usability gaps: Weak linear navigation (Next and back)</span>Poor status visibility, and low reassurance, made self-serve completion s tale of drop-offs, especially in longer applications. <span class="scroll-fill">Clients relied on field agents and in-office teams to complete journeys, adding operational cost</span>. In practice, the customer-facing experience often worked more as a lead-generation layer than a true self-serve application flow.
+				The existing journey also had <span class="scroll-fill"> usability gaps: Weak linear navigation (Next and back)</span>Poor status visibility, and low reassurance, made self-serve completion a tale of drop-offs, especially in longer applications. <span class="scroll-fill">Clients relied on field agents and in-office teams to complete journeys, adding operational cost</span>. In practice, the customer-facing experience often worked more as a lead-generation layer than a true self-serve application flow.
 			</p>
 		</div>
 	</div>
@@ -236,7 +236,7 @@
 			</p>
 			<img class="modal-image" src="Biz2X-assets/StudyingCustomerJourney.png" alt="A high-level flow of three types of customer journeys.">
 			<p class="section-body">
-				A clear pattern emerged: the journeys were different in detail, but not in shape. <span class="scroll-fill">I&nbsp;identified these three themes:</span>.
+				A clear pattern emerged: the journeys were different in detail, but not in shape. <span class="scroll-fill">I&nbsp;identified these three themes:</span>
 			</p>
 			<ul>
 				<li><span class="scroll-fill">Pre-eligibility</span>: Intent and identity of the borrower</li>
@@ -258,7 +258,7 @@
 				All possibilities of variations segregated within themes.
 			</h3>
 			<p class="section-body">
-				I defined the following for each theme to enforce guardrail that ensured a robust journey:
+				I defined the following for each theme to enforce guardrails that ensured a robust journey:
 			</p>
 			<ul>
 				<li>What it is for (purpose)</li>
@@ -337,7 +337,7 @@
 						<div class="biz2x-framework-card-content">
 							<h3 class="biz2x-framework-title">Post-eligibility</h3>
 							<p class="biz2x-framework-copy">
-								Collect and verify the information needed for <strong>underwriting and deeper scrutiny</strong> of credit worthiness.
+								Collect and verify the information needed for <strong>underwriting and deeper scrutiny</strong> of creditworthiness.
 							</p>
 						</div>
 					</div>
@@ -363,7 +363,7 @@
 				</div>
 			</div>
 			<p class="section-body">
-				We now had a framework that could lay out a high-level journey to fulfill a diverse range of client's requirement. But, the real outcome is a <span class="scroll-fill">UI that is closely tied to this configurable framework.</span>
+				We now had a framework that could lay out a high-level journey to fulfill a diverse range of client requirements. But, the real outcome is a <span class="scroll-fill">UI that is closely tied to this configurable framework.</span>
 			</p>
 		</div>
 	</div>
@@ -391,7 +391,7 @@
 			<div class="biz2x-video-toggle-shell">
 				<div class="biz2x-video-toggle-group" role="tablist" aria-label="Pre-eligibility variants">
 					<button class="biz2x-video-toggle is-active" type="button" role="tab" aria-selected="true" data-video-src="Biz2X-assets/Stepper1_copy_1.mp4" data-video-description="Prominent step names, strong visual cues, subtle playfulness.">Standard</button>
-					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="Biz2X-assets/Stepper2_copy_1.mp4" data-video-description="More space for content, suitable for journey which have content-heavy steps.">Compact</button>
+					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="Biz2X-assets/Stepper2_copy_1.mp4" data-video-description="More space for content, suitable for journeys that have content-heavy steps.">Compact</button>
 					<button class="biz2x-video-toggle" type="button" role="tab" aria-selected="false" data-video-src="Biz2X-assets/Stepper3_copy_1.mp4" data-video-description="For assisted journeys, field agents require additional controls like sync.">Additional function</button>
 				</div>
 				<video class="modal-image biz2x-toggle-video" src="Biz2X-assets/Stepper1_copy_1.mp4" muted loop autoplay preload="auto" playsinline aria-label="A guided linear flow for the pre-eligibility experience.">A guided linear flow for the pre-eligibility experience.</video>

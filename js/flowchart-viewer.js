@@ -463,6 +463,10 @@ var FlowchartViewer = (function () {
   function buildToolbar(viewer, tabs) {
     var toolbar = el('div', 'fc-toolbar');
 
+    var titleEl = el('div', 'fc-toolbar-title');
+    titleEl.textContent = 'Mentor Guidance nudge framework: Attendance';
+    toolbar.appendChild(titleEl);
+
     var tabContainer = el('div', 'fc-tabs');
     tabs.forEach(function (tab, i) {
       var btn = el('button', 'fc-tab' + (i === 0 ? ' is-active' : ''));

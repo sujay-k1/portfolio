@@ -99,8 +99,18 @@
   z-index: 20;
 }
 
+.fc-toolbar-title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--project-font-family, "InterVariable", "Inter", "Avenir Next", "Futura", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .fc-tabs {
-  display: flex;
+  display: none;
   gap: 6px;
   flex: 1;
   min-width: 0;
