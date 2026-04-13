@@ -480,32 +480,26 @@
 
   var ticking = false;
   var MAX_SHIFT = 36;
-  var cachedPositions = []; // { el, docCenterY }
 
-  function cachePositions() {
-    var scrollY = window.scrollY;
-    cachedPositions = visuals.map(function (visual) {
-      var media = visual.closest('.wg-card-image');
-      if (!media) return null;
-      var rect = media.getBoundingClientRect();
-      return { el: visual, docCenterY: rect.top + scrollY + rect.height / 2 };
-    }).filter(Boolean);
-  }
-
+  // Section 3 scrolls inside .snap-section-scroll, not window — use live
+  // getBoundingClientRect() so we always get the current viewport position.
   function applyParallax() {
     ticking = false;
-    var scrollY = window.scrollY;
     var vh = window.innerHeight;
-    var viewportCenter = scrollY + vh / 2;
+    var viewportCenter = vh / 2;
 
-    for (var i = 0; i < cachedPositions.length; i++) {
-      var item = cachedPositions[i];
+    for (var i = 0; i < visuals.length; i++) {
+      var visual = visuals[i];
+      var media = visual.closest('.wg-card-image');
+      if (!media) continue;
+      var rect = media.getBoundingClientRect();
+      var cardCenterY = rect.top + rect.height / 2;
       // Normalize: -1 when card center is at top of viewport, +1 at bottom
-      var normalized = (item.docCenterY - viewportCenter) / (vh / 2);
+      var normalized = (cardCenterY - viewportCenter) / (vh / 2);
       var shift = normalized * MAX_SHIFT;
       if (shift > MAX_SHIFT) shift = MAX_SHIFT;
       else if (shift < -MAX_SHIFT) shift = -MAX_SHIFT;
-      item.el.style.setProperty('--wg-parallax-y', shift.toFixed(2) + 'px');
+      visual.style.setProperty('--wg-parallax-y', shift.toFixed(2) + 'px');
     }
   }
 
@@ -515,15 +509,13 @@
     requestAnimationFrame(applyParallax);
   }
 
-  function refresh() {
-    cachePositions();
-    queueParallax();
-  }
-
+  // Listen on both window and the snap scroll container
+  var scrollSection = document.querySelector('.snap-section-scroll');
+  if (scrollSection) scrollSection.addEventListener('scroll', queueParallax, { passive: true });
   window.addEventListener('scroll', queueParallax, { passive: true });
-  window.addEventListener('resize', refresh);
-  window.addEventListener('load', refresh);
-  requestAnimationFrame(refresh);
+  window.addEventListener('resize', queueParallax);
+  window.addEventListener('load', queueParallax);
+  requestAnimationFrame(applyParallax);
 })();
 
 // Work Grid — hover chip

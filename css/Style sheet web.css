@@ -60,7 +60,7 @@ body {
 	    overflow: -moz-scrollbars-none; /* Firefox */
     -ms-overflow-style: none; /* Internet Explorer 10+ */
     scrollbar-width: none; /* Firefox */
-	cursor: url('../Assets/Pointer - control.png') 16 16, auto; /* Custom cursor for general pointer */
+	cursor: url('../Assets/Pointer - control.webp') 16 16, auto; /* Custom cursor for general pointer */
 }
 
 body.case-study-page {
@@ -85,7 +85,7 @@ body::-webkit-scrollbar {
 
 a {
 	all: inherit;
-	cursor: url('../Assets/Link_cursor.png') 16 16, auto; /* Custom cursor for general pointer */
+	cursor: url('../Assets/Link_cursor.webp') 16 16, auto; /* Custom cursor for general pointer */
 }
 
 p {
@@ -605,7 +605,7 @@ body.work-page .header {
     top: 60px;
     left: 55px;
     transition: transform 20s ease;
-    background-image: url("../Assets/logo.png");
+    background-image: url("../Assets/logo.webp");
 	background-position: center;
 	background-size: contain;
 }
@@ -617,7 +617,7 @@ body.work-page .header {
     top: 60px;
     left: 55px;
     transition: transform 20s ease;
-    background-image: url("../Assets/sk.png");
+    background-image: url("../Assets/sk.webp");
 	background-position: center;
 	background-size: contain;
 }
@@ -629,7 +629,7 @@ body.work-page .header {
     top: 12px;
    	left: 11px;
     transition: transform 20s ease;
-    background-image: url("../Assets/sk.png");
+    background-image: url("../Assets/sk.webp");
 	background-position: center;
 	background-size: contain;
 }
@@ -641,7 +641,7 @@ body.work-page .header {
     top: 78px;
     left: 65px;
     transition: transform 20s ease;
-    background-image: url("../Assets/Arrow.png");
+    background-image: url("../Assets/Arrow.webp");
 	background-position: center;
 	background-size: contain;
 }
@@ -653,7 +653,7 @@ body.work-page .header {
     top: 7px;
     left: -1px;
     transition: transform 20s ease;
-    background-image: url("../Assets/Arrow.png");
+    background-image: url("../Assets/Arrow.webp");
 	background-position: center;
 	background-size: contain;
 }

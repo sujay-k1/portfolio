@@ -222,14 +222,14 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2025-26',
-    logo: 'Assets/saison-omni-logo-white.png',
+    logo: 'Assets/saison-omni-logo-white.webp',
     logoAlt: 'Saison Omni logo',
     logoSub: 'Dissolved by Saison International',
     href: '/work/saison-omni',
     statement: '<span class="hl">Scaled product and fueled operations</span> by building reusable governance modules and design patterns',
     keywords: ['Design Patterns', 'Configurable modules', 'Lending', 'System Design', 'Design Ops', 'Data Driven Design'],
     meta: 'ENTERPRISE// FINTECH// LENDING',
-    image: 'Assets/card-01.png',
+    image: 'Assets/card-01.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -241,14 +241,14 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2024-25',
-    logo: 'Assets/biz2x-logo-white.png',
+    logo: 'Assets/biz2x-logo-white.webp',
     logoAlt: 'Biz2X logo',
     logoSub: 'Biz2X',
     href: '/work/Biz2X',
     statement: '<span class="hl">Cut lender onboarding time to UAT</span> by 60% with configurable application journey framework',
     keywords: ['Design Patterns', 'Configurable Journey', 'Lending', 'System Design', 'CRM', 'Data Driven Design'],
     meta: 'ENTERPRISE// FINTECH// LENDING',
-    image: 'Assets/card-02.png',
+    image: 'Assets/card-02.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -266,7 +266,7 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2024',
-    logo: 'Assets/jiotesseract-logo-white.png',
+    logo: 'Assets/jiotesseract-logo-white.webp',
     logoAlt: 'JioTesseract logo',
     logoSub: 'JioTesseract',
     href: '/work/Jio',
@@ -274,7 +274,7 @@ const __removed_finalHorizonCardsData = [
     keywords: ['Design Foundation', 'System Design', 'XR Platform', 'Design Patterns', 'Spatial Design', 'Interaction Design'],
     meta: 'Platform // XR (AR/VR/MR)',
     backgroundImage: 'Assets/JioPlatformBG',
-    image: 'Assets/card-03.png',
+    image: 'Assets/card-03.webp',
     imageFit: 'cover',
     imagePosition: '50% 50%',
     imageScale: 1,
@@ -283,7 +283,7 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2023',
-    logo: 'Assets/jiotesseract-logo-white.png',
+    logo: 'Assets/jiotesseract-logo-white.webp',
     logoAlt: 'JioTesseract logo',
     logoSub: 'JioTesseract',
     href: 'https://tesseract.in/learning-and-development-ai-analytics/',
@@ -291,7 +291,7 @@ const __removed_finalHorizonCardsData = [
     statement: '<span class="hl">Boosted Enterprise training</span> with immersive landing platform for 20+ enterprises',
     keywords: ['LMS', 'System Design', 'Dashboard', 'Immersive Learning', 'No-code Tool', 'Enterprise Training'],
     meta: 'Enterprise // Immersive L&D',
-    image: 'Assets/card-04.png',
+    image: 'Assets/card-04.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -312,7 +312,7 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2022',
-    logo: 'Assets/prime-video-logo-white.png',
+    logo: 'Assets/prime-video-logo-white.webp',
     logoAlt: 'Prime Video logo',
     logoSub: '@BRND STUDIO',
     href: 'https://www.primevideo.com/detail/0OKPRIFW4S22RJVLB7N5JC8LRH',
@@ -320,7 +320,7 @@ const __removed_finalHorizonCardsData = [
     statement: '<span class="hl">Strengthened accessibility</span> by shipping AI-enabled audio description workflows.',
     keywords: ['Accessibility', 'Editing Tool', 'Entertainment', 'Asset Management', 'Project Management Tool'],
     meta: 'ENTERPRISE// ENTERTAINMENT',
-    image: 'Assets/card-05.png',
+    image: 'Assets/card-05.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -341,14 +341,14 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2021',
-    logo: 'Assets/byju\'s-logo-white.png',
+    logo: 'Assets/byju\'s-logo-white.webp',
     logoAlt: 'BYJU’S logo',
     logoSub: '@BRND STUDIO',
     href: '/work/MentorConnect',
     statement: '<span class="hl">Improved subscription renewal</span> by scaling “real” mentorship with MentorConnect',
     keywords: ['Chatbot', 'CMS', 'Primary Research', 'Education', 'A/B Testing', 'Smartfeed', 'Personalization', 'Data Driven Design'],
     meta: 'Consumer // Education',
-    image: 'Assets/card-06.png',
+    image: 'Assets/card-06.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -366,14 +366,14 @@ const __removed_finalHorizonCardsData = [
   },
   {
     year: '2020',
-    logo: 'Assets/Aangan-white-logo.png',
+    logo: 'Assets/Aangan-white-logo.webp',
     logoAlt: 'Aangan logo',
     logoSub: '@BRND STUDIO',
     href: '/work/SurakshaCentral',
     statement: '<span class="hl">Scaled risk identification</span> by standardizing audits for NGOs and government adoption.',
     keywords: ['Data Viz', 'Enterprise Suite', 'Social Service', 'Brand Strategy', 'Usability Testing', 'CMS', 'Design System'],
     meta: 'SaaS // Social Sector',
-    image: 'Assets/card-07.png',
+    image: 'Assets/card-07.webp',
     imageFit: 'contain',
     imagePosition: '50% 0%',
     imageScale: 1,
@@ -398,7 +398,7 @@ const __removed_finalHorizonCardsData = [
       <p>I also explored a <a href="/work/WhatsApp">speculative concept</a> to help WhatsApp users remember and act on actionable messages, and I make films from time to time: <a href="https://www.youtube.com/watch?v=Lv0h4fs75i8" target="_blank" rel="noopener noreferrer">here's one</a> I'm especially fond of.</p>
       <p>My previous portfolio was also a small expression of my long-standing fascination with Bezier curves: you can <a href="/Old_portfolio/">check it out here.</a></p>
     `,
-    image: 'Assets/profile.jpg',
+    image: 'Assets/profile.webp',
     imageAlt: 'Profile portrait'
   }
 ];
@@ -4852,24 +4852,24 @@ function renderFinalHorizonSection() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Open LinkedIn profile in a new tab"
-                ><img src="Assets/contact-icons-04.png" alt=""></a>
+                ><img src="Assets/contact-icons-04.webp" alt=""></a>
                 <a
                   class="folio-opportunity-icon folio-opportunity-icon-link"
                   href="mailto:imsujaykumar@gmail.com"
                   aria-label="Email imsujaykumar@gmail.com"
-                ><img src="Assets/contact-icons-03.png" alt=""></a>
+                ><img src="Assets/contact-icons-03.webp" alt=""></a>
                 <a
                   class="folio-opportunity-icon folio-opportunity-icon-link"
                   href="tel:+918828290489"
                   aria-label="Call +91 88282 90489"
-                ><img src="Assets/contact-icons-02.png" alt=""></a>
+                ><img src="Assets/contact-icons-02.webp" alt=""></a>
                 <a
                   class="folio-opportunity-icon folio-opportunity-icon-link folio-opportunity-github"
                   href="https://github.com/sujay-k1/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="View GitHub profile"
-                ><img src="Assets/github-logo.png" alt="GitHub"></a>
+                ><img src="Assets/github-logo.webp" alt="GitHub"></a>
               </div>
             </div>
             <div class="folio-opportunity-pill"><span class="folio-status-dot" aria-hidden="true"></span><span>open to opportunities</span></div>
@@ -4948,7 +4948,7 @@ function renderFinalHorizonSection() {
                 index === 1
                   ? `<div class="folio-hcard-image folio-hcard-image-split">
                        <div class="folio-hcard-image-stack">
-                         <img class="folio-hcard-image-base" src="Assets/card-01-01.png" alt="">
+                         <img class="folio-hcard-image-base" src="Assets/card-01-01.webp" alt="">
                          <img class="folio-hcard-image-overlay" src="${card.image}" alt="">
                        </div>
                      </div>`

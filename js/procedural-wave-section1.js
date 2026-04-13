@@ -569,7 +569,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   const pointerHud = document.createElement('div');
   pointerHud.className = 'intro-wave-pointer-hud';
   pointerHud.innerHTML = `
-    <img class="intro-wave-pointer-arrow" src="Assets/Arrow-2.png" alt="">
+    <img class="intro-wave-pointer-arrow" src="Assets/Arrow-2.webp" alt="">
     <div class="intro-wave-pointer-bars is-hidden">
       <div class="intro-wave-pointer-row">
         <span class="intro-wave-pointer-label">Curiosity</span>
