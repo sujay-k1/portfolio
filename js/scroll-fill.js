@@ -104,7 +104,7 @@
       words: built.words,
       baseColor: parseColor(computedStyle.color),
       accentColor: parseColor(
-        computedStyle.getPropertyValue("--scroll-fill-accent") || "rgb(158, 131, 199)"
+        computedStyle.getPropertyValue("--scroll-fill-accent") || "rgb(193, 165, 236)"
       ),
       duration: Math.max(chars.length, 1)
     };

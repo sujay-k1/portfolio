@@ -25,6 +25,7 @@
 <link href="css/Style sheet web.css" rel="stylesheet" type="text/css" media="screen and (min-width: 768px), screen and (max-width: 767px) and (orientation: landscape)">
 <link href="css/biz2x-case-study.css" rel="stylesheet" type="text/css">
 <link href="css/case-study-responsive.css" rel="stylesheet" type="text/css">
+<link href="css/codrops-image-reveal.css" rel="stylesheet" type="text/css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
@@ -113,7 +114,7 @@
 	</div>
 
 	<div class="biz2x-banner-statement">
-		Digitized child-safety audits for Aangan to improve reliability, usability, and operational visibility.
+		Strengthened child-safety risk identification by standardizing audits of Rescue Homes
 	</div>
 
 	<div class="biz2x-overview-panel">
@@ -144,9 +145,7 @@
 				<div class="biz2x-overview-block">
 					<p class="biz2x-overview-label">Impact</p>
 					<ul class="biz2x-overview-list">
-						<li>Translated a <span class="highlight">manual audit workflow</span> into a digital tool for field use</li>
-						<li>Improved clarity and usability through <span class="highlight">iterative testing and refinement</span></li>
-						<li>Established a shared <span class="highlight">brand and design direction</span> for future Aangan products</li>
+						<li>Enhance data collection for children safety in <span class="highlight">Rescue Homes of 7 states in India</span> with a digital tool for field use</li>
 					</ul>
 				</div>
 			</div>
@@ -163,7 +162,7 @@
 		</div>
 			<div class="content-section-block">
 			<h3 class="section-title">
-				Empowering Aangan with a digital tool to conduct thorough audits of childcare institutions, tackling the issue of abuse and enhancing child safety.
+				Aangan is tackling the issue of abuse and enhancing child safety.
 			</h3>
 			<p class="section-body">
 				Aangan developed a planning and review tool based on the Juvenile Justice (Care and Protection of Children) Act, 2015, and Model Rules, 2016. Under this program, Aangan's volunteers and inspectors visited Rescue Homes to conduct audits, manually replicating data from physical forms into a digital format. This process allowed for data storage and analysis, but it led to accuracy and reliability issues and was time-consuming for generating reports and deriving insights.
@@ -174,31 +173,59 @@
 		<div class="section">
 			<div class="section-heading-block">
 			<h2 class="headline">
-				Digital audit tool
+				Aangan's auditing framework
 			</h2>
-		</div>
-			<div class="content-section-block">
-			<h3 class="section-title">
-				Aangan’s years of worth of collected was simplified to formulate a digital version of their audit tool.
-			</h3>
-			<p class="section-body">
-				Over time, Aangan volunteers had collected observations against the questionnaire. We derived common themes and simplified it. As per Aangan’s vision of data collection workflow, we designed the form.
-			</p>
-			<img class="modal-image" src="SurakshaCentral-assets/SCfeature.png" alt="An image highlighting the features built on the first iteration of SafCa tool">
-			<p class="section-body">
-				<ol class="numbered-circle-list">
-					<li>To ensure that the entire form doesn’t look overwhelming to the user while filling the form, we collapsed the qualifiers under each score.</li>
-					<li>The drop-down was kept persistent on scrolling to ensure its accessibility for the ability to switch between different parameters.</li>
-					<li>For the external score on each criterion, the surveying team has to select the process  used to reach the conclusion.</li>
-					<li>Since each criterion is derived from the Juvenile Justice (Care and Protection of Children) Act, 2015 and Model Rules, 2016, the relevant rules are mentioned next to them in case the Surveying team has to justify the criteria.</li>
-				</ol>
-			</p>
-			<div class="note-container">
-				<p class="emoji">🎯 </p>
-				<p class="note">The goal was to take a digital version of the pen paper tool to the volunteers and study their expectations and their on-ground needs.
+			</div>
+				<div class="content-section-block">
+				<h3 class="section-title">
+					Data collection and report generation for CCIs
+				</h3>
+				<p class="section-body">
+					Aangan audited Child Care Institutions periodically. They gathered the data and insights for each CCI. They aggregated the data at district as well as state-level, and worked with officials of Women & Child Development state departments to chart out plans for improvement.
 				</p>
+				<p class="section-body">
+					Here's how their auditing worked:
+				</p>
+				<ul>
+					<li style="margin-bottom:16px;">Aangan evaluated Child Care Institutions(Rescue Homes) across parameters like <span class="scroll-fill">Management & Staff, Nutrition, Psychological care, etc.</span></li>
+					<li style="margin-bottom:16px;">Each parameters had multiple in-depth criteria, example: <span class="scroll-fill">Do staff members stay in the living area at night</span>, are there women staff members for girls?</li>
+					<li style="margin-bottom:16px;">Volunteers go through documents, make observations, and talk to children and staff to scrutinize against each criteria, example: <span class="scroll-fill">maybe the children are left unaccompanied at night</span></li>
+					<li style="margin-bottom:16px;">They <span class="scroll-fill">assign scores to each criteria, identify redflags,</span> and prepare a report containing a final score and recommendations</li>
+				</ul>
 			</div>
 		</div>
+
+		<div class="section">
+			<div class="section-heading-block">
+			<h2 class="headline">
+				Digital audit tool
+			</h2>
+			</div>
+				<div class="content-section-block">
+				<h3 class="section-title">
+					Aangan’s framework simplified to a digital audit tool.
+				</h3>
+				<p class="section-body">
+					Over time, Aangan had a rich repository of observations against criteria. We derived <span class="scroll-fill">common themes to create a tiered system of score: 0, 0.5, and 1</span>. For example, a children being left accompanied corresponds to a score of 0, if there are few such occurences, it corresponds to 0.5, etc. We also retained the option of recording new observation against each scoring tier. We called them "Qualifiers".
+				</p>
+				<h4 class="heading3">
+					First iteration
+				</h4>
+				<img class="modal-image" src="SurakshaCentral-assets/SCfeature.png" alt="An image highlighting the features built on the first iteration of SafCa tool">
+				<p class="section-body">
+					<ol class="numbered-circle-list">
+						<li>Volunteers first selected a score, then they pick the qualifier that holds true</li>
+						<li>Persistent drop-down to switch between different parameters at any time</li>
+						<li>Process used to evaluate the CCI for credibility of the audit</li>
+						<li>The section of the Juvenile Justice (Care and Protection of Children) Act, 2015 that mandates meeting the criteria are mentioned in case the Surveying team has to justify the criteria.</li>
+					</ol>
+				</p>
+				<div class="note-container">
+					<p class="emoji">🎯 </p>
+					<p class="note">The goal was to take a digital version of the pen paper tool to the volunteers and study their expectations and their on-ground needs.
+					</p>
+				</div>
+			</div>
 		</div>
 	
 		<div class="section">
@@ -209,13 +236,13 @@
 			</div>
 			<div class="content-section-block">
                 <h3 class="section-title">
-                    The most important, the longest (or complicated) and the most conventional flows were tested.
+                    Tested usability of data collection workflow
                 </h3>
                 <p class="section-body">
                     <a href="https://docs.google.com/spreadsheets/d/1FWmtdzZAvDgMqOaQW8cAIB-ZcuS1rRwx/edit?usp=sharing&ouid=114604788975451857227&rtpof=true&sd=true" target="_blank">Usability testing documentation</a>
                 </p>
 				<p class="section-body">
-                    To quantify the usability of the system through SUM, we were evaluating the following 4 metrics:
+                    We quantified the usability of features based on:
                 </p>
 				<ul>
 					<li>⌛ Time taken to complete the task</li>
@@ -223,7 +250,47 @@
 					<li>😊 Satisfaction</li>
 					<li>🎯 Task completion rate</li>
 				</ul>
+				<p class="section-body">
+                    This allowed us to prioritize the problems at hand.
+                </p>
 				<h4 class="heading3">Top observations</h4>
+				<div
+					class="report-slideshow report-slideshow--inline is-open"
+					aria-hidden="false"
+					data-slideshow-images="SurakshaCentral-assets/ResearchInsight1.png,SurakshaCentral-assets/ResearchInsight2.png,SurakshaCentral-assets/ResearchInsight3.png,SurakshaCentral-assets/ResearchInsight4.png,SurakshaCentral-assets/ResearchInsight5.png"
+					data-slideshow-label="Research insight"
+				>
+					<div class="report-slideshow-dialog" role="region" aria-label="Research insights slideshow">
+						<div class="report-slideshow-stage">
+							<div class="report-slideshow-header">
+								<div class="report-slideshow-progress-wrap" aria-hidden="true">
+									<svg class="report-slideshow-progress" viewBox="0 0 44 44">
+										<circle class="report-slideshow-progress-track" cx="22" cy="22" r="18"></circle>
+										<circle class="report-slideshow-progress-ring" cx="22" cy="22" r="18"></circle>
+									</svg>
+									<button class="report-slideshow-toggle" type="button" aria-label="Pause slideshow" aria-pressed="false">
+										<span class="report-slideshow-toggle-icon is-pause" aria-hidden="true"></span>
+									</button>
+								</div>
+							</div>
+							<button class="report-slideshow-arrow is-prev" type="button" aria-label="Previous image" data-slideshow-prev>
+								<span aria-hidden="true">&#8592;</span>
+							</button>
+							<div class="report-slideshow-viewport">
+								<p class="report-slideshow-counter">1 / 5</p>
+								<div class="report-slideshow-frame">
+									<img class="report-slideshow-image" alt="Research insight">
+								</div>
+							</div>
+							<button class="report-slideshow-arrow is-next" type="button" aria-label="Next image" data-slideshow-next>
+								<span aria-hidden="true">&#8594;</span>
+							</button>
+						</div>
+						<div class="report-slideshow-thumbs" aria-label="Research insight thumbnails"></div>
+					</div>
+				</div>
+
+			<!--
 				<img class="modal-image" src="SurakshaCentral-assets/Observation1.png" alt="A screenshot of SafCa's first iteration highlighting usability issues.">
 				<p class="section-body"><strong>Process Used</strong>:<br>Users did not understand the relevance of asterisk marks. They supposed that they are just mandatory check boxes to be filled.</p>
 				<img class="modal-image" src="SurakshaCentral-assets/Observation2.png" alt="A screenshot of SafCa's first iteration highlighting usability issues.">
@@ -237,8 +304,10 @@
 				<p class="section-body"><strong>Summary</strong>:<br>Users felt, a higher Red Flag score meant that the situation was worse. The score was associated with the number of Red Flags.</p>
 				<img class="modal-image" src="SurakshaCentral-assets/Observation6.png" alt="A screenshot of SafCa's first iteration highlighting usability issues.">
 				<p class="section-body"><strong>Reset PIN</strong>:<br>Users had trouble finding the option to reset the PIN. They mostly got confused between a password and a PIN. <br>Users were not confident of the numbers they entered as PIN, because they couldn’t see it.</p>
+			-->
+
 				<h4 class="heading3">Persona</h4>
-				<img class="modal-image" src="SurakshaCentral-assets/Persona.png" alt="A documentation of the user persona called the Volunteer.">
+				<!--<img class="modal-image" src="SurakshaCentral-assets/Persona.png" alt="A documentation of the user persona called the Volunteer.">-->
 			</div>
 		</div>
 
@@ -250,30 +319,33 @@
 			</div>
             <div class="content-section-block">
                 <h3 class="section-title">
-                    Refining the experience by simplifying processes, reversing scoring criteria for clarity, and introducing features to streamline usability.
+                    The workflow required further simplification.
                 </h3>
+				<p class="section-body">
+					We collaborated with the Aangan management to take refinement decisions.
+				</p>
                 <h4 class="heading3">
-					Major simplification
+					UI changes:
                 </h4>
 				<ul>
-					<li>Removed “Process used” and replaced it with recommended process associated to each criteria.</li>
-					<li>Removed unnecessary filters.</li>
-					<li>Text of the criteria and qualifiers were edited to make more comprehensible.</li>
+					<li>Removed <span class="scroll-fill">selection of recording the process of evaluation</span>, we added the required process instead</li>
+					<li>Removed unnecessary <span class="scroll-fill">filters</span>.</li>
+					<li>Edited text to <span class="scroll-fill">make more comprehensible</span>.</li>
 				</ul>
 				<h4 class="heading3">
 					Scoring criteria:
                 </h4>
 				<ul>
-					<li>Instead of deriving qualifiers from scores, the approach was reversed to derive scores from selected qualifiers</li>
-					<li>Internal evaluation was limited to just giving scores instead of selecting the qualifiers too.</li>
+					<li>We <span class="scroll-fill">removed scores</span> from the UI: Now, volunteers would select the qualifiers and the scores would get assigned behind the scene.</li>
+					<li>Simplified <span class="scroll-fill">internal evalation</span> to assign only a score and not a qualifier</li>
 				</ul>
 				<h4 class="heading3">
 					Feature based changes:
                 </h4>
 				<ul>
-					<li>Auto-saving as opposed to asking the users to choose between saving without existing, saving and exiting, and staying.</li>
-					<li>Creation of a universal CCI (Earlier called Rescue Homes) List for the Surveying team to pick from.</li>
-					<li><strong>Redesign of Summary and Dashboard</strong> to make more concise and less information heavy.</li>
+					<li><span class="scroll-fill">Auto-saving</span>: Removed the complex choice of selecting exiting without saving, saving and exiting, and cancelling.</li>
+					<li>Maintaining a universal set of CCIs at the back-end to ensure data collection accuracy and analysis.</li>
+					<li><span class="scroll-fill">Redesign of Summary and Dashboard</span> to make more concise and less information heavy.</li>
 				</ul>
             </div>
 		</div>
@@ -281,27 +353,52 @@
 		<div class="section">
         	<div class="section-heading-block">
 				<h2 class="headline">
-				Branding strategy and Design system
+				Design pattern and Design system
 			</h2>
 			</div>
             <div class="content-section-block">
                 <h3 class="section-title">
                    Unifying Aangan’s product offerings to enhance operational efficiency and establish a strong digital presence in the community.
                 </h3>
-				<p class="section-body">As Aangan planned to launch multiple products, a unified brand strategy became essential. They aimed to remain a parent brand in the community while also creating a distinct brand that portrays a digital personality. To clearly communicate the relationship between the brands and emphasize the association with the parent brand, we opted for an endorsed branding approach. This strategy also allowed us to centralize common products, such as a portal serving as a unified hub for configuration, back-end management, and data visualization.</p>
-				<p class="section-body">Through workshops and discussions, we crafted a brand language that reflects Aangan’s commitment to child safety. The result? A brand that not only enhances recognition but also builds trust within the communities we serve.</p>
+				<p class="section-body">As Aangan planned to launch multiple products, a unified brand strategy became essential. They aimed to remain a parent brand in the community while also <span class="scroll-fill">creating a distinct brand that portrays a digital personality</span>. To clearly communicate the relationship between the brands and emphasize the association with the parent brand, we opted for an endorsed branding approach. This strategy also allowed us to centralize common products, such as a portal serving as a unified hub for configuration, back-end management, and data visualization.</p>
+				<p class="section-body">We built a <span class="scroll-fill">library of UI components and interactions that could be reused</span>. They were designed in a way other products could <span class="scroll-fill">carry their own unique identity, and at the same time feel parts of the same family.</span></p>
 				
-                <div class="note-container">
-				<p class="emoji">🎯 </p>
-				<p class="note">
-					As Aangan prepared to launch multiple products, we developed a unified brand strategy to establish a distinct digital identity while emphasizing its community roots. This approach enabled centralized operations and a cohesive brand language that strengthens recognition and trust.
-				</p>
+				<div
+					class="report-slideshow report-slideshow--inline is-open"
+					aria-hidden="false"
+					data-slideshow-images="SurakshaCentral-assets/Safca-01.png,SurakshaCentral-assets/Safca-02.png,SurakshaCentral-assets/Safca-03.png,SurakshaCentral-assets/Safca-04.png,SurakshaCentral-assets/Safca-05.png"
+					data-slideshow-overlay-images="SurakshaCentral-assets/Bharosa-01.png,SurakshaCentral-assets/Bharosa-02.png,SurakshaCentral-assets/Bharosa-03.png,SurakshaCentral-assets/Bharosa-04.png,SurakshaCentral-assets/Bharosa-05.png"
+					data-slideshow-label="SafCa screen"
+				>
+					<div class="report-slideshow-dialog" role="region" aria-label="SafCa screens slideshow">
+						<div class="report-slideshow-stage">
+							<div class="report-slideshow-header">
+								<div class="report-slideshow-progress-wrap" aria-hidden="true">
+									<svg class="report-slideshow-progress" viewBox="0 0 44 44">
+										<circle class="report-slideshow-progress-track" cx="22" cy="22" r="18"></circle>
+										<circle class="report-slideshow-progress-ring" cx="22" cy="22" r="18"></circle>
+									</svg>
+									<button class="report-slideshow-toggle" type="button" aria-label="Pause slideshow" aria-pressed="false">
+										<span class="report-slideshow-toggle-icon is-pause" aria-hidden="true"></span>
+									</button>
+								</div>
+							</div>
+							<button class="report-slideshow-arrow is-prev" type="button" aria-label="Previous image" data-slideshow-prev>
+								<span aria-hidden="true">&#8592;</span>
+							</button>
+							<div class="report-slideshow-viewport">
+								<p class="report-slideshow-counter">1 / 5</p>
+								<div class="report-slideshow-frame">
+									<img class="report-slideshow-image" alt="SafCa screen">
+								</div>
+							</div>
+							<button class="report-slideshow-arrow is-next" type="button" aria-label="Next image" data-slideshow-next>
+								<span aria-hidden="true">&#8594;</span>
+							</button>
+						</div>
+						<div class="report-slideshow-thumbs" aria-label="SafCa screen thumbnails"></div>
+					</div>
 				</div>
-				<img class="modal-image" src="SurakshaCentral-assets/ScreenComparison1.png"  alt="Screenshots of Bharosa and SafCa next to each other showcasing the use of brand language in the family of products.">
-				<img class="modal-image" src="SurakshaCentral-assets/ScreenComparison2.png"  alt="Screenshots of Bharosa and SafCa next to each other showcasing the use of brand language in the family of products.">
-				<img class="modal-image" src="SurakshaCentral-assets/ScreenComparison3.png"  alt="Screenshots of Bharosa and SafCa next to each other showcasing the use of brand language in the family of products.">
-				<img class="modal-image" src="SurakshaCentral-assets/ScreenComparison4.png"  alt="Screenshots of Bharosa and SafCa next to each other showcasing the use of brand language in the family of products.">
-				<img class="modal-image" src="SurakshaCentral-assets/ScreenComparison5.png"  alt="Screenshots of Bharosa and SafCa next to each other showcasing the use of brand language in the family of products.">
 				<h4 class="heading3">Final prototype</h4>
 				<iframe width="100%" height="640" src="https://xd.adobe.com/embed/7f9ccf3e-ed56-42a3-be03-1bd4a79a0f9b-2acf/" frameborder="0" allowfullscreen></iframe>
             </div>
@@ -380,6 +477,8 @@ span.onclick = function() {
 	<script src="js/loader-page-handoff.js"></script>
 	<script src="js/case-study-index.js"></script>
 	<script src="js/next-case-study-card.js"></script>
-	
+	<script src="js/listing-slideshow.js"></script>
+	<script src="js/scroll-fill.js"></script>
+
 </body>
 </html>

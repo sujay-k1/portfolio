@@ -274,6 +274,7 @@
     var closeButton = modal ? modal.querySelector(".close") : null;
     var modalImage = modal ? (modal.querySelector("#img01") || modal.querySelector("img.modal-content")) : null;
     var modalVideo = null;
+    var lastTrigger = null;
 
     if (!modal || !closeButton || !modalImage) {
       return;
@@ -329,6 +330,7 @@
     function openModalShell() {
       modal.style.display = "flex";
       modal.setAttribute("aria-hidden", "false");
+      closeButton.focus({ preventScroll: true });
     }
 
     function closeMediaViewer() {
@@ -336,6 +338,9 @@
       stopModalVideo();
       modal.style.display = "none";
       modal.setAttribute("aria-hidden", "true");
+      if (lastTrigger && typeof lastTrigger.focus === "function") {
+        lastTrigger.focus({ preventScroll: true });
+      }
     }
 
     function openImageViewer(node) {
@@ -387,6 +392,8 @@
         return;
       }
 
+      lastTrigger = node;
+
       if (node.tagName && node.tagName.toLowerCase() === "video") {
         openVideoViewer(node);
         return;
@@ -396,11 +403,25 @@
     }
 
     Array.from(document.querySelectorAll(".modal-image")).forEach(function (node) {
+      node.setAttribute("tabindex", "0");
+      node.setAttribute("role", "button");
+      node.setAttribute("aria-haspopup", "dialog");
+
       node.onclick = function (event) {
         event.preventDefault();
         event.stopPropagation();
         openMediaViewer(node);
       };
+
+      node.addEventListener("keydown", function (event) {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        openMediaViewer(node);
+      });
     });
 
     closeButton.onclick = function (event) {

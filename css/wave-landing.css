@@ -16,7 +16,7 @@
   --txt-status: #54f342;
   --txt-highlight: #ae83c6;
   --txt-intro-main: #cebfdb;
-  --txt-intro-accent: #9e83c7;
+  --txt-intro-accent: #C1A5EC;
 
   /* Semantic color tokens */
   --color-bg-canvas: var(--bg-0);
@@ -136,6 +136,34 @@ body > .folio-status-persistent,
 body > .folio-bottom-nav-persistent,
 body > main {
   transition: opacity 0.28s ease;
+}
+
+.folio-section-focus-anchor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.folio-section-focus-anchor:focus-visible {
+  outline: none;
+}
+
+.folio-section-focus-anchor:focus-visible ~ .intro-stage {
+  box-shadow:
+    inset 0 0 0 2px rgba(193, 165, 236, 0.9),
+    inset 0 0 0 9px rgba(193, 165, 236, 0.16);
+}
+
+.folio-section-focus-anchor:focus-visible ~ .folio-about {
+  box-shadow:
+    inset 0 0 0 2px rgba(193, 165, 236, 0.9),
+    inset 0 0 0 9px rgba(193, 165, 236, 0.16);
 }
 
 @supports (font-variation-settings: normal) {
@@ -1047,13 +1075,13 @@ body.status-persistent-active .snap-section[data-section="10"] .folio-status {
 
 .section3-fill-char-overlay {
   opacity: 0;
-  color: #9e83c7;
+  color: #C1A5EC;
 }
 
 .scroll-fill {
   display: inline-block;
   color: rgba(255, 255, 255, 0);
-  background-image: linear-gradient(to bottom, transparent 20%, #9e83c7 21%);
+  background-image: linear-gradient(to bottom, transparent 20%, #C1A5EC 21%);
   background-position: 0 1.22em;
   background-repeat: no-repeat;
   background-size: var(--scroll-fill-underline-progress, 0%) 2px;
@@ -1086,7 +1114,7 @@ body.status-persistent-active .snap-section[data-section="10"] .folio-status {
 
 .scroll-fill-char-accent {
   opacity: 0;
-  color: #9e83c7;
+  color: #C1A5EC;
 }
 
 .scroll-fill .scroll-fill-char-fill {
@@ -1094,7 +1122,7 @@ body.status-persistent-active .snap-section[data-section="10"] .folio-status {
 }
 
 .scroll-fill .scroll-fill-char-accent {
-  color: #9e83c7;
+  color: #C1A5EC;
 }
 
 .folio-keywords {
@@ -1269,6 +1297,10 @@ body.final-horizon-active {
   transition: transform var(--final-horizon-vertical-duration, var(--final-horizon-transition-duration, 0.8s)) cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
+.folio-hcard-wrap:focus-visible {
+  outline: none;
+}
+
 .folio-hcard-wrap.is-right-of-active {
   transform: translateY(calc(100% - 108px));
 }
@@ -1346,6 +1378,12 @@ body.final-horizon-active {
   background: linear-gradient(135deg, #1c1420 0%, #231c28 100%);
   overflow: hidden;
   isolation: isolate;
+}
+
+.folio-hcard-wrap:focus-visible .folio-hcard-frame {
+  box-shadow:
+    0 0 0 2px rgba(193, 165, 236, 0.9),
+    0 0 0 7px rgba(193, 165, 236, 0.18);
 }
 
 .folio-hcard-frame::before {
@@ -2967,6 +3005,7 @@ body.loader-logo-active .brand-loader-slot {
     --folio-tablet-landscape-card-height: clamp(520px, 72vh, 620px);
     --folio-tablet-landscape-card-top-inset: 80px;
     --folio-tablet-landscape-left-reveal: 24px;
+    padding-bottom: 240px;
   }
 
   .snap-section[data-section="3"] .folio-horizon {
@@ -3362,7 +3401,7 @@ body.loader-logo-active .brand-loader-slot {
   }
 
   .scroll-fill-word.scroll-fill-accent-word {
-    background-image: linear-gradient(to bottom, transparent 20%, #9e83c7 21%);
+    background-image: linear-gradient(to bottom, transparent 20%, #C1A5EC 21%);
     background-position: 0 calc(100% - 0.08em);
     background-repeat: no-repeat;
     background-size: var(--scroll-fill-underline-progress, 0%) 2px;
@@ -3652,7 +3691,7 @@ body.loader-logo-active .brand-loader-slot {
   }
 
   .scroll-fill-word.scroll-fill-accent-word {
-    background-image: linear-gradient(to bottom, transparent 20%, #9e83c7 21%);
+    background-image: linear-gradient(to bottom, transparent 20%, #C1A5EC 21%);
     background-position: 0 calc(100% - 0.08em);
     background-repeat: no-repeat;
     background-size: var(--scroll-fill-underline-progress, 0%) 2px;

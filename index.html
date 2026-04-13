@@ -61,6 +61,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,649..854,-305..-98,560..788,416..570,528..760&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&opsz@20..48&GRAD@-25..200&wght@200..700">
   <link rel="stylesheet" href="css/wave-landing.css">
+  <link rel="stylesheet" href="css/work-grid.css">
 </head>
 <body class="snap-mode app-loading">
   <div class="startup-loader" id="startup-loader" aria-hidden="true">
@@ -321,10 +322,311 @@
           <div class="section-transition-label">scroll</div>
         </div>
       </section>
-      <section class="snap-section snap-section-horizon" data-section="3" data-section-role="work" aria-label="Selected work cards">
-        <section class="folio-horizon" id="folio-horizon">
-          <div class="folio-horizon-rail" id="folio-horizon-rail" aria-live="polite"></div>
-        </section>
+      <section class="snap-section snap-section-scroll" data-section="3" data-section-role="work" aria-label="Selected work cards">
+
+  <!-- Filter Tags -->
+  <section class="wg-filters" aria-label="Work filters">
+    <div class="wg-filters-row">
+      <div class="wg-filter-pill" id="wg-filter-pill" aria-hidden="true">
+        <svg class="wg-filter-pill-svg" viewBox="0 0 100 40" preserveAspectRatio="none">
+          <defs>
+            <filter id="wg-pill-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="blur"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+            <linearGradient id="wg-pill-highlight-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0"></stop>
+              <stop offset="28%" stop-color="#ffffff" stop-opacity="0.08"></stop>
+              <stop offset="50%" stop-color="#ffffff" stop-opacity="1"></stop>
+              <stop offset="72%" stop-color="#ffffff" stop-opacity="0.08"></stop>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path class="wg-filter-pill-stroke"></path>
+          <path class="wg-filter-pill-highlight-glow" filter="url(#wg-pill-glow)"></path>
+          <path class="wg-filter-pill-highlight"></path>
+        </svg>
+      </div>
+      <button class="wg-filter-tag is-active" data-filter="all">All</button>
+      <button class="wg-filter-tag" data-filter="e2e">End-to-End Process</button>
+      <button class="wg-filter-tag" data-filter="enterprise">Enterprise Products</button>
+      <button class="wg-filter-tag" data-filter="fintech">Fintech</button>
+      <button class="wg-filter-tag" data-filter="platform">Platform Design</button>
+      <button class="wg-filter-tag" data-filter="xr">XR</button>
+      <button class="wg-filter-tag" data-filter="leadership">Project Leadership</button>
+      <button class="wg-filter-tag" data-filter="self">Self-Initiated</button>
+      <button class="wg-filter-tag" data-filter="consumer">Consumer Facing</button>
+      <button class="wg-filter-tag" data-filter="research">Research / Testing</button>
+      <button class="wg-filter-tag" data-filter="live">Live Examples</button>
+    </div>
+  </section>
+
+  <!-- Work Grid -->
+  <section class="wg-grid" aria-label="Work projects">
+
+    <!-- Card 1: MentorConnect -->
+    <a href="/work/MentorConnect" class="wg-card wg-card--crop-bottom" data-tags="e2e consumer research" data-keywords="Chatbot,CMS,Primary Research,Education,A/B Testing,Smartfeed,Personalization,Data Driven Design">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-06.png" alt="MentorConnect app showing mentor guidance interface" loading="lazy">
+            </div>
+          </div>
+          <div class="wg-card-badge" data-card-badge>
+            <span class="wg-card-badge-icon" data-card-badge-star aria-hidden="true"></span>
+            <span class="wg-card-badge-text">Personal Favourites</span>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Strengthened Academic Performance</strong> with a Smart Guidance Framework to provide "real" mentorship at scale.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2021</span>
+          <span class="wg-card-brand">
+            <img class="wg-card-logo" src="Assets/byju's-logo-white.png" alt="BYJU'S logo">
+            <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="Assets/brndstudio_logo.png" alt="BRNDSTUDIO logo">
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 2: Biz2X -->
+    <a href="/work/Biz2X" class="wg-card wg-card--crop-bottom" data-tags="e2e platform fintech enterprise consumer" data-keywords="Design Patterns,Configurable Journey,Lending,System Design,CRM,Data Driven Design">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-02.png" alt="Biz2X lending platform interface" loading="lazy">
+            </div>
+          </div>
+          <div class="wg-card-badge" data-card-badge>
+            <span class="wg-card-badge-icon" data-card-badge-star aria-hidden="true"></span>
+            <span class="wg-card-badge-text">Personal Favourites</span>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Cut lender onboarding time to UAT</strong> by 60% with configurable application journey framework.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2024-25</span>
+          <img class="wg-card-logo" src="Assets/biz2x-logo-white.png" alt="Biz2X logo">
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 3: Prime Video / BRND STUDIO -->
+    <a href="https://www.primevideo.com/detail/0OKPRIFW4S22RJVLB7N5JC8LRH" target="_blank" rel="noopener noreferrer" class="wg-card wg-card--scale-180-top-right" data-tags="live" data-keywords="Accessibility,Editing Tool,Entertainment,Asset Management,Project Management Tool" data-hover-chip-icon="public" data-hover-chip-trailing-icon="arrow_outward" data-hover-chip-text="Open example content: No Country For Old Men">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-05.png" alt="Prime Video audio description workflows" loading="lazy">
+            </div>
+          </div>
+          <div class="wg-card-badge" data-card-badge>
+            <span class="wg-card-badge-icon" data-card-badge-star aria-hidden="true"></span>
+            <span class="wg-card-badge-text">Personal Favourites</span>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Strengthened accessibility</strong> by shipping AI-enabled audio description workflows.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2022</span>
+          <span class="wg-card-brand">
+            <img class="wg-card-logo" src="Assets/prime-video-logo-white.png" alt="Prime Video logo">
+            <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="Assets/brndstudio_logo.png" alt="BRNDSTUDIO logo">
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 4: Saison Omni -->
+    <a href="/work/saison-omni" class="wg-card wg-card--split-reveal" data-tags="platform fintech enterprise leadership" data-keywords="Design Patterns,Configurable modules,Lending,System Design,Design Ops,Data Driven Design">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <div class="wg-image-split">
+                <img class="wg-image-base" src="Assets/card-01-01.jpg" alt="Saison Omni base image" loading="lazy">
+                <img class="wg-image-overlay" src="Assets/card-01.jpg" alt="Saison Omni overlay image" loading="lazy">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Scaled product and fueled operations</strong> by building reusable governance modules and design patterns.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2025-26</span>
+          <span class="wg-card-brand">
+            <img class="wg-card-logo" src="Assets/saison-omni-logo-white.png" alt="Saison Omni logo">
+            <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
+            <span class="wg-card-brand-note">(Dissolved)</span>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 5: JioTesseract Platform -->
+    <a href="/work/Jio" class="wg-card wg-card--jio-platform-bg" data-tags="platform xr leadership research" data-keywords="Design Foundation,System Design,XR Platform,Design Patterns,Spatial Design,Interaction Design">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-03.png" alt="JioTesseract XR platform" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Cut development time</strong> with Platform SDK: patterns, practices, and multimodal interaction.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2024</span>
+          <img class="wg-card-logo" src="Assets/jiotesseract-logo-white.png" alt="JioTesseract logo">
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 6: JioTesseract L&D -->
+    <a href="https://tesseract.in/learning-and-development-ai-analytics/" target="_blank" rel="noopener noreferrer" class="wg-card wg-card--scale-250-bottom-right" data-tags="enterprise xr live" data-keywords="LMS,System Design,Dashboard,Immersive Learning,No-code Tool,Enterprise Training" data-hover-chip-icon="public" data-hover-chip-trailing-icon="arrow_outward" data-hover-chip-text="Open product page">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-04.png" alt="JioTesseract immersive learning platform" loading="lazy">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Boosted Enterprise training</strong> with immersive landing platform for 20+ enterprises.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2023</span>
+          <img class="wg-card-logo" src="Assets/jiotesseract-logo-white.png" alt="JioTesseract logo">
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 7: Suraksha Central / Safca -->
+    <a href="/work/SurakshaCentral" class="wg-card wg-card--crop-bottom" data-tags="e2e enterprise research" data-keywords="Data Viz,Enterprise Suite,Social Service,Brand Strategy,Usability Testing,CMS,Design System">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/card-07.png" alt="Safca mobile app showing survey interface" loading="lazy">
+            </div>
+          </div>
+          <div class="wg-card-badge" data-card-badge>
+            <span class="wg-card-badge-icon" data-card-badge-star aria-hidden="true"></span>
+            <span class="wg-card-badge-text">Personal Favourites</span>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Scaled risk identification</strong> by standardizing audits for NGOs and government adoption.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2020</span>
+          <span class="wg-card-brand">
+            <img class="wg-card-logo" src="Assets/Aangan-white-logo.png" alt="Aangan logo">
+            <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="Assets/brndstudio_logo.png" alt="BRNDSTUDIO logo">
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 8: Placeholder / WhatsApp -->
+    <a href="/work/WhatsApp/" class="wg-card wg-card--whatsapp-video" data-tags="consumer self" data-keywords="Messaging,Speculative,Behavior Design,Retention,Trust,Conversation Design">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <video class="wg-card-video" autoplay muted loop playsinline preload="metadata" aria-label="WhatsApp project preview">
+                <source src="Assets/WhatsApp.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          Speculative project to help users <strong class="wg-hl">remember actionable items on WhatsApp chats</strong>.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2023</span>
+          <span class="wg-card-brand">
+            <img class="wg-card-logo" src="Assets/WALogo.png" alt="WhatsApp logo">
+            <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
+            <span class="wg-card-brand-note">Self-initiated</span>
+          </span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 9: Placeholder / Jharkhand SIR -->
+    <a href="https://voter-search.sujaykumar.net" class="wg-card wg-card--crop-bottom" data-tags="self live consumer" data-keywords="Governance,Public Systems,Audit,Search,Records,Field Operations" data-hover-chip-icon="public" data-hover-chip-trailing-icon="arrow_outward" data-hover-chip-text="Open product page">
+      <div class="wg-card-image">
+        <div class="wg-card-image-inner">
+          <div class="wg-card-media-shell">
+            <div class="wg-keyflow"></div>
+            <div class="wg-card-parallax" data-parallax-visual>
+              <img src="Assets/Jharkhand-SIR.png" alt="Jharkhand SIR project thumbnail" loading="lazy">
+            </div>
+          </div>
+          <div class="wg-card-badge" data-card-badge>
+            <span class="wg-card-badge-icon" data-card-badge-star aria-hidden="true"></span>
+            <span class="wg-card-badge-text">Personal Favourites</span>
+          </div>
+        </div>
+      </div>
+      <div class="wg-card-content">
+        <p class="wg-card-statement">
+          <strong class="wg-hl">Helping 20 million voters of Jharkhand</strong> find their records in 2003 SIR records.
+        </p>
+        <div class="wg-card-footer">
+          <span class="wg-card-year">2026</span>
+          <span class="wg-card-logo" style="height:auto; opacity:0.6; font-size:12px; display:inline-flex; align-items:center;">Self-initiated</span>
+        </div>
+      </div>
+    </a>
+
+  </section>
+
+  <a class="wg-closing" href="/personal-story" aria-label="Closing note">
+    <p class="wg-closing-kicker">WOULD YOU LIKE TO KNOW</p>
+    <p class="wg-closing-script">how it all makes sense now?<span class="material-symbols-rounded wg-closing-arrow" aria-hidden="true">arrow_forward</span></p>
+  </a>
+
+
         <div class="section-transition-layer section-transition-layer-local section-transition-layer-split-desktop-only" data-transition-key="3-2" aria-hidden="true">
           <svg class="section-transition-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -355,6 +657,105 @@
     </div>
   </main>
 
+  <div class="wg-hover-chip" id="wg-hover-chip" aria-hidden="true">
+    <span class="material-symbols-rounded wg-hover-chip-icon wg-hover-chip-icon-leading" id="wg-hover-chip-icon-leading">arrow_right_alt</span>
+    <span class="wg-hover-chip-text" id="wg-hover-chip-text">Open case-study</span>
+    <span class="material-symbols-rounded wg-hover-chip-icon wg-hover-chip-icon-trailing is-hidden" id="wg-hover-chip-icon-trailing">arrow_right_alt</span>
+  </div>
+
+  <!-- Status Pill (outside snap track so position:fixed works) -->
+  <div class="wg-dock-overlay" data-dock-overlay aria-hidden="true"></div>
+  <div class="wg-status wg-status--opportunity" tabindex="0" role="button" aria-expanded="false" aria-controls="wg-status-panel" data-opportunity-pill>
+    <div class="wg-status-info">
+      <span class="wg-status-dot"></span>
+      <span class="wg-status-text">open to opportunities</span>
+    </div>
+  </div>
+  <div class="wg-status-dock" data-status-dock>
+    <div class="wg-status-bridge" aria-hidden="true"></div>
+    <section class="wg-status-panel" id="wg-status-panel" data-status-panel aria-hidden="true">
+      <div class="wg-status-panel-shell">
+        <div class="wg-status-panel-mark" aria-hidden="true">
+          <svg class="wg-status-panel-mark-svg" viewBox="0 0 620 240" role="presentation">
+            <defs>
+              <filter id="wg-status-panel-mark-inner-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feOffset dx="-3" dy="-3" result="offset-shadow"></feOffset>
+                <feGaussianBlur in="offset-shadow" stdDeviation="1.8" result="blur-shadow"></feGaussianBlur>
+                <feComposite in="blur-shadow" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="inner-shadow-mask"></feComposite>
+                <feFlood flood-color="#ffffff" flood-opacity="0.18" result="inner-shadow-color"></feFlood>
+                <feComposite in="inner-shadow-color" in2="inner-shadow-mask" operator="in" result="inner-shadow"></feComposite>
+                <feMerge>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                  <feMergeNode in="inner-shadow"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+            <text x="0" y="236" class="wg-status-panel-mark-text" text-anchor="start" filter="url(#wg-status-panel-mark-inner-shadow)">hi,</text>
+          </svg>
+        </div>
+        <div class="wg-status-panel-copy">
+          <div class="wg-status-panel-heading">
+            <p>Like what you see?</p>
+            <button class="wg-status-panel-favorite" type="button" data-status-favorite aria-pressed="false" aria-label="Favorite this card">
+              <span class="material-symbols-rounded wg-status-panel-favorite-icon" aria-hidden="true">favorite</span>
+            </button>
+          </div>
+          <p>I'd love to share the thinking and stories behind my work. If you're exploring collaborators for your project, I'd be happy to chat.</p>
+          <p>I'm also building a side passion project I'd be delighted to geek out about.</p>
+        </div>
+        <div class="wg-status-panel-footer">
+          <p>Connect with me</p>
+          <div class="wg-status-panel-icons">
+            <a class="wg-status-panel-icon" href="https://linkedin.com/in/sujay-k" target="_blank" rel="noopener noreferrer" aria-label="Open LinkedIn profile in a new tab"><img src="Assets/contact-icons-04.png" alt=""></a>
+            <a class="wg-status-panel-icon" href="mailto:imsujaykumar@gmail.com" aria-label="Email imsujaykumar@gmail.com"><img src="Assets/contact-icons-03.png" alt=""></a>
+            <a class="wg-status-panel-icon" href="tel:+918828290489" aria-label="Call +91 88282 90489"><img src="Assets/contact-icons-02.png" alt=""></a>
+            <a class="wg-status-panel-icon wg-status-panel-icon--github" href="https://github.com/sujay-k1/" target="_blank" rel="noopener noreferrer" aria-label="View GitHub profile"><img src="Assets/github-logo.png" alt="GitHub"></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="wg-status-controls">
+      <div class="wg-chat-tooltip" data-chat-tooltip aria-hidden="true"></div>
+      <button class="wg-chat-close" type="button" aria-label="Close chat" aria-hidden="true" tabindex="-1" data-chat-close>
+        <span class="material-symbols-rounded" aria-hidden="true">close</span>
+      </button>
+      <div class="wg-status" data-chat-dock>
+        <div class="wg-status-info wg-status-info--inline" data-opportunity-trigger tabindex="0" role="button" aria-expanded="false" aria-controls="wg-status-panel">
+          <span class="wg-status-dot"></span>
+          <span class="wg-status-text">open to opportunities</span>
+        </div>
+        <button class="wg-sphere-wrap" type="button" data-chat-sphere aria-expanded="false" aria-controls="portfolio-chat" aria-label="Open chat">
+          <canvas class="wg-sphere-canvas" width="48" height="48"></canvas>
+          <span class="wg-sphere-badge">AiSK</span>
+        </button>
+        <form id="chat-form" class="portfolio-chat__composer" novalidate>
+          <input
+            id="chat-input"
+            class="portfolio-chat__input"
+            type="text"
+            placeholder="New chat or follow-up"
+            autocomplete="off"
+          />
+          <button id="chat-send" class="portfolio-chat__send" type="submit" aria-label="Send message">
+            <span class="material-symbols-rounded" aria-hidden="true">send</span>
+          </button>
+        </form>
+      </div>
+    </div>
+    <div id="portfolio-chat" class="portfolio-chat" data-chat-panel aria-hidden="true">
+      <div class="portfolio-chat__header">
+        <div>
+          <h3 class="portfolio-chat__title">Portfolio Guide</h3>
+          <p class="portfolio-chat__subtitle">
+            Ask a question or follow-up.
+          </p>
+        </div>
+        <button id="chat-reset" class="portfolio-chat__reset" type="button" style="display: none;">Reset</button>
+      </div>
+      <div id="chat-messages" class="portfolio-chat__messages" aria-live="polite"></div>
+    </div>
+  </div>
+
   <script>
     window.__EMAIL_ALERT_CONFIG__ = {
       visitEnabled: false,
@@ -373,7 +774,9 @@
   <script src="js/startup-loader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <script type="module" src="js/intro-only.js"></script>
+  <script src="js/work-grid.js"></script>
 </body>
 </html>

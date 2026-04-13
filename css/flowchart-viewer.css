@@ -41,8 +41,8 @@
   --fc-text: rgba(255, 255, 255, 0.92);
   --fc-text-muted: rgba(255, 255, 255, 0.62);
   --fc-text-strong: #f6f4ef;
-  --fc-accent: #9e83c7;
-  --fc-accent-soft: rgba(158, 131, 199, 0.18);
+  --fc-accent: #C1A5EC;
+  --fc-accent-soft: rgba(193, 165, 236, 0.18);
   --fc-accent-warm: #dcdfa9;
 
   /* Configurable properties */
@@ -68,7 +68,7 @@
   color: var(--fc-text);
   margin: 8px 0 20px;
   background:
-    radial-gradient(circle at top left, rgba(158, 131, 199, 0.14) 0%, rgba(158, 131, 199, 0) 34%),
+    radial-gradient(circle at top left, rgba(193, 165, 236, 0.14) 0%, rgba(193, 165, 236, 0) 34%),
     linear-gradient(180deg, rgba(31, 24, 38, 0.96) 0%, rgba(21, 16, 26, 0.92) 100%);
   border: 1px solid var(--fc-border);
   border-radius: 24px;
@@ -78,6 +78,16 @@
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   overflow: hidden;
+}
+
+.fc-viewer:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: 4px;
+}
+
+.fc-viewer.is-engaged {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: 4px;
 }
 
 .fc-viewer *,
@@ -145,8 +155,15 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.fc-tab:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: 3px;
+  color: var(--fc-text-strong);
+  background: rgba(193, 165, 236, 0.12);
+}
+
 .fc-tab.is-active {
-  background: linear-gradient(180deg, rgba(220, 223, 169, 0.18) 0%, rgba(158, 131, 199, 0.12) 100%);
+  background: linear-gradient(180deg, rgba(220, 223, 169, 0.18) 0%, rgba(193, 165, 236, 0.12) 100%);
   border-color: rgba(220, 223, 169, 0.34);
   color: #f4f0ca;
   font-weight: 500;
@@ -225,6 +242,16 @@
   background: var(--fc-surface-soft-hover);
 }
 
+.fc-ctrl-btn:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: 2px;
+  color: var(--fc-text-strong);
+}
+
+.fc-ctrl-btn:focus-visible::before {
+  background: rgba(193, 165, 236, 0.18);
+}
+
 .fc-ctrl-btn:active::before {
   background: rgba(255, 255, 255, 0.14);
 }
@@ -254,6 +281,12 @@
   border-color: var(--fc-border-strong);
 }
 
+.fc-fullscreen-btn:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: 3px;
+  background: rgba(193, 165, 236, 0.12);
+}
+
 .fc-fullscreen-btn svg {
   width: 16px;
   height: 16px;
@@ -267,7 +300,12 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%);
   scrollbar-width: thin;
-  scrollbar-color: rgba(158, 131, 199, 0.46) rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(193, 165, 236, 0.46) rgba(255, 255, 255, 0.05);
+}
+
+.fc-scroll:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.9);
+  outline-offset: -2px;
 }
 
 .fc-scroll::-webkit-scrollbar {
@@ -280,7 +318,7 @@
 }
 
 .fc-scroll::-webkit-scrollbar-thumb {
-  background: rgba(158, 131, 199, 0.42);
+  background: rgba(193, 165, 236, 0.42);
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;

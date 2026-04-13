@@ -207,7 +207,8 @@ const FINAL_HORIZON_DYNAMIC_DURATION_CURVE_BASE_MS = 895.21248;
 const FINAL_HORIZON_DYNAMIC_DURATION_CURVE_DECAY = 0.978152;
 const MAIN_SCROLL_DEBUG_GRAPH_HORIZON_MS = 3000;
 const MAIN_SCROLL_DEBUG_DEFAULT_SAMPLE_MS = 200;
-const finalHorizonCardsData = [
+const finalHorizonCardsData = []; // cleared — work-grid.js handles cards now
+const __removed_finalHorizonCardsData = [
   {
     kind: 'opportunity',
     year: '',
@@ -1918,6 +1919,7 @@ function createSectionAnimationState(sectionIndex, durationSeconds) {
 }
 
 function syncBodySectionState(index) {
+  document.body.dataset.activeSnapIndex = String(index);
   document.body.dataset.section = String(index + 1);
   document.documentElement.classList.toggle('horizon-overscroll-lock', index === finalHorizonSectionIndex);
   document.body.classList.toggle('section-2-active', isSection2FlowIndex(index));
@@ -2467,7 +2469,7 @@ function waitForImageLoad(img) {
 }
 
 function preloadPageImages() {
-  const images = Array.from(document.images).filter((img) => img.getAttribute('src'));
+  const images = Array.from(document.images).filter((img) => img.getAttribute('src') && img.loading !== 'lazy');
   return Promise.all(images.map(waitForImageLoad));
 }
 
@@ -6375,7 +6377,17 @@ function initSnapScroll() {
   window.addEventListener(
     'wheel',
     (event) => {
-      event.preventDefault();
+      if (document.querySelector('.wg-dock-overlay.is-visible')) {
+        if (!event.target.closest('.wg-status-dock')) {
+          event.preventDefault();
+        }
+        return;
+      }
+      const scrollSection = snapSections[SNAP_STATE.index];
+      const isScrollableSection = scrollSection && scrollSection.classList.contains('snap-section-scroll');
+      if (!isScrollableSection) {
+        event.preventDefault();
+      }
       const now = performance.now();
       const adjustedDeltaX = scaleScrollAnimationDelta(event.deltaX);
       const adjustedDeltaY = scaleScrollAnimationDelta(event.deltaY);
@@ -6386,6 +6398,38 @@ function initSnapScroll() {
         Math.abs(adjustedDeltaX) > Math.abs(adjustedDeltaY) ? adjustedDeltaX : adjustedDeltaY;
       recordMainScrollDebugInput(event.deltaX, event.deltaY);
       if (SNAP_STATE.index === finalHorizonSectionIndex && !SNAP_STATE.isAnimating) {
+        const scrollSection = snapSections[finalHorizonSectionIndex];
+        if (scrollSection && scrollSection.classList.contains('snap-section-scroll')) {
+          const atTop = scrollSection.scrollTop <= 0;
+          const atBottom = scrollSection.scrollTop + scrollSection.clientHeight >= scrollSection.scrollHeight - 1;
+          const direction = adjustedDeltaY > 0 ? 1 : adjustedDeltaY < 0 ? -1 : 0;
+          if (direction < 0 && atTop) {
+            event.preventDefault();
+            if (SNAP_STATE.lastWheelDirection !== direction) SNAP_STATE.wheelAccumulator = 0;
+            SNAP_STATE.lastWheelDirection = direction;
+            SNAP_STATE.wheelAccumulator += adjustedDeltaY;
+            if (Math.abs(SNAP_STATE.wheelAccumulator) >= WHEEL_SNAP_THRESHOLD) {
+              SNAP_STATE.wheelAccumulator = 0;
+              SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+              queueOrGo(-1);
+            }
+            return;
+          }
+          if (direction > 0 && atBottom) {
+            event.preventDefault();
+            if (SNAP_STATE.lastWheelDirection !== direction) SNAP_STATE.wheelAccumulator = 0;
+            SNAP_STATE.lastWheelDirection = direction;
+            SNAP_STATE.wheelAccumulator += adjustedDeltaY;
+            if (Math.abs(SNAP_STATE.wheelAccumulator) >= WHEEL_SNAP_THRESHOLD) {
+              SNAP_STATE.wheelAccumulator = 0;
+              SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+              queueOrGo(1);
+            }
+            return;
+          }
+          // Not at boundary — allow native scroll
+          return;
+        }
         handleFinalHorizonScroll(adjustedDeltaX, adjustedDeltaY);
         return;
       }
@@ -6426,7 +6470,28 @@ function initSnapScroll() {
   window.addEventListener(
     'keydown',
     (event) => {
+      if (document.querySelector('.wg-dock-overlay.is-visible')) return;
       if (SNAP_STATE.index === finalHorizonSectionIndex && !SNAP_STATE.isAnimating) {
+        const ks = snapSections[finalHorizonSectionIndex];
+        const ksScrollable = ks && ks.classList.contains('snap-section-scroll');
+        if (ksScrollable) {
+          const atTop = ks.scrollTop <= 0;
+          const atBottom = ks.scrollTop + ks.clientHeight >= ks.scrollHeight - 1;
+          if ((event.key === 'ArrowUp' || event.key === 'PageUp') && atTop) {
+            event.preventDefault();
+            SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+            queueOrGo(-1);
+            return;
+          }
+          if ((event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') && atBottom) {
+            event.preventDefault();
+            SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+            queueOrGo(1);
+            return;
+          }
+          // Let native scroll handle it
+          return;
+        }
         if (event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') {
           event.preventDefault();
           handleFinalHorizonScroll(0, WHEEL_SNAP_THRESHOLD);
@@ -6489,6 +6554,28 @@ function initSnapScroll() {
   window.addEventListener(
     'touchmove',
     (event) => {
+      if (document.querySelector('.wg-dock-overlay.is-visible')) {
+        if (!event.target.closest('.wg-status-dock')) {
+          event.preventDefault();
+        }
+        return;
+      }
+      const scrollSection = snapSections[SNAP_STATE.index];
+      const isScrollableSection = scrollSection && scrollSection.classList.contains('snap-section-scroll');
+      if (isScrollableSection) {
+        const atTop = scrollSection.scrollTop <= 0;
+        const atBottom = scrollSection.scrollTop + scrollSection.clientHeight >= scrollSection.scrollHeight - 1;
+        const currentY = event.touches[0]?.clientY || 0;
+        const rawDy = SNAP_STATE.touchLastY - currentY;
+        const goingUp = rawDy < 0;
+        const goingDown = rawDy > 0;
+        if ((goingUp && atTop) || (goingDown && atBottom)) {
+          event.preventDefault();
+        }
+        SNAP_STATE.touchLastTs = performance.now();
+        SNAP_STATE.touchLastY = currentY;
+        return;
+      }
       event.preventDefault();
       if (!event.touches.length) {
         return;
@@ -6512,6 +6599,13 @@ function initSnapScroll() {
   window.addEventListener(
     'touchend',
     (event) => {
+      if (document.querySelector('.wg-dock-overlay.is-visible')) {
+        return;
+      }
+      const scrollSectionEnd = snapSections[SNAP_STATE.index];
+      if (scrollSectionEnd && scrollSectionEnd.classList.contains('snap-section-scroll')) {
+        return;
+      }
       if (!event.changedTouches.length) {
         return;
       }

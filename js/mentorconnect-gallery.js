@@ -1,6 +1,12 @@
 (function () {
   var ACTIVATION_BAND_PX = 72;
   var RELEASE_COOLDOWN_MS = 180;
+  var AUTOSCROLL_RESUME_DELAY_MS = 300;
+  var AUTOSCROLL_TARGET_TRAVEL_SECONDS = 12;
+  var AUTOSCROLL_MIN_PX_PER_SECOND = 56;
+  var AUTOSCROLL_MAX_PX_PER_SECOND = 140;
+  var KEYBOARD_STEP_PX = 88;
+  var KEYBOARD_PAGE_STEP_PX = 220;
   var WHEEL_DELTA_CAP = 56;
   var WHEEL_INERTIA_WINDOW_MS = 80;
   var WHEEL_INERTIA_MIN_DELTA = 10;
@@ -27,7 +33,11 @@
     lastWheelTs: 0,
     lastWheelDelta: 0,
     bodyLockStyles: null,
-    lastObservedScrollY: window.scrollY
+    lastObservedScrollY: window.scrollY,
+    lastInteractionAt: Number.NEGATIVE_INFINITY,
+    autoplayRaf: 0,
+    autoplayLastTs: 0,
+    lastFocusedElement: null
   };
 
   function clamp(value, min, max) {
@@ -53,12 +63,67 @@
     }
   }
 
+  function stopAutoplayLoop() {
+    if (!state.autoplayRaf) {
+      return;
+    }
+
+    window.cancelAnimationFrame(state.autoplayRaf);
+    state.autoplayRaf = 0;
+    state.autoplayLastTs = 0;
+  }
+
+  function focusActiveTrack(entry) {
+    if (!entry || !entry.track || typeof entry.track.focus !== "function") {
+      return;
+    }
+
+    if (!entry.track.hasAttribute("tabindex")) {
+      entry.track.setAttribute("tabindex", "-1");
+    }
+
+    if (
+      document.activeElement &&
+      document.activeElement !== document.body &&
+      document.activeElement !== document.documentElement &&
+      document.activeElement !== entry.track
+    ) {
+      state.lastFocusedElement = document.activeElement;
+    }
+
+    entry.track.focus({ preventScroll: true });
+  }
+
+  function restorePreviousFocus() {
+    if (
+      state.lastFocusedElement &&
+      typeof state.lastFocusedElement.focus === "function" &&
+      document.contains(state.lastFocusedElement)
+    ) {
+      state.lastFocusedElement.focus({ preventScroll: true });
+    }
+
+    state.lastFocusedElement = null;
+  }
+
   function consumeEvent(event) {
     if (event.cancelable) {
       event.preventDefault();
     }
 
     event.stopPropagation();
+  }
+
+  function isEditableTarget(target) {
+    if (!target) {
+      return false;
+    }
+
+    if (target.isContentEditable) {
+      return true;
+    }
+
+    return !!target.closest("input, textarea, select, button, [contenteditable='true']");
   }
 
   function getStickyTopPx(entry) {
@@ -140,6 +205,18 @@
     syncObservedScrollY();
   }
 
+  function clearActiveEntry(useCooldown) {
+    state.activeEntry = null;
+    state.touchY = null;
+    state.lastInteractionAt = Number.NEGATIVE_INFINITY;
+    if (useCooldown) {
+      state.releaseUntil = Date.now() + RELEASE_COOLDOWN_MS;
+    }
+    stopAutoplayLoop();
+    unlockPage();
+    restorePreviousFocus();
+  }
+
   function syncObservedScrollY() {
     state.lastObservedScrollY = state.activeEntry
       ? state.lockedScrollY
@@ -159,8 +236,7 @@
     galleries.forEach(measureGallery);
 
     if (state.activeEntry && !state.activeEntry.active) {
-      state.activeEntry = null;
-      unlockPage();
+      clearActiveEntry(false);
     }
   }
 
@@ -232,6 +308,82 @@
     return entry.track.scrollLeft > 1;
   }
 
+  function getAutoplayVelocity(entry) {
+    return clamp(
+      entry.overflow / AUTOSCROLL_TARGET_TRAVEL_SECONDS,
+      AUTOSCROLL_MIN_PX_PER_SECOND,
+      AUTOSCROLL_MAX_PX_PER_SECOND
+    );
+  }
+
+  function noteInteraction(deltaY) {
+    if (Math.abs(deltaY) < 0.5) {
+      return;
+    }
+
+    state.lastInteractionAt = performance.now();
+  }
+
+  function maybeReleaseAtBoundary(entry, deltaY, nextLeft) {
+    var atEnd;
+    var atStart;
+
+    if (!entry || !state.activeEntry) {
+      return false;
+    }
+
+    atEnd = deltaY > 0 && nextLeft >= entry.overflow - 1;
+    atStart = deltaY < 0 && nextLeft <= 1;
+
+    if ((atEnd || atStart) && activationPointReached(entry)) {
+      clearActiveEntry(true);
+      return true;
+    }
+
+    return false;
+  }
+
+  function ensureAutoplayLoop() {
+    if (state.autoplayRaf || !state.activeEntry) {
+      return;
+    }
+
+    state.autoplayLastTs = performance.now();
+    state.autoplayRaf = window.requestAnimationFrame(runAutoplayFrame);
+  }
+
+  function runAutoplayFrame(timestamp) {
+    var entry = state.activeEntry;
+    var dt;
+    var deltaY;
+
+    state.autoplayRaf = 0;
+
+    if (!entry || hasForeignLock()) {
+      state.autoplayLastTs = timestamp;
+      return;
+    }
+
+    dt = Math.max(0, Math.min((timestamp - (state.autoplayLastTs || timestamp)) / 1000, 0.05));
+    state.autoplayLastTs = timestamp;
+
+    if (performance.now() - state.lastInteractionAt >= AUTOSCROLL_RESUME_DELAY_MS) {
+      deltaY = getAutoplayVelocity(entry) * dt;
+      consumeDelta(deltaY, false);
+    }
+
+    if (state.activeEntry) {
+      state.autoplayRaf = window.requestAnimationFrame(runAutoplayFrame);
+    }
+  }
+
+  function activateEntry(entry) {
+    state.activeEntry = entry;
+    focusActiveTrack(entry);
+    ensureAutoplayLoop();
+    return state.activeEntry;
+  }
+
   function maybeActivateEntry(deltaY) {
     var direction;
     var candidate = null;
@@ -280,8 +432,7 @@
       return null;
     }
 
-    state.activeEntry = candidate;
-    return state.activeEntry;
+    return activateEntry(candidate);
   }
 
   function maybeActivateEntryFromScroll(previousScrollY, currentScrollY) {
@@ -333,8 +484,7 @@
       return null;
     }
 
-    state.activeEntry = candidate;
-    return state.activeEntry;
+    return activateEntry(candidate);
   }
 
   function normalizeWheelDelta(deltaY) {
@@ -354,42 +504,31 @@
     return sameDirection && withinWindow && shrinking && small;
   }
 
-  function releaseIfAtBoundary(deltaY) {
-    var atEnd;
-    var atStart;
-
-    if (!state.activeEntry) {
-      return false;
-    }
-
-    atEnd = deltaY > 0 && state.activeEntry.track.scrollLeft >= state.activeEntry.overflow - 1;
-    atStart = deltaY < 0 && state.activeEntry.track.scrollLeft <= 1;
-
-    if ((atEnd || atStart) && activationPointReached(state.activeEntry)) {
-      state.activeEntry = null;
-      state.releaseUntil = Date.now() + RELEASE_COOLDOWN_MS;
-      unlockPage();
-      return "released";
-    }
-
-    return false;
-  }
-
-  function consumeDelta(deltaY) {
+  function consumeDelta(deltaY, shouldTrackInteraction) {
     var entry = maybeActivateEntry(deltaY);
     var nextLeft;
+    var currentLeft;
 
     if (!entry) {
       return false;
     }
 
-    if (releaseIfAtBoundary(deltaY) === "released") {
+    if (shouldTrackInteraction !== false) {
+      noteInteraction(deltaY);
+    }
+
+    currentLeft = entry.track.scrollLeft;
+    nextLeft = clamp(currentLeft + deltaY, 0, entry.overflow);
+
+    if (Math.abs(nextLeft - currentLeft) >= 0.5) {
+      entry.track.scrollLeft = nextLeft;
+    }
+
+    if (maybeReleaseAtBoundary(entry, deltaY, nextLeft)) {
       return true;
     }
 
-    nextLeft = clamp(entry.track.scrollLeft + deltaY, 0, entry.overflow);
-    entry.track.scrollLeft = nextLeft;
-    return true;
+    return Math.abs(nextLeft - currentLeft) >= 0.5;
   }
 
   function onWheel(event) {
@@ -455,6 +594,41 @@
     state.touchY = null;
   }
 
+  function onKeyDown(event) {
+    var deltaY = 0;
+
+    if (
+      !state.activeEntry ||
+      event.defaultPrevented ||
+      event.ctrlKey ||
+      event.metaKey ||
+      isEditableTarget(event.target)
+    ) {
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      deltaY = KEYBOARD_STEP_PX;
+    } else if (event.key === "ArrowUp") {
+      deltaY = -KEYBOARD_STEP_PX;
+    } else if (event.key === "PageDown" || event.key === " ") {
+      deltaY = KEYBOARD_PAGE_STEP_PX;
+    } else if (event.key === "PageUp") {
+      deltaY = -KEYBOARD_PAGE_STEP_PX;
+    } else {
+      return;
+    }
+
+    if (consumeDelta(deltaY)) {
+      consumeEvent(event);
+      return;
+    }
+
+    if (state.activeEntry) {
+      consumeEvent(event);
+    }
+  }
+
   function onResize() {
     measureAll();
     syncObservedScrollY();
@@ -510,6 +684,7 @@
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd);
   window.addEventListener("touchcancel", onTouchEnd);
+  document.addEventListener("keydown", onKeyDown, true);
   window.addEventListener("resize", onResize);
   window.addEventListener("scroll", onScroll, { passive: true });
 

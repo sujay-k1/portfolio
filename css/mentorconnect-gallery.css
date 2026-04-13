@@ -36,6 +36,12 @@
   padding: 4px 2px 8px;
 }
 
+.mentorconnect-problem-gallery__track:focus-visible {
+  outline: 2px solid rgba(193, 165, 236, 0.88);
+  outline-offset: 8px;
+  border-radius: 24px;
+}
+
 .mentorconnect-problem-gallery__track::-webkit-scrollbar {
   height: 8px;
 }

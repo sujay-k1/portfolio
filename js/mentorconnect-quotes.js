@@ -70,8 +70,6 @@
       });
     });
 
-    rotator.addEventListener("mouseenter", stopRotation);
-    rotator.addEventListener("mouseleave", startRotation);
     rotator.addEventListener("focusin", stopRotation);
     rotator.addEventListener("focusout", function (event) {
       if (!rotator.contains(event.relatedTarget)) {

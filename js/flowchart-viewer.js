@@ -8,6 +8,7 @@ var FlowchartViewer = (function () {
   var FONT_MIN = 6, FONT_MAX = 18, FONT_STEP = 1;
   var GAP_MIN  = 8, GAP_MAX  = 40, GAP_STEP  = 4;
   var SVG_NS = 'http://www.w3.org/2000/svg';
+  var FLOWCHART_KEYBOARD_SCROLL_STEP = 96;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -23,6 +24,149 @@ var FlowchartViewer = (function () {
     var e = document.createElementNS(SVG_NS, tag);
     if (attrs) Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); });
     return e;
+  }
+
+  function isVisibleNode(node) {
+    return !!(node && node.getClientRects && node.getClientRects().length);
+  }
+
+  function getInteractiveNodes(viewer) {
+    var nodes = [];
+    var scrollArea = viewer.querySelector('.fc-scroll');
+
+    if (isVisibleNode(scrollArea)) {
+      nodes.push(scrollArea);
+    }
+
+    Array.prototype.forEach.call(
+      viewer.querySelectorAll('.fc-tab, .fc-ctrl-btn, .fc-fullscreen-btn'),
+      function (node) {
+        if (node.disabled || !isVisibleNode(node)) {
+          return;
+        }
+        nodes.push(node);
+      }
+    );
+
+    return nodes;
+  }
+
+  function syncInteractiveTabOrder(viewer) {
+    var engaged = !!viewer._fcInteractionActive;
+    var scrollArea = viewer.querySelector('.fc-scroll');
+
+    viewer.classList.toggle('is-engaged', engaged);
+    viewer.setAttribute(
+      'aria-label',
+      engaged
+        ? 'Mentor Guidance nudge framework. Use Left and Right arrow keys to scroll, Tab to move between flowchart controls, and Escape to exit.'
+        : 'Mentor Guidance nudge framework. Press Enter or Space to interact.'
+    );
+
+    if (scrollArea) {
+      scrollArea.setAttribute('role', 'region');
+      scrollArea.setAttribute(
+        'aria-label',
+        engaged
+          ? 'Flowchart canvas. Use Left and Right arrow keys to scroll. Press Escape or Space to exit interaction.'
+          : 'Flowchart canvas'
+      );
+      scrollArea.setAttribute('tabindex', engaged ? '0' : '-1');
+    }
+
+    Array.prototype.forEach.call(
+      viewer.querySelectorAll('.fc-tab, .fc-ctrl-btn, .fc-fullscreen-btn'),
+      function (node) {
+        if (engaged) {
+          node.removeAttribute('tabindex');
+          return;
+        }
+
+        node.setAttribute('tabindex', '-1');
+      }
+    );
+  }
+
+  function enterInteractionMode(viewer) {
+    var scrollArea = viewer.querySelector('.fc-scroll');
+
+    viewer._fcInteractionActive = true;
+    syncInteractiveTabOrder(viewer);
+
+    if (scrollArea) {
+      scrollArea.focus({ preventScroll: true });
+    }
+  }
+
+  function exitInteractionMode(viewer) {
+    viewer._fcInteractionActive = false;
+    syncInteractiveTabOrder(viewer);
+    viewer.focus({ preventScroll: true });
+  }
+
+  function moveInteractionFocus(viewer, direction) {
+    var nodes = getInteractiveNodes(viewer);
+    var currentIndex;
+
+    if (!nodes.length) {
+      return;
+    }
+
+    currentIndex = nodes.indexOf(document.activeElement);
+
+    if (currentIndex === -1) {
+      nodes[direction < 0 ? nodes.length - 1 : 0].focus({ preventScroll: true });
+      return;
+    }
+
+    currentIndex = (currentIndex + direction + nodes.length) % nodes.length;
+    nodes[currentIndex].focus({ preventScroll: true });
+  }
+
+  function handleViewerKeydown(event) {
+    var viewer = event.currentTarget;
+    var scrollArea = viewer.querySelector('.fc-scroll');
+
+    if (!viewer._fcInteractionActive) {
+      if (event.target === viewer && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        enterInteractionMode(viewer);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      exitInteractionMode(viewer);
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      moveInteractionFocus(viewer, event.shiftKey ? -1 : 1);
+      return;
+    }
+
+    if (event.target !== scrollArea) {
+      return;
+    }
+
+    if (event.key === ' ') {
+      event.preventDefault();
+      exitInteractionMode(viewer);
+      return;
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      scrollArea.scrollLeft += FLOWCHART_KEYBOARD_SCROLL_STEP;
+      return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      scrollArea.scrollLeft -= FLOWCHART_KEYBOARD_SCROLL_STEP;
+    }
   }
 
   function getRectWithinGrid(node, grid) {
@@ -470,8 +614,10 @@ var FlowchartViewer = (function () {
     var tabContainer = el('div', 'fc-tabs');
     tabs.forEach(function (tab, i) {
       var btn = el('button', 'fc-tab' + (i === 0 ? ' is-active' : ''));
+      btn.type = 'button';
       btn.textContent = tab.label;
       btn.setAttribute('data-fc-tab-id', tab.id);
+      btn.setAttribute('aria-label', 'Show ' + tab.label + ' flowchart');
       btn.addEventListener('click', function () {
         tabContainer.querySelectorAll('.fc-tab').forEach(function (t) { t.classList.remove('is-active'); });
         btn.classList.add('is-active');
@@ -483,12 +629,14 @@ var FlowchartViewer = (function () {
     toolbar.appendChild(tabContainer);
 
     var controls = el('div', 'fc-controls');
-    controls.appendChild(buildCtrlGroup(viewer, 'Aa', '--fc-card-font-size', 'px', FONT_MIN, FONT_MAX, FONT_STEP));
-    controls.appendChild(buildCtrlGroup(viewer, '\u21D4', '--fc-gap', 'px', GAP_MIN, GAP_MAX, GAP_STEP));
+    controls.appendChild(buildCtrlGroup(viewer, 'Aa', 'text size', '--fc-card-font-size', 'px', FONT_MIN, FONT_MAX, FONT_STEP));
+    controls.appendChild(buildCtrlGroup(viewer, '\u21D4', 'column spacing', '--fc-gap', 'px', GAP_MIN, GAP_MAX, GAP_STEP));
 
     var fsBtn = el('button', 'fc-fullscreen-btn');
+    fsBtn.type = 'button';
     fsBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg>';
     fsBtn.title = 'Toggle fullscreen';
+    fsBtn.setAttribute('aria-label', 'Toggle fullscreen');
     fsBtn.addEventListener('click', function () {
       viewer.classList.toggle('is-fullscreen');
       document.body.style.overflow = viewer.classList.contains('is-fullscreen') ? 'hidden' : '';
@@ -508,15 +656,19 @@ var FlowchartViewer = (function () {
     });
   }
 
-  function buildCtrlGroup(viewer, label, prop, unit, min, max, step) {
+  function buildCtrlGroup(viewer, label, labelText, prop, unit, min, max, step) {
     var group = el('div', 'fc-ctrl-group');
     var lbl = el('span', 'fc-ctrl-label');
     lbl.textContent = label;
 
     var btnMinus = el('button', 'fc-ctrl-btn');
+    btnMinus.type = 'button';
     btnMinus.textContent = '\u2212';
+    btnMinus.setAttribute('aria-label', 'Decrease ' + labelText);
     var btnPlus = el('button', 'fc-ctrl-btn');
+    btnPlus.type = 'button';
     btnPlus.textContent = '+';
+    btnPlus.setAttribute('aria-label', 'Increase ' + labelText);
 
     function getCurrent() {
       return parseInt(getComputedStyle(viewer).getPropertyValue(prop)) || ((min + max) / 2);
@@ -551,10 +703,16 @@ var FlowchartViewer = (function () {
     if (!src) return;
 
     container.classList.add('fc-viewer');
+    container.setAttribute('tabindex', '0');
+    container.setAttribute('role', 'group');
+    container._fcInteractionActive = false;
+    container.addEventListener('keydown', handleViewerKeydown);
+    syncInteractiveTabOrder(container);
 
     var scrollArea = el('div', 'fc-scroll');
     scrollArea.innerHTML = '<div style="padding:40px;text-align:center;color:#999;">Loading chart\u2026</div>';
     container.appendChild(scrollArea);
+    syncInteractiveTabOrder(container);
 
     fetch(src)
       .then(function (res) { return res.json(); })
@@ -565,6 +723,7 @@ var FlowchartViewer = (function () {
         buildToolbar(container, json.tabs);
         container.appendChild(scrollArea);
         renderChart(container, json.tabs[0]);
+        syncInteractiveTabOrder(container);
       })
       .catch(function (err) {
         scrollArea.innerHTML = '<div style="padding:40px;text-align:center;color:#c44;">Failed to load chart data.</div>';

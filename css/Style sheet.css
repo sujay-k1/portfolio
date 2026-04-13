@@ -728,13 +728,18 @@ body.case-study-page .next-case-study-card {
 	border-radius: 28px;
 	border: 1px solid rgba(255, 255, 255, 0.12);
 	background:
-		radial-gradient(circle at top right, rgba(158, 131, 199, 0.20), transparent 38%),
+		radial-gradient(circle at top right, rgba(193, 165, 236, 0.20), transparent 38%),
 		linear-gradient(180deg, rgba(24, 20, 31, 0.96) 0%, rgba(34, 28, 43, 0.96) 100%);
 	box-shadow:
 		inset 0 1px 0 rgba(255, 255, 255, 0.06),
 		0 24px 48px rgba(0, 0, 0, 0.18);
 	color: #f5effb;
 	text-decoration: none;
+}
+
+body.case-study-page .next-case-study-card:focus-visible {
+	outline: 2px solid rgba(193, 165, 236, 0.9);
+	outline-offset: 6px;
 }
 
 body.case-study-page .next-case-study-copy {
@@ -1043,6 +1048,12 @@ td {
 /* Add some hover effect on modal-image images */
 .modal-image:hover {
     opacity: 0.7;
+}
+
+.modal-image:focus-visible {
+    opacity: 0.88;
+    outline: 2px solid rgba(193, 165, 236, 0.9);
+    outline-offset: 6px;
 }
 
 /* Scrollable container for images */
