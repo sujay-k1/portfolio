@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentorConnect Flowchart Capture</title>
+  <link href="../../../../css/Style%20sheet.css" rel="stylesheet" type="text/css">
+  <link href="../../../../css/Style%20sheet%20web.css" rel="stylesheet" type="text/css">
+  <link href="../../../../css/biz2x-case-study.css" rel="stylesheet" type="text/css">
+  <link href="../../../../css/case-study-responsive.css" rel="stylesheet" type="text/css">
+  <link href="../../../../css/mentorconnect-gallery.css" rel="stylesheet" type="text/css">
+  <link href="../../../../css/flowchart-viewer.css" rel="stylesheet" type="text/css">
+  <style>
+    body {
+      margin: 0;
+      padding: 36px;
+      background: #16111d;
+    }
+
+    .capture-shell {
+      max-width: 1720px;
+      margin: 0 auto;
+    }
+
+    #fc-chart {
+      min-height: 1700px;
+    }
+  </style>
+</head>
+<body>
+  <div class="capture-shell">
+    <div id="fc-chart" data-fc-src="../../../../MentorConnect-assets/chart-data.json"></div>
+  </div>
+  <script src="../../../../js/flowchart-viewer.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      FlowchartViewer.init(document.getElementById('fc-chart'));
+    });
+  </script>
+</body>
+</html>
