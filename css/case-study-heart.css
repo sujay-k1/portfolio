@@ -1,0 +1,145 @@
+/* ─── Case Study Heart Widget ───────────────────────────────────────────────── */
+
+.cs-heart-widget {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.cs-heart-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.cs-heart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+}
+
+.cs-heart-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cs-heart-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
+.cs-heart-icon {
+  font-family: 'Material Symbols Rounded' !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none !important;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga' !important;
+  -webkit-font-smoothing: antialiased;
+  color: rgba(255, 255, 255, 0.3);
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+  transition: color 0.2s ease, font-variation-settings 0.2s ease;
+  user-select: none;
+}
+
+/* Favorited state */
+.cs-heart-widget.is-favorited .cs-heart-icon {
+  color: #e05c7a;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+.cs-heart-widget.is-favorited .cs-heart-label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ─── Desktop: fixed to bottom-left, aligned with the index panel ────────────── */
+
+.cs-heart-widget--fixed {
+  position: fixed;
+  bottom: 40px;
+  left: var(--case-responsive-inline);
+  width: calc(30% - 80px);
+  z-index: 359;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.cs-heart-widget--fixed.is-scroll-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Hide inline on desktop / landscape */
+.cs-heart-widget--inline {
+  display: none;
+}
+
+/* ─── Mobile portrait: hide fixed, show inline ────────────────────────────────── */
+
+@media (max-width: 1200px) and (orientation: portrait) {
+  .cs-heart-widget--fixed {
+    display: none;
+  }
+
+  .cs-heart-widget--inline {
+    display: flex;
+    width: -webkit-fill-available;
+    border-radius: 30px;
+    margin-bottom: 32px;
+    padding-left: clamp(20px, 5vw, 48px);
+  }
+}
+
+/* ─── Toast styles (self-contained — work-grid.css not loaded on case studies) ── */
+
+.wg-copy-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgb(91 0 181 / 80%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  line-height: 1;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 9999;
+  white-space: nowrap;
+}
+
+.wg-copy-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

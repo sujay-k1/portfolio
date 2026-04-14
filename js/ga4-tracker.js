@@ -1,4 +1,18 @@
 (function () {
+  // ─── Self-exclusion ──────────────────────────────────────────────────────────
+  // Visit /?internal=1 once on any device to permanently exclude it from tracking.
+  // Visit /?internal=0 to clear the flag and restore tracking.
+  if (/[?&]internal=0/.test(location.search)) {
+    localStorage.removeItem('ga_internal');
+  }
+  if (/[?&]internal=1/.test(location.search)) {
+    localStorage.setItem('ga_internal', '1');
+  }
+  if (localStorage.getItem('ga_internal') === '1') {
+    return;
+  }
+
+  // ─── Init ────────────────────────────────────────────────────────────────────
   var config = window.GA4_CONFIG || {};
   var measurementId = String(config.measurementId || '').trim();
   var measurementIdPattern = /^G-[A-Z0-9]+$/i;
@@ -14,6 +28,7 @@
   bootstrapGoogleTag();
   initTracking();
 
+  // ─── Bootstrap ───────────────────────────────────────────────────────────────
   function bootstrapGoogleTag() {
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function () {
@@ -41,15 +56,21 @@
     window.gtag('config', measurementId, configOptions);
   }
 
+  // ─── Tracking init ───────────────────────────────────────────────────────────
   function initTracking() {
     onReady(function () {
       trackPageContext();
       initSectionTracking();
       initCardTracking();
+      initChatTracking();
+      initContactTracking();
+      initClosingTracking();
+      initScrollDepthTracking();
       initFavoriteTracking();
     });
   }
 
+  // ─── Page context ────────────────────────────────────────────────────────────
   function trackPageContext() {
     if (pageType !== 'case_study') {
       return;
@@ -61,6 +82,7 @@
     });
   }
 
+  // ─── Section tracking ────────────────────────────────────────────────────────
   function initSectionTracking() {
     if (pageType === 'landing') {
       observeImpressions('.snap-section[data-section]', {
@@ -114,42 +136,36 @@
     }
   }
 
+  // ─── Card tracking ───────────────────────────────────────────────────────────
   function initCardTracking() {
     if (pageType === 'landing') {
-      observeImpressions('.folio-hcard-wrap', {
+      // Work grid cards
+      observeImpressions('.wg-card', {
         eventName: 'portfolio_card_view',
-        threshold: 0.65,
+        threshold: 0.5,
         getKey: function (node) {
-          return 'horizon-card:' + getCardId(node);
+          return 'wg-card:' + getWgCardId(node);
         },
         getParams: function (node) {
           return {
-            card_id: getCardId(node),
-            card_label: getLabelFromNode(node),
-            card_type: getHorizonCardType(node),
-            card_target: normalizeHref(getCardHref(node))
+            card_id: getWgCardId(node),
+            card_label: getWgCardLabel(node),
+            card_type: 'work_card',
+            card_target: normalizeHref(node.getAttribute('href') || ''),
+            card_tags: String(node.getAttribute('data-tags') || '')
           };
         }
       });
 
-      return;
-    }
-
-    if (pageType === 'work_index') {
-      observeImpressions('.Thumbnail-outer-container', {
-        eventName: 'portfolio_card_view',
-        threshold: 0.6,
-        getKey: function (node) {
-          return 'work-card:' + getCardId(node);
-        },
-        getParams: function (node) {
-          return {
-            card_id: getCardId(node),
-            card_label: getLabelFromNode(node),
-            card_type: 'work_index_card',
-            card_target: normalizeHref(getCardHref(node))
-          };
-        }
+      // Work grid card clicks
+      bindClicks('.wg-card', function (card) {
+        track('portfolio_card_click', {
+          card_id: getWgCardId(card),
+          card_label: getWgCardLabel(card),
+          card_type: 'work_card',
+          card_target: normalizeHref(card.getAttribute('href') || ''),
+          card_tags: String(card.getAttribute('data-tags') || '')
+        });
       });
 
       return;
@@ -175,22 +191,169 @@
     }
   }
 
-  function initFavoriteTracking() {
+  // ─── Chat tracking ───────────────────────────────────────────────────────────
+  function initChatTracking() {
     if (pageType !== 'landing') {
       return;
     }
 
-    bindClicks('[data-opportunity-favorite]', function (button) {
-      var card = button.closest('.folio-hcard-wrap');
-      track('portfolio_favorite_click', {
-        card_id: card ? getCardId(card) : 'favorite-card',
-        card_label: card ? getLabelFromNode(card) : '',
-        card_type: card ? getHorizonCardType(card) : 'favorite',
-        favorite_selected: button.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'
+    var messageIndex = 0;
+    var pendingPromptType = null; // set when a chip is clicked before submit
+
+    // Open
+    bindClicks('[data-chat-sphere]', function () {
+      track('portfolio_chat_open', {});
+    });
+
+    // Close
+    bindClicks('[data-chat-close]', function () {
+      track('portfolio_chat_close', {});
+    });
+
+    // Starter chip clicks — mark prompt type and also fire a chip event
+    watchForNewNodes('.portfolio-chat__starter-chip', function (chip) {
+      if (chip.getAttribute('data-ga-chat-bound') === 'true') {
+        return;
+      }
+      chip.setAttribute('data-ga-chat-bound', 'true');
+      chip.addEventListener('click', function () {
+        pendingPromptType = 'starter';
+        track('portfolio_chat_starter_click', {
+          prompt_text: cleanText(chip.textContent).slice(0, 100)
+        });
+      });
+    });
+
+    // Follow-up chip clicks — mark prompt type and fire a chip event
+    watchForNewNodes('.portfolio-chat__follow-up-chip', function (chip) {
+      if (chip.getAttribute('data-ga-chat-bound') === 'true') {
+        return;
+      }
+      chip.setAttribute('data-ga-chat-bound', 'true');
+      chip.addEventListener('click', function () {
+        pendingPromptType = 'follow_up';
+        track('portfolio_chat_followup_click', {
+          prompt_text: cleanText(chip.textContent).slice(0, 100)
+        });
+      });
+    });
+
+    // Message send
+    var form = document.getElementById('chat-form');
+    var input = document.getElementById('chat-input');
+
+    if (form && input) {
+      form.addEventListener('submit', function () {
+        var text = cleanText(input.value || '');
+        if (!text) {
+          return;
+        }
+
+        messageIndex += 1;
+
+        var promptType = pendingPromptType || 'custom';
+        pendingPromptType = null;
+
+        track('portfolio_chat_message_sent', {
+          message_preview: text.slice(0, 100),
+          keywords: extractKeywords(text),
+          message_length: getMessageLength(text),
+          prompt_type: promptType,
+          message_index: messageIndex
+        });
+      });
+    }
+  }
+
+  // ─── Contact tracking ────────────────────────────────────────────────────────
+  function initContactTracking() {
+    if (pageType !== 'landing') {
+      return;
+    }
+
+    bindClicks('.wg-status-panel-icon', function (link) {
+      track('portfolio_contact_click', {
+        contact_type: getContactType(link),
+        contact_label: cleanText(link.getAttribute('aria-label') || '').slice(0, 100)
       });
     });
   }
 
+  // ─── Closing note tracking ───────────────────────────────────────────────────
+  function initClosingTracking() {
+    if (pageType !== 'landing') {
+      return;
+    }
+
+    bindClicks('.wg-closing', function () {
+      track('portfolio_closing_click', {});
+    });
+  }
+
+  // ─── Favorite / heart tracking ──────────────────────────────────────────────
+  function initFavoriteTracking() {
+    // Home page: the status-panel heart button
+    if (pageType === 'landing') {
+      bindClicks('[data-status-favorite]', function (btn) {
+        // aria-pressed reflects the state *before* work-grid.js toggles it
+        var willBeSelected = btn.getAttribute('aria-pressed') !== 'true';
+        track('portfolio_favorite_click', {
+          favorite_selected: willBeSelected ? 'true' : 'false',
+          location: 'status_panel'
+        });
+      });
+    }
+
+    // Case study pages: heart widget dispatches a custom event
+    if (pageType === 'case_study') {
+      document.addEventListener('cs:heart:click', function (e) {
+        track('portfolio_favorite_click', {
+          case_study_name: getCaseStudyName(),
+          favorite_selected: e.detail && e.detail.selected ? 'true' : 'false',
+          location: 'case_study_heart'
+        });
+      });
+    }
+  }
+
+  // ─── Scroll depth tracking ───────────────────────────────────────────────────
+  function initScrollDepthTracking() {
+    if (pageType !== 'personal_story') {
+      return;
+    }
+
+    var milestones = [25, 50, 75, 100];
+    var fired = {};
+
+    function getScrollPct() {
+      var el = document.documentElement;
+      var scrollTop = window.pageYOffset || el.scrollTop || 0;
+      var maxScroll = el.scrollHeight - el.clientHeight;
+      if (maxScroll <= 0) {
+        return 100;
+      }
+      return Math.min(100, Math.round((scrollTop / maxScroll) * 100));
+    }
+
+    function onScroll() {
+      var pct = getScrollPct();
+      milestones.forEach(function (milestone) {
+        if (!fired[milestone] && pct >= milestone) {
+          fired[milestone] = true;
+          trackOnce('portfolio_scroll_depth', 'personal-story-' + milestone, {
+            depth_pct: milestone,
+            depth_label: milestone + '%'
+          });
+        }
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    // Check on load in case the page is short
+    onScroll();
+  }
+
+  // ─── Impression observer ─────────────────────────────────────────────────────
   function observeImpressions(selector, options) {
     var threshold = typeof options.threshold === 'number' ? options.threshold : 0.6;
 
@@ -210,7 +373,7 @@
         observer.unobserve(entry.target);
       });
     }, {
-      threshold: buildThresholds(threshold)
+      threshold: [threshold]
     });
 
     function register(node) {
@@ -230,16 +393,15 @@
     if (!key) {
       return;
     }
-
     trackOnce(options.eventName, key, options.getParams(node));
   }
 
+  // ─── DOM helpers ─────────────────────────────────────────────────────────────
   function bindClicks(selector, handler) {
     function register(node) {
       if (!node || node.getAttribute('data-ga-click-bound') === 'true') {
         return;
       }
-
       node.setAttribute('data-ga-click-bound', 'true');
       node.addEventListener('click', function () {
         handler(node);
@@ -285,12 +447,12 @@
     });
   }
 
+  // ─── Core track ──────────────────────────────────────────────────────────────
   function trackOnce(eventName, key, params) {
     var cacheKey = eventName + '::' + key;
     if (firedEvents.has(cacheKey)) {
       return;
     }
-
     firedEvents.add(cacheKey);
     track(eventName, params);
   }
@@ -301,9 +463,7 @@
     }
 
     var eventParams = Object.assign(
-      {
-        page_type: pageType
-      },
+      { page_type: pageType },
       sanitizeParams(params || {})
     );
 
@@ -316,29 +476,73 @@
 
   function sanitizeParams(params) {
     var output = {};
-
     Object.keys(params).forEach(function (key) {
       var value = params[key];
-
       if (value === undefined || value === null || value === '') {
         return;
       }
-
       output[key] = typeof value === 'string' ? value.slice(0, 100) : value;
     });
-
     return output;
   }
 
+  // ─── Keyword extraction ──────────────────────────────────────────────────────
+  var STOPWORDS = new Set([
+    'a','an','the','and','or','but','in','on','at','to','for','of','with','by',
+    'from','is','it','be','as','this','that','which','were','was','are','have',
+    'has','had','do','does','did','so','if','then','than','when','where','what',
+    'how','who','will','would','could','should','may','might','can','not','no',
+    'my','your','his','her','its','our','their','i','you','he','she','we','they',
+    'me','him','us','them','about','into','up','out','more','some','any','all',
+    'just','like','also','been','get','got','let','make','need','see','know',
+    'tell','use','want','give','take','come','go','say','look','think','feel',
+    'work','try','ask','show','find','call','here','there','now','very','much',
+    'only','even','back','well','still','since','after','before','over',
+    'between','same','other','each','most','own','such','good','long','first',
+    'last','few','new','old','big','small','right','next','early','did','am',
+    'its','re','ve','ll','don','didn','doesn','isn','wasn','weren','haven',
+    'can','yes','hi','hey','hello','please','thanks','thank'
+  ]);
+
+  function extractKeywords(text) {
+    var words = text.toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(function (w) {
+        return w.length > 2 && !STOPWORDS.has(w);
+      });
+
+    // Deduplicate while preserving order
+    var seen = {};
+    var unique = [];
+    words.forEach(function (w) {
+      if (!seen[w]) {
+        seen[w] = true;
+        unique.push(w);
+      }
+    });
+
+    return unique.slice(0, 5).join(',');
+  }
+
+  function getMessageLength(text) {
+    var len = text.length;
+    if (len < 30) return 'short';
+    if (len <= 100) return 'medium';
+    return 'long';
+  }
+
+  // ─── Page type detection ─────────────────────────────────────────────────────
   function getPageType() {
+    // Check path first — personal-story body has case-study-page class (incorrect)
+    if (pagePath === '/personal-story' || pagePath.indexOf('/personal-story') === 0) {
+      return 'personal_story';
+    }
+
     var body = document.body;
 
     if (body && body.classList.contains('case-study-page')) {
       return 'case_study';
-    }
-
-    if (body && body.classList.contains('work-page')) {
-      return 'work_index';
     }
 
     if (document.querySelector('.snap-section')) {
@@ -348,6 +552,7 @@
     return 'page';
   }
 
+  // ─── Label / ID helpers ──────────────────────────────────────────────────────
   function getCaseStudyName() {
     var pathParts = pagePath.split('/').filter(Boolean);
     var lastPathPart = pathParts[pathParts.length - 1] || 'case-study';
@@ -361,21 +566,17 @@
     if (sectionRole) {
       return slugify(sectionRole);
     }
-
     if (sectionValue) {
       return 'section-' + slugify(sectionValue);
     }
-
     return slugify(getLabelFromNode(node) || 'landing-section');
   }
 
   function getCaseStudySectionId(node) {
     var heading = node.querySelector('.headline, .section-title, h2, h3');
-
     if (heading && heading.textContent) {
       return slugify(heading.textContent);
     }
-
     return 'section-' + String(indexOfElement(node, '.section') + 1);
   }
 
@@ -384,24 +585,34 @@
     return heading ? cleanText(heading.textContent) : '';
   }
 
+  function getWgCardId(node) {
+    var href = node.getAttribute('href') || '';
+    if (href) {
+      return slugify(normalizeHref(href));
+    }
+    return slugify(getWgCardLabel(node) || 'card');
+  }
+
+  function getWgCardLabel(node) {
+    var statement = node.querySelector('.wg-card-statement');
+    if (statement && statement.textContent) {
+      return cleanText(statement.textContent);
+    }
+    // Fall back to project name from href
+    var href = node.getAttribute('href') || '';
+    var parts = href.split('/').filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }
+
   function getCardId(node) {
     var label = getLabelFromNode(node);
     var href = getCardHref(node);
     var dataIndex = node.getAttribute('data-card-index');
 
-    if (href) {
-      return slugify(normalizeHref(href));
-    }
-
-    if (label) {
-      return slugify(label);
-    }
-
-    if (dataIndex) {
-      return 'card-' + dataIndex;
-    }
-
-    return 'card-' + String(indexOfElement(node, node.className ? '.' + String(node.className).split(' ').join('.') : '*') + 1);
+    if (href) return slugify(normalizeHref(href));
+    if (label) return slugify(label);
+    if (dataIndex) return 'card-' + dataIndex;
+    return 'card-unknown';
   }
 
   function getLabelFromNode(node) {
@@ -413,7 +624,6 @@
     var labelNode = node.querySelector(
       '.next-case-study-title, .body-text, .headline, .section-title, h1, h2, h3, p'
     );
-
     if (labelNode && labelNode.textContent) {
       return cleanText(labelNode.textContent);
     }
@@ -430,54 +640,39 @@
     if (node.hasAttribute('data-href')) {
       return node.getAttribute('data-href') || '';
     }
-
     if (node.tagName && node.tagName.toLowerCase() === 'a') {
       return node.getAttribute('href') || '';
     }
-
     var anchor = node.querySelector('a[href]');
     return anchor ? anchor.getAttribute('href') || '' : '';
   }
 
-  function getHorizonCardType(node) {
-    if (node.classList.contains('is-opportunity')) {
-      return 'opportunity_card';
-    }
+  function getContactType(link) {
+    var href = link.getAttribute('href') || '';
+    var label = (link.getAttribute('aria-label') || '').toLowerCase();
 
-    if (node.classList.contains('is-info-card')) {
-      return 'info_card';
-    }
-
-    return 'work_card';
+    if (href.indexOf('linkedin') !== -1 || label.indexOf('linkedin') !== -1) return 'linkedin';
+    if (href.indexOf('mailto:') === 0 || label.indexOf('email') !== -1) return 'email';
+    if (href.indexOf('tel:') === 0 || label.indexOf('call') !== -1) return 'phone';
+    if (href.indexOf('github') !== -1 || label.indexOf('github') !== -1) return 'github';
+    return 'other';
   }
 
-  function buildThresholds(threshold) {
-    return [threshold];
-  }
-
+  // ─── Path / text utils ───────────────────────────────────────────────────────
   function normalizeHref(href) {
-    if (!href) {
-      return '';
-    }
-
-    if (/^https?:\/\//i.test(href) || /^mailto:/i.test(href)) {
-      return href;
-    }
-
+    if (!href) return '';
+    if (/^https?:\/\//i.test(href) || /^mailto:/i.test(href)) return href;
     return normalizePath(href);
   }
 
   function normalizePath(pathname) {
     var normalized = pathname || '/';
-
     if (normalized.length > 1 && normalized.endsWith('/')) {
       normalized = normalized.slice(0, -1);
     }
-
     if (normalized.endsWith('/index.html')) {
       normalized = normalized.slice(0, -11);
     }
-
     return normalized || '/';
   }
 
@@ -512,7 +707,6 @@
       document.addEventListener('DOMContentLoaded', callback, { once: true });
       return;
     }
-
     callback();
   }
 })();

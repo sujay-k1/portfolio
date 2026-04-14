@@ -884,12 +884,24 @@
 
   if (favorite) {
     syncFavoriteButton();
+    var favoriteToastTimer = null;
     favorite.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       var nextSelected = !getFavoriteSelected();
       setFavoriteSelected(nextSelected);
       syncFavoriteButton();
+      if (nextSelected) {
+        var t = document.getElementById('wg-copy-toast');
+        if (t) {
+          t.textContent = 'Thanks, appreciate it!';
+          t.classList.add('is-visible');
+          clearTimeout(favoriteToastTimer);
+          favoriteToastTimer = setTimeout(function () {
+            t.classList.remove('is-visible');
+          }, 2000);
+        }
+      }
     });
   }
 
