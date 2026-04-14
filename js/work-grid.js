@@ -1015,11 +1015,24 @@
   var API_URL = 'https://portfolio-chat-api.imsujaykumar.workers.dev';
   var SESSION_KEY = 'portfolio_chat_session_id';
   var HISTORY_KEY = 'portfolio_chat_history';
+  var STARTER_PROMPTS = [
+    'Which project shows his process best?',
+    'Why is he a strong fit?',
+    'Tell me about his experience across companies.'
+  ];
   var sessionId = localStorage.getItem(SESSION_KEY);
   var chatHistory = [];
   var isConversationClosed = false;
   var isChatOpen = false;
   var closeRevealTimer = null;
+  var starterEl = null;
+  var followUpsEl = null;
+
+  // Create follow-ups container and inject after messages
+  var chatPanelEl = document.getElementById('portfolio-chat');
+  var followUpsContainer = document.createElement('div');
+  followUpsContainer.className = 'portfolio-chat__follow-ups';
+  if (chatPanelEl) chatPanelEl.appendChild(followUpsContainer);
 
   function updateDetachedPillShift() {
     if (!dock || !chatDock) return;
@@ -1129,6 +1142,55 @@
     return s;
   }
 
+  function removeStarterPrompts() {
+    if (starterEl && starterEl.parentNode) {
+      starterEl.parentNode.removeChild(starterEl);
+    }
+    starterEl = null;
+  }
+
+  function renderStarterPrompts() {
+    if (hasConversation()) return;
+    removeStarterPrompts();
+    var container = document.createElement('div');
+    container.className = 'portfolio-chat__starters';
+    STARTER_PROMPTS.forEach(function (prompt) {
+      var chip = document.createElement('button');
+      chip.className = 'portfolio-chat__starter-chip';
+      chip.type = 'button';
+      chip.textContent = prompt;
+      chip.addEventListener('click', function () { sendPrompt(prompt); });
+      container.appendChild(chip);
+    });
+    messagesEl.appendChild(container);
+    starterEl = container;
+    scrollToBottom();
+  }
+
+  function clearFollowUpPrompts() {
+    if (followUpsEl && followUpsEl.parentNode) {
+      followUpsEl.parentNode.removeChild(followUpsEl);
+    }
+    followUpsEl = null;
+  }
+
+  function renderFollowUpPrompts(prompts) {
+    clearFollowUpPrompts();
+    if (!prompts || !prompts.length) return;
+    var strip = document.createElement('div');
+    strip.className = 'portfolio-chat__follow-ups-strip';
+    prompts.forEach(function (prompt) {
+      var chip = document.createElement('button');
+      chip.className = 'portfolio-chat__follow-up-chip';
+      chip.type = 'button';
+      chip.textContent = prompt;
+      chip.addEventListener('click', function () { sendPrompt(prompt); });
+      strip.appendChild(chip);
+    });
+    followUpsContainer.appendChild(strip);
+    followUpsEl = strip;
+  }
+
   function renderMessage(message) {
     var row = document.createElement('div');
     row.className = 'portfolio-chat__row ' + (message.role === 'user' ? 'portfolio-chat__row--user' : 'portfolio-chat__row--assistant');
@@ -1137,7 +1199,7 @@
     if (message.role !== 'user') {
       var meta = document.createElement('div');
       meta.className = 'portfolio-chat__meta';
-      meta.textContent = 'Assistant';
+      meta.textContent = 'Portfolio Guide';
       bubble.appendChild(meta);
     }
     var text = document.createElement('div');
@@ -1156,21 +1218,54 @@
     return row;
   }
 
-  function addMessage(role, text, links) {
-    var message = { role: role, text: text, links: links || [] };
+  function addMessage(role, text, links, followUpPrompts) {
+    var message = { role: role, text: text, links: links || [], follow_up_prompts: followUpPrompts || [] };
     chatHistory.push(message);
     saveHistory();
     renderMessage(message);
     updateTooltipCopy();
   }
 
+  var PORTFOLIO_COLOR_CONFIG = {
+    bodyGlow1Hex: '#716895', bodyGlow1Alpha: 0.24,
+    bodyGlow2Hex: '#3a3157', bodyGlow2Alpha: 0.32,
+    bodyGlow3Hex: '#120e1d', bodyGlow3Alpha: 0.96,
+    spec1Hex: '#e3d5ee', spec1Alpha: 0.1,
+    spec2Hex: '#b49bcf', spec2Alpha: 0.05,
+    gridHex: '#af9acb', gridAlpha: 0.09,
+    bodyLineStartHex: '#b79ae2',
+    bodyLineEndHex: '#8b79d1',
+    seamLineHex: '#e0d3f3'
+  };
+
   function addTypingMessage() {
-    return renderMessage({
-      role: 'assistant',
-      text: 'Thinking...',
-      links: [],
-      typing: true
+    var row = document.createElement('div');
+    row.className = 'portfolio-chat__row portfolio-chat__row--assistant';
+    var bubble = document.createElement('div');
+    bubble.className = 'portfolio-chat__bubble portfolio-chat__bubble--assistant portfolio-chat__bubble--typing-sphere';
+    var canvas = document.createElement('canvas');
+    canvas.className = 'portfolio-chat__typing-canvas';
+    bubble.appendChild(canvas);
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    row._sphereController = initWireSphere(canvas, {
+      wireCount: 28,
+      waveAmp: 0.3,
+      waveFreq: 2.7,
+      travelSpeed: 4,
+      axisTiltX: 1.57,
+      autoRotateZ: 0,
+      blurAmount: 6,
+      wireThickness: 0.28,
+      poleStretch: 1.5,
+      sizeW: 66,
+      sizeH: 48,
+      radiusScale: 0.34,
+      disableHover: true,
+      colorConfig: PORTFOLIO_COLOR_CONFIG
     });
+    scrollToBottom();
+    return row;
   }
 
   function setChatOpen(nextOpen) {
@@ -1231,6 +1326,8 @@
     chatHistory = [];
     sessionStorage.removeItem(HISTORY_KEY);
     messagesEl.innerHTML = '';
+    starterEl = null; // removed by innerHTML clear above
+    clearFollowUpPrompts();
     isConversationClosed = false;
     chatInput.disabled = false;
     chatSend.disabled = false;
@@ -1244,6 +1341,13 @@
       if (!raw) return;
       chatHistory = JSON.parse(raw);
       chatHistory.forEach(renderMessage);
+      // Restore follow-up prompts for the last assistant message only
+      for (var i = chatHistory.length - 1; i >= 0; i--) {
+        if (chatHistory[i].role === 'assistant') {
+          renderFollowUpPrompts(chatHistory[i].follow_up_prompts || []);
+          break;
+        }
+      }
     } catch (error) {
       console.error('Could not restore chat history', error);
     }
@@ -1254,12 +1358,19 @@
     if (chatHistory.length) return;
     addMessage(
       'assistant',
-      'Hi — I can help you explore Sujay’s work. Tell me what skills or problem space you\'re evaluating, and I’ll surface the strongest examples.'
+      'Hi — I can help you explore Sujay\u2019s work. Tell me what skills or problem space you\u2019re evaluating, and I\u2019ll surface the strongest examples.'
     );
+    renderStarterPrompts();
+  }
+
+  function sendPrompt(text) {
+    askPortfolio(text);
   }
 
   async function askPortfolio(message) {
     if (isConversationClosed || !message) return;
+    removeStarterPrompts();
+    clearFollowUpPrompts();
     addMessage('user', message);
     chatInput.value = '';
     var typingRow = addTypingMessage();
@@ -1273,6 +1384,7 @@
         body: JSON.stringify({ message: message })
       });
       var data = await res.json();
+      if (typingRow._sphereController) typingRow._sphereController.destroy();
       typingRow.remove();
       if (!res.ok) {
         addMessage('assistant', 'Something went wrong.');
@@ -1283,7 +1395,8 @@
         sessionId = data.sessionId;
         localStorage.setItem(SESSION_KEY, sessionId);
       }
-      addMessage('assistant', data.answer || '', data.links || []);
+      addMessage('assistant', data.answer || '', data.links || [], data.follow_up_prompts || []);
+      renderFollowUpPrompts(data.follow_up_prompts || []);
       if (data.locked) {
         isConversationClosed = true;
         chatInput.disabled = true;
@@ -1291,6 +1404,7 @@
         chatInput.placeholder = 'Conversation closed';
       }
     } catch (error) {
+      if (typingRow._sphereController) typingRow._sphereController.destroy();
       typingRow.remove();
       addMessage('assistant', 'Could not reach the chat service.');
       console.error(error);
@@ -1397,12 +1511,39 @@
 })();
 
 // Work Grid — procedural wire sphere
-(function () {
-  var canvas = document.querySelector('.wg-sphere-canvas');
-  if (!canvas) return;
 
-  // ── Configurable parameters ──
-  var config = {
+// Color helpers for configurable sphere palette
+function hexToRgb(hex) {
+  var h = hex.replace('#', '');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+}
+function rgbaFromHexAlpha(hex, alpha) {
+  var c = hexToRgb(hex);
+  return 'rgba(' + c.r + ',' + c.g + ',' + c.b + ',' + alpha + ')';
+}
+function hexToHsl(hex) {
+  var c = hexToRgb(hex);
+  var r = c.r/255, g = c.g/255, b = c.b/255;
+  var max = Math.max(r,g,b), min = Math.min(r,g,b), d = max - min;
+  var h = 0, s = 0, l = (max + min) / 2;
+  if (d > 0) {
+    s = d / (1 - Math.abs(2*l - 1));
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = ((b - r) / d + 2) / 6;
+    else h = ((r - g) / d + 4) / 6;
+  }
+  return { h: h * 360, s: s, l: l };
+}
+function lerpHueDegrees(a, b, t) {
+  var diff = b - a;
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
+  return a + diff * t;
+}
+
+function initWireSphere(canvasEl, overrides) {
+  var config = Object.assign({
     wireCount: 28,
     waveAmp: 0.18,
     waveFreq: 1.0,
@@ -1419,35 +1560,40 @@
     bodyBlendMode: 'multiply',
     seamBlendMode: 'darken',
     frontLayerBlendMode: 'hard-light',
-    blurAmount: 2
-  };
+    blurAmount: 2,
+    disableHover: false,
+    colorConfig: null,
+    wireThickness: 1.0,
+    poleStretch: 1.0,
+    sizeW: 48,
+    sizeH: 48
+  }, overrides || {});
 
-  var SIZE = 48;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.floor(SIZE * dpr);
-  canvas.height = Math.floor(SIZE * dpr);
-  canvas.style.width = SIZE + 'px';
-  canvas.style.height = SIZE + 'px';
+  canvasEl.width = Math.floor(config.sizeW * dpr);
+  canvasEl.height = Math.floor(config.sizeH * dpr);
+  canvasEl.style.width = config.sizeW + 'px';
+  canvasEl.style.height = config.sizeH + 'px';
 
-  var ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
-  if (!ctx) return;
+  var ctx = canvasEl.getContext('2d', { alpha: true, desynchronized: true });
+  if (!ctx) return null;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   var backCanvas = document.createElement('canvas');
-  backCanvas.width = canvas.width;
-  backCanvas.height = canvas.height;
+  backCanvas.width = canvasEl.width;
+  backCanvas.height = canvasEl.height;
   var backCtx = backCanvas.getContext('2d', { alpha: true, desynchronized: true });
   backCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   var frontCanvas = document.createElement('canvas');
-  frontCanvas.width = canvas.width;
-  frontCanvas.height = canvas.height;
+  frontCanvas.width = canvasEl.width;
+  frontCanvas.height = canvasEl.height;
   var frontCtx = frontCanvas.getContext('2d', { alpha: true, desynchronized: true });
   frontCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   var compositeCanvas = document.createElement('canvas');
-  compositeCanvas.width = canvas.width;
-  compositeCanvas.height = canvas.height;
+  compositeCanvas.width = canvasEl.width;
+  compositeCanvas.height = canvasEl.height;
   var compositeCtx = compositeCanvas.getContext('2d', { alpha: true, desynchronized: true });
   compositeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -1457,6 +1603,7 @@
   var hoverAmount = 0;
   var autoSpinAngle = 0;
   var autoRotateZAngle = 0;
+  var destroyed = false;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
   function lerp(a, b, t) { return a + (b - a) * t; }
@@ -1517,10 +1664,18 @@
       cx + radius * 0.28, cy - radius * 0.34, radius * 0.02,
       cx, cy, radius * 1.04
     );
-    body.addColorStop(0, 'rgba(22, 62, 86, 0.28)');
-    body.addColorStop(0.18, 'rgba(11, 28, 41, 0.36)');
-    body.addColorStop(0.56, 'rgba(4, 10, 16, 0.96)');
-    body.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    if (config.colorConfig) {
+      var cc = config.colorConfig;
+      body.addColorStop(0,    rgbaFromHexAlpha(cc.bodyGlow1Hex, cc.bodyGlow1Alpha));
+      body.addColorStop(0.18, rgbaFromHexAlpha(cc.bodyGlow2Hex, cc.bodyGlow2Alpha));
+      body.addColorStop(0.56, rgbaFromHexAlpha(cc.bodyGlow3Hex, cc.bodyGlow3Alpha));
+      body.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    } else {
+      body.addColorStop(0,    'rgba(22, 62, 86, 0.28)');
+      body.addColorStop(0.18, 'rgba(11, 28, 41, 0.36)');
+      body.addColorStop(0.56, 'rgba(4, 10, 16, 0.96)');
+      body.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    }
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 1.02, 0, Math.PI * 2);
@@ -1530,9 +1685,15 @@
       cx + radius * 0.4, cy - radius * 0.44, 0,
       cx + radius * 0.4, cy - radius * 0.44, radius * 0.24
     );
-    spec.addColorStop(0, 'rgba(120, 226, 255, 0.1)');
-    spec.addColorStop(0.45, 'rgba(64, 177, 222, 0.04)');
-    spec.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    if (config.colorConfig) {
+      spec.addColorStop(0,    rgbaFromHexAlpha(cc.spec1Hex, cc.spec1Alpha));
+      spec.addColorStop(0.45, rgbaFromHexAlpha(cc.spec2Hex, cc.spec2Alpha));
+      spec.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    } else {
+      spec.addColorStop(0,    'rgba(120, 226, 255, 0.1)');
+      spec.addColorStop(0.45, 'rgba(64, 177, 222, 0.04)');
+      spec.addColorStop(1,    'rgba(0, 0, 0, 0)');
+    }
     ctx.fillStyle = spec;
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 1.01, 0, Math.PI * 2);
@@ -1563,6 +1724,10 @@
     var lightDir = normalize({ x: 0.72, y: 0.26, z: 1.05 });
     var wireT = totalWires <= 0 ? 0 : wireIndex / totalWires;
     var hueOrbit = 30 * Math.sin(wireT * Math.PI * 2) + 16 * Math.sin(wireT * Math.PI * 6 + 0.85);
+    var _cc = config.colorConfig;
+    var _startHsl = _cc ? hexToHsl(_cc.bodyLineStartHex) : null;
+    var _endHsl   = _cc ? hexToHsl(_cc.bodyLineEndHex)   : null;
+    var _seamHsl  = _cc ? hexToHsl(_cc.seamLineHex)      : null;
 
     for (var i = 0; i < points.length - 1; i++) {
       var originalA = points[i];
@@ -1583,16 +1748,29 @@
         var visibility = clamp((depth + 1) * 0.5, 0, 1);
         var lit = Math.pow(clamp(dot(mid3, lightDir) * 0.5 + 0.5, 0, 1), 1.35);
         var presence = clamp(0.56 * lit + 0.44 * visibility, 0, 1);
-        var coolMix = clamp(
-          0.58 * (1 - visibility) + 0.16 * (1 - lit) + 0.16 * Math.abs(mid3.x) +
-          0.1 * Math.sin(segmentU * Math.PI * 2 + wireT * Math.PI * 4), 0, 1
-        );
-        var hue = clamp(lerp(136, 224, coolMix) + hueOrbit, 112, 252);
-        var saturation = lerp(82, 100, clamp(0.25 + 0.75 * presence, 0, 1));
-        var bodyLight = lerp(34, 60, presence);
-        var seamLight = lerp(68, 86, clamp(0.22 + 0.78 * lit, 0, 1));
         var bodyAlpha = 0.5 * lerp(0.84, 1, visibility);
         var seamAlpha = 0.72 * lerp(0.88, 1, visibility);
+        var bodyStroke, seamStroke;
+        if (_cc) {
+          var ribbonT = clamp(0.5 + 0.5 * Math.sin(wireT * Math.PI * 2 + segmentU * Math.PI), 0, 1);
+          var bHue = lerpHueDegrees(_startHsl.h, _endHsl.h, ribbonT);
+          var bSat = lerp(_startHsl.s * 100, _endHsl.s * 100, ribbonT);
+          var bLit = lerp(_startHsl.l * 100, _endHsl.l * 100, presence);
+          var sLit = lerp(_seamHsl.l * 100 * 0.8, _seamHsl.l * 100, clamp(0.22 + 0.78 * lit, 0, 1));
+          bodyStroke = hsla(bHue, bSat, bLit, bodyAlpha);
+          seamStroke = hsla(_seamHsl.h, _seamHsl.s * 100, sLit, seamAlpha);
+        } else {
+          var coolMix = clamp(
+            0.58 * (1 - visibility) + 0.16 * (1 - lit) + 0.16 * Math.abs(mid3.x) +
+            0.1 * Math.sin(segmentU * Math.PI * 2 + wireT * Math.PI * 4), 0, 1
+          );
+          var hue = clamp(lerp(136, 224, coolMix) + hueOrbit, 112, 252);
+          var saturation = lerp(82, 100, clamp(0.25 + 0.75 * presence, 0, 1));
+          var bodyLight = lerp(34, 60, presence);
+          var seamLight = lerp(68, 86, clamp(0.22 + 0.78 * lit, 0, 1));
+          bodyStroke = hsla(hue, saturation, bodyLight, bodyAlpha);
+          seamStroke = hsla(clamp(lerp(hue - 16, 188, 0.22), 108, 236), Math.min(100, saturation * 0.9 + 8), seamLight, seamAlpha);
+        }
 
         if (hideBack && depth < 0) continue;
 
@@ -1602,8 +1780,8 @@
         target.push({
           a: a, b: b,
           passes: [
-            { strokeStyle: hsla(hue, saturation, bodyLight, bodyAlpha), lineWidth: bodyWidth, composite: config.bodyBlendMode },
-            { strokeStyle: hsla(clamp(lerp(hue - 16, 188, 0.22), 108, 236), Math.min(100, saturation * 0.9 + 8), seamLight, seamAlpha), lineWidth: seamWidth, composite: config.seamBlendMode }
+            { strokeStyle: bodyStroke, lineWidth: bodyWidth, composite: config.bodyBlendMode },
+            { strokeStyle: seamStroke, lineWidth: seamWidth, composite: config.seamBlendMode }
           ]
         });
       }
@@ -1623,10 +1801,13 @@
     targetCtx.restore();
   }
 
-  canvas.addEventListener('pointerenter', function () { hoverTarget = 1; });
-  canvas.addEventListener('pointerleave', function () { hoverTarget = 0; });
+  if (!config.disableHover) {
+    canvasEl.addEventListener('pointerenter', function () { hoverTarget = 1; });
+    canvasEl.addEventListener('pointerleave', function () { hoverTarget = 0; });
+  }
 
   function render(now) {
+    if (destroyed) return;
     if (lastNow === null) lastNow = now;
     var dt = Math.min(0.05, (now - lastNow) / 1000);
     lastNow = now;
@@ -1638,7 +1819,7 @@
     autoSpinAngle += dt * 1.0 * spinMultiplier;
     autoRotateZAngle += dt * config.autoRotateZ * spinMultiplier;
 
-    var width = SIZE, height = SIZE;
+    var width = config.sizeW, height = config.sizeH;
     var cx = width / 2, cy = height / 2;
     var radius = Math.min(width, height) * config.radiusScale;
 
@@ -1650,7 +1831,7 @@
 
     var basis = buildAxisBasis();
     var samples = Math.max(32, Math.min(80, Math.round(radius * 2.4)));
-    var strokeWidth = Math.max(1.2, Math.min(3, radius * 0.096));
+    var strokeWidth = Math.max(1.2, Math.min(3, radius * 0.096)) * config.wireThickness;
     var phaseStep = (Math.PI * 2) / config.wireCount;
     var autoSpin = config.spin + autoSpinAngle;
     var leftStackAngle = -Math.PI * 0.5;
@@ -1675,7 +1856,7 @@
         var wave = config.waveAmp * envelope * Math.sin(theta * Math.PI * config.waveFreq - elapsed * config.travelSpeed + wirePhase);
         var radialScale = 1 + wave;
         var radialDir = add(scale(basis.b, Math.cos(alpha)), scale(basis.c, Math.sin(alpha)));
-        var point3d = add(scale(basis.axis, Math.cos(theta)), scale(radialDir, Math.sin(theta) * radialScale));
+        var point3d = add(scale(basis.axis, Math.cos(theta) * config.poleStretch), scale(radialDir, Math.sin(theta) * radialScale));
         points.push(project(point3d, radius, cx, cy));
       }
 
@@ -1704,4 +1885,12 @@
   }
 
   requestAnimationFrame(render);
+  return { destroy: function () { destroyed = true; } };
+}
+
+// Initialise the dock sphere
+(function () {
+  var canvas = document.querySelector('.wg-sphere-canvas');
+  if (!canvas) return;
+  initWireSphere(canvas);
 })();
