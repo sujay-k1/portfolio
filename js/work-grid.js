@@ -1240,14 +1240,14 @@
 
   function addTypingMessage() {
     var row = document.createElement('div');
-    row.className = 'portfolio-chat__row portfolio-chat__row--assistant';
+    row.className = 'portfolio-chat__typing-dock';
     var bubble = document.createElement('div');
     bubble.className = 'portfolio-chat__bubble portfolio-chat__bubble--assistant portfolio-chat__bubble--typing-sphere';
     var canvas = document.createElement('canvas');
     canvas.className = 'portfolio-chat__typing-canvas';
     bubble.appendChild(canvas);
     row.appendChild(bubble);
-    messagesEl.appendChild(row);
+    chatPanelEl.appendChild(row);
     row._sphereController = initWireSphere(canvas, {
       wireCount: 28,
       waveAmp: 0.3,

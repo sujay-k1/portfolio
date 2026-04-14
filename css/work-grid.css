@@ -1512,6 +1512,8 @@ body:has(.wg-dock-overlay.is-visible) .snap-section-scroll {
     opacity 0.42s cubic-bezier(0.165, 0.84, 0.44, 1),
     transform 0.42s cubic-bezier(0.165, 0.84, 0.44, 1);
   z-index: 1;
+  border-radius: 38px;
+  overflow: hidden;
 }
 
 .wg-status-dock.is-chat-open .portfolio-chat {
@@ -1807,4 +1809,12 @@ body:has(.wg-dock-overlay.is-visible) .snap-section-scroll {
 
 .portfolio-chat__typing-canvas {
   display: block;
+}
+
+.portfolio-chat__typing-dock {
+  position: absolute;
+  bottom: -24px;
+  left: 38px;
+  z-index: 10;
+  pointer-events: none;
 }
