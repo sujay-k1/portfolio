@@ -591,10 +591,6 @@
 .scroll-fill-word {
 	display: inline-block;
 	white-space: nowrap;
-	background-image: linear-gradient(to bottom, transparent 20%, var(--scroll-fill-accent, #C1A5EC) 21%);
-	background-position: 0 1.24em;
-	background-repeat: no-repeat;
-	background-size: var(--scroll-fill-underline-progress, 0%) 2px;
 	transition: color 120ms linear;
 }
 
