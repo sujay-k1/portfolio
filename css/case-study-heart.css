@@ -110,7 +110,7 @@
     display: flex;
     width: -webkit-fill-available;
     border-radius: 30px;
-    margin-bottom: 32px;
+    margin-bottom: -32px;
     padding-left: clamp(20px, 5vw, 48px);
   }
 }
