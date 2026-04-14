@@ -473,6 +473,89 @@
   }, { passive: true });
 })();
 
+// Work Grid — contact icon tooltips + copy on desktop
+(function () {
+  var allIcons = Array.from(document.querySelectorAll('.wg-status-panel-icon'));
+  var toast = document.getElementById('wg-copy-toast');
+  if (!allIcons.length) return;
+
+  function isDesktop() {
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  }
+
+  var toastTimer = null;
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toast.classList.remove('is-visible');
+    }, 2000);
+  }
+
+  allIcons.forEach(function (icon) {
+    var inlineTooltip = icon.querySelector('.wg-icon-tooltip');
+    if (!inlineTooltip) return;
+
+    // Move tooltip to body to escape stacking context of the dock
+    var tooltipText = inlineTooltip.textContent;
+    inlineTooltip.remove();
+    var tooltip = document.createElement('span');
+    tooltip.className = 'wg-icon-tooltip';
+    tooltip.textContent = tooltipText;
+    document.body.appendChild(tooltip);
+
+    function positionTooltip() {
+      var rect = icon.getBoundingClientRect();
+      tooltip.style.left = '0px';
+      tooltip.style.top = '-9999px';
+      var tooltipWidth = tooltip.offsetWidth || 160;
+      var left = rect.left + rect.width / 2 - tooltipWidth / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+    }
+
+    icon.addEventListener('mouseenter', function () {
+      positionTooltip();
+      tooltip.classList.add('is-visible');
+    });
+
+    icon.addEventListener('mouseleave', function () {
+      tooltip.classList.remove('is-visible');
+    });
+
+    // Copy on desktop for phone/email
+    var copyValue = icon.getAttribute('data-copy');
+    if (!copyValue) return;
+
+    var isEmail = icon.getAttribute('href').indexOf('mailto:') === 0;
+
+    icon.addEventListener('click', function (event) {
+      if (!isDesktop()) return;
+      event.preventDefault();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(copyValue).then(function () {
+          showToast(isEmail ? 'Email id copied' : 'Phone number copied');
+        }).catch(function () {
+          window.location.href = icon.getAttribute('href');
+        });
+      } else {
+        // fallback for browsers without clipboard API
+        var ta = document.createElement('textarea');
+        ta.value = copyValue;
+        ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast(isEmail ? 'Email id copied' : 'Phone number copied'); }
+        catch (e) { window.location.href = icon.getAttribute('href'); }
+        document.body.removeChild(ta);
+      }
+    });
+  });
+})();
+
 // Work Grid — scroll-linked media parallax
 (function () {
   var visuals = Array.from(document.querySelectorAll('[data-parallax-visual]'));
