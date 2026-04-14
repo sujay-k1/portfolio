@@ -601,6 +601,92 @@
   requestAnimationFrame(applyParallax);
 })();
 
+// Filter row edge auto-scroll
+(function () {
+  var filtersRow = document.querySelector('.wg-filters-row');
+  var filters = document.querySelector('.wg-filters');
+  if (!filtersRow || !filters) return;
+
+  // Build edge overlays
+  function makeEdge(side) {
+    var edge = document.createElement('div');
+    edge.className = 'wg-filters-edge wg-filters-edge--' + side;
+    var icon = document.createElement('span');
+    icon.className = 'material-symbols-rounded';
+    icon.textContent = side === 'left' ? 'chevron_left' : 'chevron_right';
+    edge.appendChild(icon);
+    return edge;
+  }
+
+  var leftEdge = makeEdge('left');
+  var rightEdge = makeEdge('right');
+  filters.appendChild(leftEdge);
+  filters.appendChild(rightEdge);
+
+  var scrollDir = 0;
+  var rafId = null;
+  var SCROLL_SPEED = 4;
+
+  function scrollStep() {
+    if (!scrollDir) return;
+    filtersRow.scrollLeft += scrollDir * SCROLL_SPEED;
+    rafId = requestAnimationFrame(scrollStep);
+  }
+
+  function startScroll(dir) {
+    if (scrollDir === dir) return;
+    scrollDir = dir;
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(scrollStep);
+  }
+
+  function stopScroll() {
+    scrollDir = 0;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  filtersRow.addEventListener('mousemove', function (e) {
+    var rect = filtersRow.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    if (x <= 80) {
+      leftEdge.classList.add('is-visible');
+      rightEdge.classList.remove('is-visible');
+      startScroll(-1);
+    } else if (x >= rect.width - 80) {
+      rightEdge.classList.add('is-visible');
+      leftEdge.classList.remove('is-visible');
+      startScroll(1);
+    } else {
+      leftEdge.classList.remove('is-visible');
+      rightEdge.classList.remove('is-visible');
+      stopScroll();
+    }
+  });
+
+  filtersRow.addEventListener('mouseleave', function () {
+    leftEdge.classList.remove('is-visible');
+    rightEdge.classList.remove('is-visible');
+    stopScroll();
+  });
+})();
+
+// Dock subtle opacity — sections 1 & 2 only
+(function () {
+  var dock = document.querySelector('.wg-status-dock');
+  var section3 = document.querySelector('.snap-section-scroll');
+  if (!dock || !section3) return;
+
+  // When section 3 is fully out of view we are on section 1 or 2 → subtle
+  // When section 3 enters view → full opacity
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      dock.classList.toggle('is-subtle', !entry.isIntersecting);
+    });
+  }, { threshold: 0.05 });
+
+  observer.observe(section3);
+})();
+
 // Work Grid — hover chip
 (function () {
   var chip = document.getElementById('wg-hover-chip');

@@ -34,14 +34,59 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Filters ── */
 .wg-filters {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  padding: 104px var(--page-inline) 8px;
+  padding: 104px var(--page-inline) 32px;
   /*border-bottom: 1px solid rgba(255, 255, 255, 0.08);*/
   overflow: hidden;
+  background: linear-gradient(180deg, #15101a 0%, #18121D 50%, rgba(26, 19, 31, 0) 99%);
+  pointer-events: none;
+}
+
+.wg-filters-row {
+  pointer-events: auto;
+}
+
+.wg-filters-edge {
+  position: absolute;
+  bottom: 0;
+  height: 89px;
+  width: 80px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.wg-filters-edge.is-visible {
+  opacity: 1;
+}
+
+.wg-filters-edge--left {
+  left: var(--page-inline);
+  background: linear-gradient(to right, #15101a 30%, transparent 100%);
+  justify-content: flex-start;
+  padding-left: 12px;
+}
+
+.wg-filters-edge--right {
+  right: var(--page-inline);
+  background: linear-gradient(to left, #15101a 30%, transparent 100%);
+  justify-content: flex-end;
+  padding-right: 12px;
+}
+
+.wg-filters-edge .material-symbols-rounded {
+  font-size: 40px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1;
 }
 
 .wg-filters-row {
@@ -745,6 +790,18 @@ body:has(.wg-dock-overlay.is-visible) .snap-section-scroll {
   bottom: 24px;
   transform: translateX(-50%);
   z-index: 40;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.wg-status-dock.is-subtle {
+  opacity: 0.45;
+}
+
+.wg-status-dock.is-subtle:hover,
+.wg-status-dock.is-subtle.is-open,
+.wg-status-dock.is-subtle.is-chat-open {
+  opacity: 1;
 }
 
 .wg-status-controls {
@@ -1354,6 +1411,10 @@ body:has(.wg-dock-overlay.is-visible) .snap-section-scroll {
 
   .wg-status-dock {
     /*bottom: 16px;*/
+  }
+
+  .wg-status {
+    background: rgba(21, 16, 26, 0.6);
   }
 
   .wg-status-panel-shell {

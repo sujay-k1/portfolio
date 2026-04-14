@@ -197,6 +197,7 @@ const SECTION_MORPH_HINT_DELAY_MS = 420;
 const SECTION_MORPH_HINT_PEAK = 82;
 const SECTION_MORPH_HANDOFF_THRESHOLD = 0.4;
 const FINAL_HORIZON_WHEEL_SNAP_THRESHOLD = 2;
+const FINAL_HORIZON_EXIT_THRESHOLD = window.matchMedia('(pointer: fine) and (min-width: 1024px)').matches ? 400 : 60;
 const FINAL_HORIZON_SNAP_DURATION = 0.8;
 const FINAL_HORIZON_WHEEL_COOLDOWN_MS = 0;
 const FINAL_HORIZON_DYNAMIC_DURATION_SAMPLE_MS = 50;
@@ -6383,6 +6384,10 @@ function initSnapScroll() {
         }
         return;
       }
+      // If scrolling horizontally over the filter row, let native horizontal scroll handle it
+      if (event.target.closest('.wg-filters-row') && Math.abs(event.deltaX) > 0) {
+        return;
+      }
       const scrollSection = snapSections[SNAP_STATE.index];
       const isScrollableSection = scrollSection && scrollSection.classList.contains('snap-section-scroll');
       if (!isScrollableSection) {
@@ -6408,7 +6413,7 @@ function initSnapScroll() {
             if (SNAP_STATE.lastWheelDirection !== direction) SNAP_STATE.wheelAccumulator = 0;
             SNAP_STATE.lastWheelDirection = direction;
             SNAP_STATE.wheelAccumulator += adjustedDeltaY;
-            if (Math.abs(SNAP_STATE.wheelAccumulator) >= WHEEL_SNAP_THRESHOLD) {
+            if (Math.abs(SNAP_STATE.wheelAccumulator) >= FINAL_HORIZON_EXIT_THRESHOLD) {
               SNAP_STATE.wheelAccumulator = 0;
               SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
               queueOrGo(-1);
@@ -6536,6 +6541,12 @@ function initSnapScroll() {
     { passive: false }
   );
 
+  // Axis lock state for filter row horizontal scroll
+  let filterRowTouchAxisLock = null; // 'x' | 'y' | null
+  let filterRowTouchStartX = 0;
+  let filterRowTouchStartY = 0;
+  const FILTER_ROW_AXIS_THRESHOLD = 8;
+
   window.addEventListener(
     'touchstart',
     (event) => {
@@ -6547,6 +6558,10 @@ function initSnapScroll() {
       SNAP_STATE.touchLastTs = performance.now();
       SNAP_STATE.touchStartY = event.touches[0].clientY;
       SNAP_STATE.touchLastY = event.touches[0].clientY;
+      // Reset axis lock for filter row
+      filterRowTouchAxisLock = null;
+      filterRowTouchStartX = event.touches[0].clientX;
+      filterRowTouchStartY = event.touches[0].clientY;
     },
     { passive: true }
   );
@@ -6560,6 +6575,20 @@ function initSnapScroll() {
         }
         return;
       }
+      // Axis lock: if touch started over filter row, determine lock direction and suppress vertical snap
+      if (event.target.closest('.wg-filters-row')) {
+        const dx = Math.abs(event.touches[0].clientX - filterRowTouchStartX);
+        const dy = Math.abs(event.touches[0].clientY - filterRowTouchStartY);
+        if (!filterRowTouchAxisLock && (dx > FILTER_ROW_AXIS_THRESHOLD || dy > FILTER_ROW_AXIS_THRESHOLD)) {
+          filterRowTouchAxisLock = dx >= dy ? 'x' : 'y';
+        }
+        if (filterRowTouchAxisLock === 'x') {
+          // Horizontal swipe — let native scroll handle it, suppress snap
+          return;
+        }
+        // Vertical swipe — fall through to normal snap handling
+      }
+
       const scrollSection = snapSections[SNAP_STATE.index];
       const isScrollableSection = scrollSection && scrollSection.classList.contains('snap-section-scroll');
       if (isScrollableSection) {
@@ -6569,7 +6598,21 @@ function initSnapScroll() {
         const rawDy = SNAP_STATE.touchLastY - currentY;
         const goingUp = rawDy < 0;
         const goingDown = rawDy > 0;
-        if ((goingUp && atTop) || (goingDown && atBottom)) {
+        if (goingUp && atTop) {
+          event.preventDefault();
+          if (SNAP_STATE.lastWheelDirection !== -1) SNAP_STATE.wheelAccumulator = 0;
+          SNAP_STATE.lastWheelDirection = -1;
+          SNAP_STATE.wheelAccumulator += rawDy;
+          if (Math.abs(SNAP_STATE.wheelAccumulator) >= FINAL_HORIZON_EXIT_THRESHOLD) {
+            SNAP_STATE.wheelAccumulator = 0;
+            SNAP_STATE.wheelCooldownUntil = performance.now() + WHEEL_COOLDOWN_MS;
+            queueOrGo(-1);
+          }
+          SNAP_STATE.touchLastTs = performance.now();
+          SNAP_STATE.touchLastY = currentY;
+          return;
+        }
+        if (goingDown && atBottom) {
           event.preventDefault();
         }
         SNAP_STATE.touchLastTs = performance.now();
