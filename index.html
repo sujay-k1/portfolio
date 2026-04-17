@@ -61,26 +61,37 @@
   }
   </script>
 
-  <link rel="preconnect" href="https://rsms.me">
+  <link rel="preconnect" href="https://media.sujaykumar.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Fonts loaded directly as <link> tags (not CSS @import) so they download
-       in parallel with wave-landing.css instead of blocking it -->
-  <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitcount:CRSV,ELSH,ELXP,slnt,wght@0..1,0..100,0..100,-8..0,200..700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,649..854,-305..-98,560..788,416..570,528..760&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&opsz@20..48&GRAD@-25..200&wght@200..700">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preload" href="https://media.sujaykumar.net/fonts/Inter/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://media.sujaykumar.net/Assets/models/pointer/pointer.gltf" as="fetch" crossorigin>
+  <link rel="preload" href="https://media.sujaykumar.net/Assets/models/pointer/buffer.bin" as="fetch" crossorigin>
+  <!-- Preload PixiJS — loaded dynamically in procedural-wave-section1.js (no crossorigin to match script tag) -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js" as="script">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/@pixi/filter-bloom@5.1.1/dist/filter-bloom.min.js" as="script">
+  <!-- Preload GSAP — used by intro-only.js on DOMContentLoaded -->
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" as="script">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js" as="script">
+  <!-- Self-hosted Inter — eliminates rsms.me round-trip -->
+  <link rel="stylesheet" href="/css/inter.css">
+  <!-- Google Fonts loaded async — startup loader covers the page while fonts download,
+       so there is no visible FOUT. noscript fallback ensures fonts still load without JS. -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,649..854,-305..-98,560..788,416..570,528..760&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&opsz@20..48&GRAD@-25..200&wght@200..700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,slnt,wdth,wght,GRAD,XOPQ,XTRA,YOPQ,YTAS,YTDE,YTFI,YTLC,YTUC@8..144,-10..0,25..151,100..1000,-200..150,27..175,323..603,25..135,649..854,-305..-98,560..788,416..570,528..760&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&opsz@20..48&GRAD@-25..200&wght@200..700&display=swap">
+  </noscript>
   <link rel="stylesheet" href="css/wave-landing.css">
-  <link rel="stylesheet" href="css/work-grid.css">
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "wcz28i22bl");
-</script>
-<script src="/js/ga-exclude.js"></script>
+  <!-- work-grid.css is below-fold — load async to avoid render-blocking -->
+  <link rel="preload" href="css/work-grid.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="css/work-grid.css"></noscript>
+  <script>(function(){var s=location.search;if(/[?&]internal=0/.test(s)){localStorage.removeItem("ga_internal");document.cookie="CLWLOPTOUT=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.sujaykumar.net";}if(/[?&]internal=1/.test(s)){localStorage.setItem("ga_internal","1");document.cookie="CLWLOPTOUT=1; expires=Fri, 31 Dec 2099 23:59:59 GMT; path=/; domain=.sujaykumar.net";}})();</script>
+  <script type="text/javascript">if(document.cookie.indexOf("CLWLOPTOUT=1")===-1){(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","wcz28i22bl");}</script>
 </head>
 <body class="snap-mode app-loading">
   <h1 class="sr-only">Sujay Kumar — Senior Product Designer in Bengaluru</h1>
@@ -394,7 +405,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-06.webp" alt="MentorConnect app showing mentor guidance interface" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-06.webp" alt="MentorConnect app showing mentor guidance interface" loading="lazy" width="480" height="280">
             </div>
           </div>
           <div class="wg-card-badge" data-card-badge>
@@ -410,9 +421,9 @@
         <div class="wg-card-footer">
           <span class="wg-card-year">2021</span>
           <span class="wg-card-brand">
-            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/byju's-logo-white.webp" alt="BYJU'S logo">
+            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/byju's-logo-white.webp" alt="BYJU'S logo" width="80" height="20">
             <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
-            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo">
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo" width="80" height="12">
           </span>
         </div>
       </div>
@@ -425,7 +436,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-02.webp" alt="Biz2X lending platform interface" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-02.webp" alt="Biz2X lending platform interface" loading="lazy" width="480" height="280">
             </div>
           </div>
           <div class="wg-card-badge" data-card-badge>
@@ -440,7 +451,7 @@
         </p>
         <div class="wg-card-footer">
           <span class="wg-card-year">2024-25</span>
-          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/biz2x-logo-white.webp" alt="Biz2X logo">
+          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/biz2x-logo-white.webp" alt="Biz2X logo" width="80" height="20">
         </div>
       </div>
     </a>
@@ -452,7 +463,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-05.webp" alt="Prime Video audio description workflows" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-05.webp" alt="Prime Video audio description workflows" loading="lazy" width="480" height="280">
             </div>
           </div>
           <div class="wg-card-badge" data-card-badge>
@@ -468,9 +479,9 @@
         <div class="wg-card-footer">
           <span class="wg-card-year">2022</span>
           <span class="wg-card-brand">
-            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/prime-video-logo-white.webp" alt="Prime Video logo">
+            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/prime-video-logo-white.webp" alt="Prime Video logo" width="80" height="20">
             <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
-            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo">
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo" width="80" height="12">
           </span>
         </div>
       </div>
@@ -484,8 +495,8 @@
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
               <div class="wg-image-split">
-                <img class="wg-image-base" src="https://media.sujaykumar.net/Assets/card-01-01.webp" alt="Saison Omni base image" loading="lazy">
-                <img class="wg-image-overlay" src="https://media.sujaykumar.net/Assets/card-01.webp" alt="Saison Omni overlay image" loading="lazy">
+                <img class="wg-image-base" src="https://media.sujaykumar.net/Assets/card-01-01.webp" alt="Saison Omni base image" loading="lazy" width="480" height="280">
+                <img class="wg-image-overlay" src="https://media.sujaykumar.net/Assets/card-01.webp" alt="Saison Omni overlay image" loading="lazy" width="480" height="280">
               </div>
             </div>
           </div>
@@ -498,7 +509,7 @@
         <div class="wg-card-footer">
           <span class="wg-card-year">2025-26</span>
           <span class="wg-card-brand">
-            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/saison-omni-logo-white.webp" alt="Saison Omni logo">
+            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/saison-omni-logo-white.webp" alt="Saison Omni logo" width="80" height="20">
             <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
             <span class="wg-card-brand-note">(Dissolved)</span>
           </span>
@@ -513,7 +524,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-03.webp" alt="JioTesseract XR platform" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-03.webp" alt="JioTesseract XR platform" loading="lazy" width="480" height="280">
             </div>
           </div>
         </div>
@@ -524,7 +535,7 @@
         </p>
         <div class="wg-card-footer">
           <span class="wg-card-year">2024</span>
-          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/jiotesseract-logo-white.webp" alt="JioTesseract logo">
+          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/jiotesseract-logo-white.webp" alt="JioTesseract logo" width="80" height="20">
         </div>
       </div>
     </a>
@@ -536,7 +547,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-04.webp" alt="JioTesseract immersive learning platform" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-04.webp" alt="JioTesseract immersive learning platform" loading="lazy" width="480" height="280">
             </div>
           </div>
         </div>
@@ -547,7 +558,7 @@
         </p>
         <div class="wg-card-footer">
           <span class="wg-card-year">2023</span>
-          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/jiotesseract-logo-white.webp" alt="JioTesseract logo">
+          <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/jiotesseract-logo-white.webp" alt="JioTesseract logo" width="80" height="20">
         </div>
       </div>
     </a>
@@ -559,7 +570,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/card-07.webp" alt="Safca mobile app showing survey interface" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/card-07.webp" alt="Safca mobile app showing survey interface" loading="lazy" width="480" height="280">
             </div>
           </div>
           <div class="wg-card-badge" data-card-badge>
@@ -575,9 +586,9 @@
         <div class="wg-card-footer">
           <span class="wg-card-year">2020</span>
           <span class="wg-card-brand">
-            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/Aangan-white-logo.webp" alt="Aangan logo">
+            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/Aangan-white-logo.webp" alt="Aangan logo" width="80" height="20">
             <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
-            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo">
+            <img class="wg-card-logo wg-card-logo--brndstudio" src="https://media.sujaykumar.net/Assets/brndstudio_logo.webp" alt="BRNDSTUDIO logo" width="80" height="12">
           </span>
         </div>
       </div>
@@ -604,7 +615,7 @@
         <div class="wg-card-footer">
           <span class="wg-card-year">2023</span>
           <span class="wg-card-brand">
-            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/WALogo.webp" alt="WhatsApp logo">
+            <img class="wg-card-logo" src="https://media.sujaykumar.net/Assets/WALogo.webp" alt="WhatsApp logo" width="80" height="20">
             <span class="wg-card-brand-pipe" aria-hidden="true">|</span>
             <span class="wg-card-brand-note">Self-initiated</span>
           </span>
@@ -619,7 +630,7 @@
           <div class="wg-card-media-shell">
             <div class="wg-keyflow"></div>
             <div class="wg-card-parallax" data-parallax-visual>
-              <img src="https://media.sujaykumar.net/Assets/Jharkhand-SIR.webp" alt="Jharkhand SIR project thumbnail" loading="lazy">
+              <img src="https://media.sujaykumar.net/Assets/Jharkhand-SIR.webp" alt="Jharkhand SIR project thumbnail" loading="lazy" width="480" height="280">
             </div>
           </div>
           <div class="wg-card-badge" data-card-badge>
@@ -726,10 +737,10 @@
         <div class="wg-status-panel-footer">
           <p>Connect with me</p>
           <div class="wg-status-panel-icons">
-            <a class="wg-status-panel-icon" href="https://linkedin.com/in/sujay-k" target="_blank" rel="noopener noreferrer" aria-label="Open LinkedIn profile in a new tab"><img src="https://media.sujaykumar.net/Assets/contact-icons-04.webp" alt=""><span class="wg-icon-tooltip">Let's connect on LinkedIn</span></a>
-            <a class="wg-status-panel-icon" href="mailto:imsujaykumar@gmail.com" aria-label="Email imsujaykumar@gmail.com" data-copy="imsujaykumar@gmail.com" data-copy-label="Copy my email: imsujaykumar@gmail.com"><img src="https://media.sujaykumar.net/Assets/contact-icons-03.webp" alt=""><span class="wg-icon-tooltip">Copy my email: imsujaykumar@gmail.com</span></a>
-            <a class="wg-status-panel-icon" href="tel:+918828290489" aria-label="Call +91 88282 90489" data-copy="8828290489" data-copy-label="Copy my number: 8828290489"><img src="https://media.sujaykumar.net/Assets/contact-icons-02.webp" alt=""><span class="wg-icon-tooltip">Copy my number: 8828290489</span></a>
-            <a class="wg-status-panel-icon wg-status-panel-icon--github" href="https://github.com/sujay-k1/" target="_blank" rel="noopener noreferrer" aria-label="View GitHub profile"><img src="https://media.sujaykumar.net/Assets/github-logo.webp" alt="GitHub"><span class="wg-icon-tooltip">Here's my Github profile</span></a>
+            <a class="wg-status-panel-icon" href="https://linkedin.com/in/sujay-k" target="_blank" rel="noopener noreferrer" aria-label="Open LinkedIn profile in a new tab"><img src="https://media.sujaykumar.net/Assets/contact-icons-04.webp" alt="" width="16" height="16"><span class="wg-icon-tooltip">Let's connect on LinkedIn</span></a>
+            <a class="wg-status-panel-icon" href="mailto:imsujaykumar@gmail.com" aria-label="Email imsujaykumar@gmail.com" data-copy="imsujaykumar@gmail.com" data-copy-label="Copy my email: imsujaykumar@gmail.com"><img src="https://media.sujaykumar.net/Assets/contact-icons-03.webp" alt="" width="16" height="16"><span class="wg-icon-tooltip">Copy my email: imsujaykumar@gmail.com</span></a>
+            <a class="wg-status-panel-icon" href="tel:+918828290489" aria-label="Call +91 88282 90489" data-copy="8828290489" data-copy-label="Copy my number: 8828290489"><img src="https://media.sujaykumar.net/Assets/contact-icons-02.webp" alt="" width="16" height="16"><span class="wg-icon-tooltip">Copy my number: 8828290489</span></a>
+            <a class="wg-status-panel-icon wg-status-panel-icon--github" href="https://github.com/sujay-k1/" target="_blank" rel="noopener noreferrer" aria-label="View GitHub profile"><img src="https://media.sujaykumar.net/Assets/github-logo.webp" alt="GitHub" width="16" height="16"><span class="wg-icon-tooltip">Here's my Github profile</span></a>
           </div>
         </div>
       </div>
@@ -793,11 +804,10 @@
   <script src="js/loader-page-handoff.js"></script>
   <script src="js/startup-loader-core.js"></script>
   <script src="js/startup-loader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
   <script type="module" src="js/intro-only.js"></script>
-  <script src="js/work-grid.js"></script>
+  <script src="js/work-grid.js" defer></script>
 </body>
 </html>

@@ -274,7 +274,7 @@ const __removed_finalHorizonCardsData = [
     statement: '<span class="hl">Cut development time</span> with Platform SDK: patterns, practices, and multimodal interaction',
     keywords: ['Design Foundation', 'System Design', 'XR Platform', 'Design Patterns', 'Spatial Design', 'Interaction Design'],
     meta: 'Platform // XR (AR/VR/MR)',
-    backgroundImage: 'Assets/JioPlatformBG',
+    backgroundImage: 'https://media.sujaykumar.net/Assets/JioPlatformBG.webp',
     image: 'Assets/card-03.webp',
     imageFit: 'cover',
     imagePosition: '50% 50%',
@@ -494,6 +494,107 @@ let emailAlertsInitPromise = null;
 let visitorProfilePromise = null;
 let sessionVisitAlertPromise = null;
 let heartAlertPromise = null;
+let section2ModelInitPromise = null;
+let section2ModelBootstrapped = false;
+let lottieScriptPromise = null;
+
+function detectPerformanceTier() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const isIPhone = /\biPhone\b/i.test(ua);
+  const isIPad =
+    /\biPad\b/i.test(ua) ||
+    (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isIOS = isIPhone || isIPad;
+  if (isIOS) {
+    return 'high';
+  }
+
+  const isMac = /\bMac\b/i.test(platform) || /\bMac OS X\b/i.test(ua);
+  const isWindows = /\bWin(dows)?\b/i.test(platform) || /\bWindows\b/i.test(ua);
+
+  const coreCount = navigator.hardwareConcurrency || 0;
+  const deviceMemory = navigator.deviceMemory || 0;
+  const coarsePointer =
+    window.matchMedia?.('(any-pointer: coarse)')?.matches ||
+    window.matchMedia?.('(pointer: coarse)')?.matches ||
+    false;
+  const narrowViewport = Math.min(window.innerWidth || 0, window.innerHeight || 0) <= 430;
+  const isAndroid = /\bAndroid\b/i.test(ua);
+  const hasFinePointer =
+    window.matchMedia?.('(any-pointer: fine)')?.matches ||
+    window.matchMedia?.('(pointer: fine)')?.matches ||
+    false;
+  let score = 0;
+
+  if (isMac) {
+    if (hasFinePointer && coreCount && coreCount <= 4) {
+      return 'mid';
+    }
+    return 'high';
+  }
+
+  if (isWindows && hasFinePointer && coreCount && coreCount <= 4 && (!deviceMemory || deviceMemory <= 8)) {
+    return 'low';
+  }
+
+  if (deviceMemory && deviceMemory <= 2) {
+    score += 3;
+  } else if (deviceMemory && deviceMemory <= 4) {
+    score += 1;
+  }
+
+  if (coreCount && coreCount <= 4) {
+    score += 3;
+  } else if (coreCount && coreCount <= 6) {
+    score += 1;
+  }
+
+  if (coarsePointer && !isAndroid) {
+    score += 1;
+  }
+  if (narrowViewport && !isAndroid) {
+    score += 1;
+  }
+
+  if (score >= 5) {
+    return 'low';
+  }
+  if (score >= 2) {
+    return 'mid';
+  }
+  return 'high';
+}
+
+const PERFORMANCE_TIER = detectPerformanceTier();
+const IS_HIGH_PERFORMANCE_TIER = PERFORMANCE_TIER === 'high';
+const IS_LOW_PERFORMANCE_TIER = PERFORMANCE_TIER === 'low';
+document.documentElement.dataset.performanceTier = PERFORMANCE_TIER;
+
+function loadLottieScriptOnce() {
+  if (window.lottie) {
+    return Promise.resolve(window.lottie);
+  }
+  if (lottieScriptPromise) {
+    return lottieScriptPromise;
+  }
+  lottieScriptPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-lottie-loader="true"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.lottie), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Failed to load lottie')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
+    script.async = true;
+    script.dataset.lottieLoader = 'true';
+    script.onload = () => resolve(window.lottie);
+    script.onerror = () => reject(new Error('Failed to load lottie'));
+    document.head.appendChild(script);
+  });
+  return lottieScriptPromise;
+}
 
 function updateIntroLine1TailOffset() {
   if (!introLine1Main || !introLine1Tail) {
@@ -2014,6 +2115,12 @@ function isSection2VisibleInViewport() {
 }
 
 function refreshSection2ModelVisibility() {
+  if (!section2ModelScene && !section2ModelBootstrapped) {
+    if (IS_LOW_PERFORMANCE_TIER && isSection2VisibleInViewport()) {
+      void ensureSection2ModelInitialized();
+    }
+    return;
+  }
   updateSection2ModelVisibility(isSection2VisibleInViewport());
 }
 
@@ -2435,6 +2542,9 @@ function initBitcountLens() {
 }
 
 function initBitcountChars() {
+  if (IS_LOW_PERFORMANCE_TIER) {
+    return;
+  }
   bitcountWords.forEach((word) => {
     const text = word.textContent || '';
     word.textContent = '';
@@ -2507,7 +2617,7 @@ function preloadSection2ModelAssets() {
     ]);
     const loader = new loaderModule.GLTFLoader();
     const gltf = await new Promise((resolve, reject) => {
-      loader.load('Assets/models/pointer/pointer.gltf', resolve, undefined, reject);
+      loader.load('https://media.sujaykumar.net/Assets/models/pointer/pointer.gltf', resolve, undefined, reject);
     });
     return {
       THREE,
@@ -2521,13 +2631,18 @@ function preloadSection2ModelAssets() {
 }
 
 function createStartupDependencyPromise() {
-  return Promise.all([
+  const dependencies = [
     preloadCriticalLibraries(),
     preloadFonts(),
-    preloadPageImages(),
-    preloadSection2ModelAssets(),
-    ensureSectionOneWaveController({ startPaused: true }).then((controller) => controller?.ready ?? null)
-  ]);
+    preloadPageImages()
+  ];
+  if (!IS_LOW_PERFORMANCE_TIER) {
+    dependencies.push(
+      preloadSection2ModelAssets(),
+      ensureSectionOneWaveController({ startPaused: true }).then((controller) => controller?.ready ?? null)
+    );
+  }
+  return Promise.all(dependencies);
 }
 
 function ensureSectionOneWaveController({ startPaused = true } = {}) {
@@ -2651,6 +2766,9 @@ function syncSectionOneWaveScrollDrive() {
 }
 
 function shouldRunSectionOneBitcountAutopilot() {
+  if (IS_LOW_PERFORMANCE_TIER) {
+    return false;
+  }
   return Boolean(
     introStage &&
       bitcountLensController &&
@@ -3348,10 +3466,12 @@ function startCoreApp() {
     ease: 'power2.out',
     stagger: 0.07
   });
-  bitcountLensController = initBitcountLens();
-  syncSectionOneBitcountAutopilot();
+  if (!IS_LOW_PERFORMANCE_TIER) {
+    bitcountLensController = initBitcountLens();
+    syncSectionOneBitcountAutopilot();
+  }
   initSection2FillTargets();
-  initSection2Model();
+  queueSection2ModelInit();
   initSnapScroll();
   updateTopNavState(SNAP_STATE.index);
   scheduleSectionMorphHint();
@@ -3366,6 +3486,48 @@ function startCoreApp() {
   window.addEventListener('resize', syncSectionOneWaveScrollDrive, { passive: true });
   window.addEventListener('resize', syncSectionOneBitcountAutopilot, { passive: true });
   document.addEventListener('visibilitychange', syncSectionOneBitcountAutopilot);
+}
+
+function queueSection2ModelInit() {
+  if (!section2ModelMount || section2ModelBootstrapped) {
+    return section2ModelInitPromise || Promise.resolve(section2ModelScene || null);
+  }
+  if (!IS_LOW_PERFORMANCE_TIER) {
+    return ensureSection2ModelInitialized();
+  }
+  if (!('IntersectionObserver' in window)) {
+    return Promise.resolve(null);
+  }
+  if (section2ModelInitPromise) {
+    return section2ModelInitPromise;
+  }
+  section2ModelInitPromise = new Promise((resolve) => {
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (!entry?.isIntersecting) {
+        return;
+      }
+      observer.disconnect();
+      ensureSection2ModelInitialized().finally(() => {
+        resolve(section2ModelScene || null);
+      });
+    }, {
+      root: null,
+      threshold: 0,
+      rootMargin: IS_LOW_PERFORMANCE_TIER ? '200px 0px' : '350px 0px'
+    });
+    observer.observe(section2ModelMount);
+  });
+  return section2ModelInitPromise;
+}
+
+function ensureSection2ModelInitialized() {
+  if (section2ModelBootstrapped) {
+    return section2ModelInitPromise || Promise.resolve(section2ModelScene || null);
+  }
+  section2ModelBootstrapped = true;
+  section2ModelInitPromise = initSection2Model().then(() => section2ModelScene || null);
+  return section2ModelInitPromise;
 }
 
 function startLoaderReveal() {
@@ -3482,16 +3644,20 @@ async function initSection2Model() {
       antialias: false,
       powerPreference: 'high-performance'
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, SECTION2_MODEL_RENDER_PIXEL_RATIO_CAP));
+    const pixelRatioCap = IS_LOW_PERFORMANCE_TIER ? 1 : SECTION2_MODEL_RENDER_PIXEL_RATIO_CAP;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 0.72;
     renderer.setClearColor(0x000000, 0);
     modelView.replaceChildren(renderer.domElement);
 
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    const envMap = pmremGenerator.fromScene(new RoomEnvironment(renderer), 0.015).texture;
-    scene.environment = envMap;
+    let pmremGenerator = null;
+    if (!IS_LOW_PERFORMANCE_TIER) {
+      pmremGenerator = new THREE.PMREMGenerator(renderer);
+      const envMap = pmremGenerator.fromScene(new RoomEnvironment(renderer), 0.015).texture;
+      scene.environment = envMap;
+    }
 
     const keyLight = new THREE.DirectionalLight(0xf3d7ff, 0.95);
     keyLight.position.set(5, 5, 6);
@@ -3766,6 +3932,14 @@ async function initSection2Model() {
       const dt = Math.max(0, Math.min((nowTs - (section2ModelScene?.lastFrameTime || nowTs)) / 1000, 0.05));
       if (section2ModelScene) {
         section2ModelScene.lastFrameTime = nowTs;
+        if (
+          IS_LOW_PERFORMANCE_TIER &&
+          section2ModelScene.lastRenderAt &&
+          nowTs - section2ModelScene.lastRenderAt < 1000 / 24
+        ) {
+          return;
+        }
+        section2ModelScene.lastRenderAt = nowTs;
       }
       if (modelSpinGroup) {
         const now = performance.now();
@@ -3922,6 +4096,7 @@ async function initSection2Model() {
       modelY: 0,
       pathAngle: 0,
       activeCardIndex: -1,
+      lastRenderAt: 0,
       animationLoop
     };
     if (section2ModelScene.isActive) {
@@ -4720,16 +4895,21 @@ function hideFinalHorizonLottieMarker() {
 }
 
 function ensureFinalHorizonLottieMarker() {
-  if (FINAL_HORIZON_STATE.lottieInstance || !finalHorizonLottieMarkerInner || !window.lottie) {
+  if (FINAL_HORIZON_STATE.lottieInstance || !finalHorizonLottieMarkerInner) {
     return;
   }
-  FINAL_HORIZON_STATE.lottieInstance = window.lottie.loadAnimation({
-    container: finalHorizonLottieMarkerInner,
-    renderer: 'svg',
-    loop: true,
-    autoplay: false,
-    path: 'Assets/data.json'
-  });
+  void loadLottieScriptOnce().then(() => {
+    if (FINAL_HORIZON_STATE.lottieInstance || !window.lottie) {
+      return;
+    }
+    FINAL_HORIZON_STATE.lottieInstance = window.lottie.loadAnimation({
+      container: finalHorizonLottieMarkerInner,
+      renderer: 'svg',
+      loop: true,
+      autoplay: false,
+      path: 'Assets/data.json'
+    });
+  }).catch(() => {});
 }
 
 function updateFinalHorizonLottieMarker(activeIndex) {

@@ -1,15 +1,105 @@
+function detectWorkGridPerformanceTier() {
+  var ua = navigator.userAgent || '';
+  var platform = navigator.platform || '';
+  var isIPhone = /\biPhone\b/i.test(ua);
+  var isIPad =
+    /\biPad\b/i.test(ua) ||
+    (platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var isIOS = isIPhone || isIPad;
+  if (isIOS) return 'high';
+
+  var isMac = /\bMac\b/i.test(platform) || /\bMac OS X\b/i.test(ua);
+  var isWindows = /\bWin(dows)?\b/i.test(platform) || /\bWindows\b/i.test(ua);
+
+  var coreCount = navigator.hardwareConcurrency || 0;
+  var deviceMemory = navigator.deviceMemory || 0;
+  var coarsePointer =
+    (window.matchMedia && (window.matchMedia('(any-pointer: coarse)').matches || window.matchMedia('(pointer: coarse)').matches)) || false;
+  var narrowViewport = Math.min(window.innerWidth || 0, window.innerHeight || 0) <= 430;
+  var hasFinePointer =
+    (window.matchMedia && (window.matchMedia('(any-pointer: fine)').matches || window.matchMedia('(pointer: fine)').matches)) || false;
+  var isAndroid = /\bAndroid\b/i.test(ua);
+  var score = 0;
+
+  if (isMac) {
+    if (hasFinePointer && coreCount && coreCount <= 4) return 'mid';
+    return 'high';
+  }
+
+  if (isWindows && hasFinePointer && coreCount && coreCount <= 4 && (!deviceMemory || deviceMemory <= 8)) return 'low';
+
+  if (deviceMemory && deviceMemory <= 2) score += 3;
+  else if (deviceMemory && deviceMemory <= 4) score += 1;
+  if (coreCount && coreCount <= 4) score += 3;
+  else if (coreCount && coreCount <= 6) score += 1;
+  if (coarsePointer && !isAndroid) score += 1;
+  if (narrowViewport && !isAndroid) score += 1;
+
+  if (score >= 5) return 'low';
+  if (score >= 2) return 'mid';
+  return 'high';
+}
+
+var WORK_GRID_PERFORMANCE_TIER = document.documentElement.getAttribute('data-performance-tier') || detectWorkGridPerformanceTier();
+var WORK_GRID_IS_LOW = WORK_GRID_PERFORMANCE_TIER === 'low';
+var workGridLottieScriptPromise = null;
+
+function loadWorkGridLottieScriptOnce() {
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (workGridLottieScriptPromise) return workGridLottieScriptPromise;
+  workGridLottieScriptPromise = new Promise(function (resolve, reject) {
+    var existing = document.querySelector('script[data-lottie-loader="true"]');
+    if (existing) {
+      existing.addEventListener('load', function () { resolve(window.lottie); }, { once: true });
+      existing.addEventListener('error', function () { reject(new Error('Failed to load lottie')); }, { once: true });
+      return;
+    }
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
+    script.async = true;
+    script.dataset.lottieLoader = 'true';
+    script.onload = function () { resolve(window.lottie); };
+    script.onerror = function () { reject(new Error('Failed to load lottie')); };
+    document.head.appendChild(script);
+  });
+  return workGridLottieScriptPromise;
+}
+
 // Work Grid — keyword marquee
 (function () {
   var stars = Array.from(document.querySelectorAll('[data-card-badge-star]'));
-  if (!stars.length || !window.lottie) return;
-  stars.forEach(function (node) {
-    window.lottie.loadAnimation({
-      container: node,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'Assets/star.json'
+  if (!stars.length) return;
+
+  function initStar(node) {
+    if (node._starLottieReady) return;
+    node._starLottieReady = true;
+    loadWorkGridLottieScriptOnce().then(function () {
+      if (!window.lottie) return;
+      node._starLottie = window.lottie.loadAnimation({
+        container: node,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'Assets/star.json'
+      });
+    }).catch(function () {});
+  }
+
+  if (!WORK_GRID_IS_LOW || !('IntersectionObserver' in window)) {
+    stars.forEach(initStar);
+    return;
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      initStar(entry.target);
+      observer.unobserve(entry.target);
     });
+  }, { rootMargin: '300px 0px' });
+
+  stars.forEach(function (node) {
+    observer.observe(node);
   });
 })();
 
@@ -46,6 +136,29 @@
 
   function isMobileLike() {
     return window.matchMedia('(hover: none), (pointer: coarse), (max-width: 768px)').matches;
+  }
+
+  if (WORK_GRID_IS_LOW && 'IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      if (!isMobileLike()) {
+        cards.forEach(function (card) { card.classList.remove('is-mobile-active'); });
+        return;
+      }
+      entries.forEach(function (entry) {
+        entry.target.classList.toggle('is-mobile-active', entry.intersectionRatio >= 0.95);
+      });
+    }, { threshold: [0.95] });
+
+    cards.forEach(function (card) {
+      observer.observe(card);
+    });
+
+    window.addEventListener('resize', function () {
+      if (!isMobileLike()) {
+        cards.forEach(function (card) { card.classList.remove('is-mobile-active'); });
+      }
+    });
+    return;
   }
 
   function updateActiveCards() {
@@ -563,6 +676,24 @@
 
   var ticking = false;
   var MAX_SHIFT = 36;
+  var activeVisuals = visuals;
+
+  if (WORK_GRID_IS_LOW && 'IntersectionObserver' in window) {
+    activeVisuals = [];
+    var activeSet = new Set();
+    var visibilityObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) activeSet.add(entry.target);
+        else activeSet.delete(entry.target);
+      });
+      activeVisuals = Array.from(activeSet);
+      queueParallax();
+    }, { rootMargin: '250px 0px' });
+
+    visuals.forEach(function (visual) {
+      visibilityObserver.observe(visual);
+    });
+  }
 
   // Section 3 scrolls inside .snap-section-scroll, not window — use live
   // getBoundingClientRect() so we always get the current viewport position.
@@ -571,8 +702,8 @@
     var vh = window.innerHeight;
     var viewportCenter = vh / 2;
 
-    for (var i = 0; i < visuals.length; i++) {
-      var visual = visuals[i];
+    for (var i = 0; i < activeVisuals.length; i++) {
+      var visual = activeVisuals[i];
       var media = visual.closest('.wg-card-image');
       if (!media) continue;
       var rect = media.getBoundingClientRect();
@@ -599,6 +730,41 @@
   window.addEventListener('resize', queueParallax);
   window.addEventListener('load', queueParallax);
   requestAnimationFrame(applyParallax);
+})();
+
+// Filter row edge auto-scroll
+(function () {
+  var videos = Array.from(document.querySelectorAll('.wg-card-video'));
+  if (!videos.length) return;
+
+  function syncVideo(video, shouldPlay) {
+    if (shouldPlay) {
+      var playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(function () {});
+      }
+      return;
+    }
+    video.pause();
+  }
+
+  if (WORK_GRID_IS_LOW && 'IntersectionObserver' in window) {
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        syncVideo(entry.target, entry.isIntersecting);
+      });
+    }, { threshold: 0.35, rootMargin: '150px 0px' });
+
+    videos.forEach(function (video) {
+      video.preload = 'metadata';
+      observer.observe(video);
+    });
+    return;
+  }
+
+  videos.forEach(function (video) {
+    syncVideo(video, true);
+  });
 })();
 
 // Filter row edge auto-scroll
@@ -1261,7 +1427,7 @@
     row.appendChild(bubble);
     chatPanelEl.appendChild(row);
     row._sphereController = initWireSphere(canvas, {
-      wireCount: 28,
+      wireCount: WORK_GRID_IS_LOW ? 14 : 28,
       waveAmp: 0.3,
       waveFreq: 2.7,
       travelSpeed: 4,
@@ -1818,8 +1984,26 @@ function initWireSphere(canvasEl, overrides) {
     canvasEl.addEventListener('pointerleave', function () { hoverTarget = 0; });
   }
 
+  var controller = {
+    active: true,
+    destroy: function () {
+      destroyed = true;
+      controller.active = false;
+    },
+    resume: function () {
+      if (destroyed || controller.active) return;
+      controller.active = true;
+      lastNow = null;
+      requestAnimationFrame(render);
+    },
+    pause: function () {
+      controller.active = false;
+    }
+  };
+
   function render(now) {
     if (destroyed) return;
+    if (!controller.active) return;
     if (lastNow === null) lastNow = now;
     var dt = Math.min(0.05, (now - lastNow) / 1000);
     lastNow = now;
@@ -1893,16 +2077,25 @@ function initWireSphere(canvasEl, overrides) {
     ctx.drawImage(compositeCanvas, 0, 0, width, height);
     ctx.restore();
 
+    if (!controller.active) return;
     requestAnimationFrame(render);
   }
 
   requestAnimationFrame(render);
-  return { destroy: function () { destroyed = true; } };
+  return controller;
 }
 
 // Initialise the dock sphere
 (function () {
   var canvas = document.querySelector('.wg-sphere-canvas');
   if (!canvas) return;
-  initWireSphere(canvas);
+  var controller = initWireSphere(canvas, WORK_GRID_IS_LOW ? { wireCount: 6 } : null);
+  if (!WORK_GRID_IS_LOW || !controller || !('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) controller.resume();
+      else controller.pause();
+    });
+  }, { threshold: 0, rootMargin: '200px 0px' });
+  observer.observe(canvas);
 })();

@@ -1,0 +1,45 @@
+/* Inter Variable Font — self-hosted via R2 CDN */
+@font-face {
+  font-family: InterVariable;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/InterVariable.woff2") format("woff2");
+}
+@font-face {
+  font-family: InterVariable;
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/InterVariable-Italic.woff2") format("woff2");
+}
+
+/* Inter static weights — fallback for browsers without variable font support */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/Inter-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/Inter-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/Inter-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("https://media.sujaykumar.net/fonts/Inter/Inter-Bold.woff2") format("woff2");
+}

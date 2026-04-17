@@ -503,6 +503,16 @@ const SECTION1_WAVE_COLOR_A = '#ABA3B8';
 const SECTION1_WAVE_COLOR_B = '#000000';
 const SECTION1_WAVE_MOBILE_BLEND_STEPS = 25;
 const SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS = 10;
+const SECTION1_WAVE_LOW_END_OVERRIDES = {
+  sampleCount: 140,
+  blendSteps: 20,
+  minBlendSteps: 10,
+  blurStrength: 0.16,
+  blurRadius: 760,
+  targetFps: 30,
+  alignmentUpdateIntervalActive: 4,
+  alignmentUpdateIntervalIdle: 6
+};
 const SECTION1_WAVE_LAYOUT_PRESETS = [
   {
     media: '(max-width: 767px) and (orientation: portrait)',
@@ -527,6 +537,9 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     return null;
   }
   host.dataset.waveVizMounted = 'yes';
+
+  // Read tier here (not at module evaluation time) so intro-only.js has already set the attribute.
+  const IS_LOW_PERFORMANCE_TIER = document.documentElement?.dataset?.performanceTier === 'low';
 
   const { PIXI, ZoomBlurFilter } = await ensurePixiCdnReady();
   const mouse = { x: 0, y: 0, inside: false };
@@ -566,6 +579,12 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     readyResolve = resolve;
   });
   const pointerHudSegments = 16;
+  const pointerTargetRect = {
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0
+  };
   const pointerHud = document.createElement('div');
   pointerHud.className = 'intro-wave-pointer-hud';
   pointerHud.innerHTML = `
@@ -605,17 +624,24 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   pointerTarget.appendChild(pointerHud);
   pointerTarget.appendChild(pointerPrompt);
 
-  const applyPointerFromClient = (clientX, clientY) => {
+  const syncPointerTargetRect = () => {
     const rect = pointerTarget.getBoundingClientRect();
-    pointerDisplay.x = clientX - rect.left;
-    pointerDisplay.y = clientY - rect.top;
+    pointerTargetRect.left = rect.left;
+    pointerTargetRect.top = rect.top;
+    pointerTargetRect.width = rect.width;
+    pointerTargetRect.height = rect.height;
+  };
+
+  const applyPointerFromClient = (clientX, clientY) => {
+    pointerDisplay.x = clientX - pointerTargetRect.left;
+    pointerDisplay.y = clientY - pointerTargetRect.top;
     mouse.x = pointerDisplay.x - stageLayout.canvasLeft;
     mouse.y = pointerDisplay.y - stageLayout.canvasTop;
     mouse.inside =
       pointerDisplay.x >= 0 &&
-      pointerDisplay.x <= rect.width &&
+      pointerDisplay.x <= pointerTargetRect.width &&
       pointerDisplay.y >= 0 &&
-      pointerDisplay.y <= rect.height;
+      pointerDisplay.y <= pointerTargetRect.height;
   };
 
   const updatePointerFromEvent = (event) => {
@@ -664,7 +690,31 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     autoDensity: true,
     resolution: 1
   });
-  app.ticker.maxFPS = SECTION1_WAVE_TUNING.targetFps;
+  const effectiveWaveSampleCount = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.sampleCount
+    : SECTION1_WAVE_CONFIG.global.sampleCount;
+  const effectiveBlendSteps = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.blendSteps
+    : SECTION1_WAVE_CONFIG.global.blendSteps;
+  const effectiveMinBlendSteps = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.minBlendSteps
+    : SECTION1_WAVE_TUNING.dynamicBlendMinSteps;
+  const effectiveBlurStrength = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.blurStrength
+    : SECTION1_WAVE_TUNING.blurStrength;
+  const effectiveBlurRadius = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.blurRadius
+    : SECTION1_WAVE_TUNING.blurRadius;
+  const effectiveAlignmentUpdateIntervalActive = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.alignmentUpdateIntervalActive
+    : SECTION1_WAVE_TUNING.alignmentUpdateIntervalActive;
+  const effectiveAlignmentUpdateIntervalIdle = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.alignmentUpdateIntervalIdle
+    : SECTION1_WAVE_TUNING.alignmentUpdateIntervalIdle;
+
+  app.ticker.maxFPS = IS_LOW_PERFORMANCE_TIER
+    ? SECTION1_WAVE_LOW_END_OVERRIDES.targetFps
+    : SECTION1_WAVE_TUNING.targetFps;
   host.appendChild(app.view);
   app.view.style.position = 'absolute';
   app.view.style.left = '0';
@@ -725,9 +775,9 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   focusSharpLayer.visible = false;
 
   const zoomBlur = new ZoomBlurFilter();
-  zoomBlur.strength = SECTION1_WAVE_TUNING.blurStrength;
+  zoomBlur.strength = effectiveBlurStrength;
   zoomBlur.innerRadius = SECTION1_WAVE_TUNING.blurInnerRadius;
-  zoomBlur.radius = SECTION1_WAVE_TUNING.blurRadius;
+  zoomBlur.radius = effectiveBlurRadius;
   zoomBlur.resolution = 0.75;
   blurWaveLayer.filters = [zoomBlur];
   const blurFilterArea = new PIXI.Rectangle(0, 0, 1, 1);
@@ -809,10 +859,12 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
   };
   syncRendererLayout();
   makeBgTexture();
+  syncPointerTargetRect();
 
   const resizeObserver = new ResizeObserver(() => {
     syncRendererLayout();
     makeBgTexture();
+    syncPointerTargetRect();
     syncMouseFromViewportPointer();
   });
   resizeObserver.observe(host);
@@ -857,9 +909,9 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const width = app.screen.width;
     const height = app.screen.height;
 
-    zoomBlur.strength = SECTION1_WAVE_TUNING.blurStrength;
+    zoomBlur.strength = effectiveBlurStrength;
     zoomBlur.innerRadius = SECTION1_WAVE_TUNING.blurInnerRadius;
-    zoomBlur.radius = SECTION1_WAVE_TUNING.blurRadius;
+    zoomBlur.radius = effectiveBlurRadius;
     zoomBlur.center = [
       width * (SECTION1_WAVE_TUNING.blurCenterX + stageLayout.compositionOffsetX),
       height * (SECTION1_WAVE_TUNING.blurCenterY + stageLayout.compositionOffsetY)
@@ -867,17 +919,17 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     blurFilterArea.x = Math.max(
       0,
       width * (SECTION1_WAVE_TUNING.blurCenterX + stageLayout.compositionOffsetX) -
-        SECTION1_WAVE_TUNING.blurRadius -
+        effectiveBlurRadius -
         64
     );
     blurFilterArea.y = Math.max(
       0,
       height * (SECTION1_WAVE_TUNING.blurCenterY + stageLayout.compositionOffsetY) -
-        SECTION1_WAVE_TUNING.blurRadius -
+        effectiveBlurRadius -
         64
     );
-    blurFilterArea.width = Math.min(width - blurFilterArea.x, SECTION1_WAVE_TUNING.blurRadius * 2 + 128);
-    blurFilterArea.height = Math.min(height - blurFilterArea.y, SECTION1_WAVE_TUNING.blurRadius * 2 + 128);
+    blurFilterArea.width = Math.min(width - blurFilterArea.x, effectiveBlurRadius * 2 + 128);
+    blurFilterArea.height = Math.min(height - blurFilterArea.y, effectiveBlurRadius * 2 + 128);
 
     const frameNow = performance.now();
     const dt = motion.lastTime == null ? 1 / 60 : Math.min(0.05, (frameNow - motion.lastTime) * 0.001);
@@ -902,15 +954,15 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const sharedWavelength = 0.5 * (wave1.baseWavelength + wave2.baseWavelength);
     const sharedSpeed = 0.5 * (wave1.speed + wave2.speed);
 
-    const raw1 = buildWaveSamples(SECTION1_WAVE_CONFIG.global.sampleCount, motion.wave1Offset, wave1, 0, projectedMouse, interaction);
-    const raw2 = buildWaveSamples(SECTION1_WAVE_CONFIG.global.sampleCount, motion.wave2Offset, wave2, 11, projectedMouse, interaction);
+    const raw1 = buildWaveSamples(effectiveWaveSampleCount, motion.wave1Offset, wave1, 0, projectedMouse, interaction);
+    const raw2 = buildWaveSamples(effectiveWaveSampleCount, motion.wave2Offset, wave2, 11, projectedMouse, interaction);
     const adj1 = raw1.map((raw) => waveInteractiveFromRaw(raw, wave1, { amplitude: sharedAmplitude, wavelength: sharedWavelength }, projectedMouse, interaction));
     const adj2 = raw2.map((raw) => waveInteractiveFromRaw(raw, wave2, { amplitude: sharedAmplitude, wavelength: sharedWavelength }, projectedMouse, interaction));
 
     let weightedOscDiff = 0;
     let weightSum = 0;
     let globalInfluence = 0;
-    for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
+    for (let i = 0; i < effectiveWaveSampleCount; i += 1) {
       const p1 = adj1[i];
       const p2 = adj2[i];
       const localWeight = Math.max(p1.influence ?? 0, p2.influence ?? 0);
@@ -923,8 +975,8 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const indexAlignment = 1 - Math.min(1, (weightSum > 0 ? weightedOscDiff / weightSum : 2) / 2);
     alignmentCache.frame += 1;
     const alignmentInterval = mouse.inside && globalInfluence >= 0.15
-      ? SECTION1_WAVE_TUNING.alignmentUpdateIntervalActive
-      : SECTION1_WAVE_TUNING.alignmentUpdateIntervalIdle;
+      ? effectiveAlignmentUpdateIntervalActive
+      : effectiveAlignmentUpdateIntervalIdle;
     if (alignmentCache.frame === 1 || alignmentCache.frame % alignmentInterval === 0) {
       alignmentCache.stats = computeScreenSpaceAlignment(
         adj1,
@@ -940,7 +992,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
     const phaseAlignment = spatialStats.alignment;
     const points1 = [];
     const points2 = [];
-    for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
+    for (let i = 0; i < effectiveWaveSampleCount; i += 1) {
       points1.push(worldToScreen(width, height, adj1[i].point));
       points2.push(worldToScreen(width, height, adj2[i].point));
     }
@@ -1029,10 +1081,10 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
 
     const totalBlendSteps = isMobileBlendMode()
       ? SECTION1_WAVE_MOBILE_BLEND_STEPS
-      : SECTION1_WAVE_CONFIG.global.blendSteps;
+      : effectiveBlendSteps;
     const dynamicMinSteps = isMobileBlendMode()
       ? SECTION1_WAVE_MOBILE_MIN_BLEND_STEPS
-      : SECTION1_WAVE_TUNING.dynamicBlendMinSteps;
+      : effectiveMinBlendSteps;
     const progressCurrentTarget =
       crestAngleDeg == null
         ? null
@@ -1147,7 +1199,7 @@ export async function initSectionOneProceduralWave({ host, pointerTarget, startP
           const widthBoost = raw === 0 || raw === 1 ? 0.3 : 0;
           const color = blendColorInt(SECTION1_WAVE_COLOR_A, SECTION1_WAVE_COLOR_B, raw);
           const sharpPts = [];
-          for (let i = 0; i < SECTION1_WAVE_CONFIG.global.sampleCount; i += 1) {
+          for (let i = 0; i < effectiveWaveSampleCount; i += 1) {
             sharpPts.push({
               x: lerp(
                 points1[i].x,
