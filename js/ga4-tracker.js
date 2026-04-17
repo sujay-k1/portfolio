@@ -203,6 +203,7 @@
     // Open
     bindClicks('[data-chat-sphere]', function () {
       track('portfolio_chat_open', {});
+      if (window.clarity) clarity('event', 'chat_opened');
     });
 
     // Close
