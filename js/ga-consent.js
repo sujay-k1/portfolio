@@ -86,7 +86,7 @@
   var text = document.createElement('p');
   text.className = 'ga-consent-text';
   text.textContent =
-    'I use Google Analytics to understand how my work is received, which projects resonate and how people move through the portfolio. By continuing, you\u2019re okay with that.';
+    'I use Google Analytics and Microsoft Clarity to understand how my work is received, which projects resonate and how people move through the portfolio. By continuing, you\u2019re okay with that.';
 
   var btn = document.createElement('button');
   btn.className = 'ga-consent-btn';
