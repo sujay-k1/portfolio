@@ -74,8 +74,8 @@
   <!-- Preload GSAP — used by intro-only.js on DOMContentLoaded -->
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" as="script">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/Flip.min.js" as="script">
-  <!-- Self-hosted Inter — eliminates rsms.me round-trip -->
-  <link rel="stylesheet" href="/css/inter.css">
+  <!-- Inter @font-face inlined — eliminates the render-blocking inter.css request -->
+  <style>@font-face{font-family:InterVariable;font-style:normal;font-weight:100 900;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/InterVariable.woff2") format("woff2")}@font-face{font-family:InterVariable;font-style:italic;font-weight:100 900;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/InterVariable-Italic.woff2") format("woff2")}@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/Inter-Regular.woff2") format("woff2")}@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/Inter-Medium.woff2") format("woff2")}@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/Inter-SemiBold.woff2") format("woff2")}@font-face{font-family:"Inter";font-style:normal;font-weight:700;font-display:swap;src:url("https://media.sujaykumar.net/fonts/Inter/Inter-Bold.woff2") format("woff2")}</style>
   <!-- Google Fonts loaded async — startup loader covers the page while fonts download,
        so there is no visible FOUT. noscript fallback ensures fonts still load without JS. -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
