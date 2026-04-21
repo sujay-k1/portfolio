@@ -40,6 +40,9 @@
     '.ga-consent-btn {',
     '  flex-shrink: 0;',
     '  appearance: none;',
+    '  position: relative;',
+    '  isolation: isolate;',
+    '  overflow: hidden;',
     '  background: transparent;',
     '  border: 1px solid rgba(193, 165, 236, 0.4);',
     '  border-radius: 100px;',
@@ -55,6 +58,23 @@
     '  padding: 8px 18px;',
     '  cursor: pointer;',
     '  transition: background 0.18s ease, border-color 0.18s ease;',
+    '}',
+    '.ga-consent-btn::before {',
+    '  content: "";',
+    '  position: absolute;',
+    '  inset: 0;',
+    '  z-index: 0;',
+    '  background: rgba(255, 255, 255, 0.1);',
+    '  transform: scaleX(0);',
+    '  transform-origin: left center;',
+    '  transition: transform 5s linear;',
+    '}',
+    '.ga-consent-btn.is-auto-filling::before {',
+    '  transform: scaleX(1);',
+    '}',
+    '.ga-consent-btn span {',
+    '  position: relative;',
+    '  z-index: 1;',
     '}',
     '.ga-consent-btn:hover {',
     '  background: rgba(193, 165, 236, 0.1);',
@@ -91,19 +111,31 @@
   var btn = document.createElement('button');
   btn.className = 'ga-consent-btn';
   btn.type = 'button';
-  btn.textContent = 'Understood';
+  var btnLabel = document.createElement('span');
+  btnLabel.textContent = 'Understood';
+  btn.appendChild(btnLabel);
 
   banner.appendChild(text);
   banner.appendChild(btn);
   document.body.appendChild(banner);
 
+  var autoClickTimer = null;
+
   requestAnimationFrame(function () {
     requestAnimationFrame(function () {
       banner.classList.add('is-visible');
+      btn.classList.add('is-auto-filling');
+      autoClickTimer = window.setTimeout(function () {
+        btn.click();
+      }, 5000);
     });
   });
 
   btn.addEventListener('click', function () {
+    if (autoClickTimer) {
+      window.clearTimeout(autoClickTimer);
+      autoClickTimer = null;
+    }
     localStorage.setItem(STORAGE_KEY, '1');
     banner.classList.remove('is-visible');
     banner.classList.add('is-dismissed');
